@@ -1,0 +1,337 @@
+/* Импортируем Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap');
+
+:root {
+    --color-bg-page: #FAFBFC;                /* фон страницы (поиск!) */
+    --color-bg-surface: #ffffff;             /* фон рабочей области (ячеек, карточек) */
+    --border-color: #E5E5E5;                 /* цвет обводки sidebar и header */
+
+    --color-accent: #81D8D0;                 /* контрастный цвет — фон кнопок, акценты */
+    --color-accent-hover: #6BCCC3;           /* темнее — при наведении на кнопку */
+    --color-accent-light: #CDEFEC;           /* полупрозрачный — активная вкладка в боковой панели */
+
+    /*    ЦВЕТА СТАТУСОВ    */
+    --color-status-loaded: #7EE29F;          /* загружен, обработан, успех, высокая уверенность */
+    --color-status-rejected: #E87373;        /* отклонен, низкая уверенность */
+    --color-status-low-confidence: #FAB25F;  /* средняя уверенность */
+    --color-status-data-refinement: #f6c681; /* на распознавании, в очереди */
+    --color-status-analysis: #C27EE2;        /* анализ */
+    --color-status-assigned: #7EADE2;        /* назначен эксперту / в работе (ручная проверка) */
+    --color-status-clarify: #BBDFFB;         /* уточнение данных */
+    --color-status-archived: #979797;        /* архивирован */
+
+    /*    ТИПОГРАФИЯ    */
+    --text-primary: #000000;                 /* основной текст и заголовки */
+    --text-secondary: #4b4b4b;               /* подтема, второстепенный текст */
+    --text-tertiary: #696969;                /* вводные данные (статистика, метаданные) */
+
+    /* Отступы */
+    --spacing-card: 20px;
+    --spacing-element: 16px;
+
+    /* Скругления */
+     --radius-card: 12px;
+     --radius-button: 8px;
+
+    /* Таблицы */
+     --table-row-height: 48px;
+     --table-border: #e2e4e8;
+
+    /* Шапка */
+    --header-height: 64px;
+
+    /* Sidebar */
+     --sidebar-width: 260px;
+}
+
+
+
+/*  Базовые стили  */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--color-bg-page);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/*    ЗАГОЛОВКИ    */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/*    ТЕКСТ    */
+p {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+
+
+/*    КНОПКИ    */
+/* Кнопка с фоном (акцентная) */
+.button-primary {
+  background-color: var(--color-accent);
+  color: #FFFFFF;           /* белый текст */
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-button);
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-primary:hover {
+  background-color: var(--color-accent-hover);  /* темнее при наведении */
+}
+
+/* Кнопка без фона (прозрачная) */
+.button-secondary {
+  background-color: transparent;
+  color: var(--color-accent);   /* акцентный цвет */
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-button);
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-secondary:hover {
+  color: var(--color-accent-hover);  /* темнее при наведении */
+  background-color: rgba(129, 216, 208, 0.1); /* лёгкий фон при ховере (опционально) */
+}
+
+
+
+/*    КАРТОЧКИ    */
+.card {
+  background-color: var(--color-bg-surface);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-card);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--spacing-card);
+}
+
+/*    ТАБЛИЦЫ    */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bg-surface);
+}
+
+th, td {
+  height: var(--table-row-height);
+  padding: 0 var(--spacing-element);
+  border-bottom: 1px solid var(--table-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* Заголовки таблицы */
+th {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  background-color: var(--bg-surface);
+}
+
+/* название документа выделено */
+td:first-child {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+td:not(:first-child) {
+  color: var(--text-secondary);
+}
+
+/*    подсветка строки ПРИ НАВЕДЕНИИ    */
+tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+
+
+/*    SIDEBAR    */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--color-bg-surface);
+  border-right: 1px solid var(--border-color);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  padding-top: var(--header-height);
+}
+
+/* вкладка sidebar */
+.sidebar-item {
+  padding: 12px 20px;
+  margin: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background-color 0.2s ease;
+}
+
+/* активная вкладка sidebar */
+.sidebar-item.active {
+  background-color: var(--color-accent-light);
+  color: #6BCCC3;
+  font-weight: 500;
+}
+
+/* Ховер для неактивных вкладок sidebar */
+.sidebar-item:not(.active):hover {
+  background-color: rgba(129, 216, 208, 0.1);
+}
+
+
+
+/*    HEADER    */
+.header {
+  height: var(--header-height);
+  background-color: var(--color-bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+/*    ОСНОВНОЙ КОНТЕНТ    */
+.main-content {
+  margin-left: var(--sidebar-width);
+  margin-top: var(--header-height);
+  padding: 24px;
+}
+
+/*    СТАТУСЫ    */
+/* бейджи */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 40px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Загружен / Обработан / Успех */
+.status-loaded {
+  background-color: rgba(126, 226, 159, 0.2);  /* #7EE29F при 20% */
+  color: #7EE29F;
+}
+
+/* Отклонен */
+.status-rejected {
+  background-color: rgba(232, 115, 115, 0.2);  /* #E87373 при 20% */
+  color: #E87373;
+}
+
+/* Низкая уверенность */
+.status-low-confidence {
+  background-color: rgba(250, 178, 95, 0.2);   /* #FAB25F при 20% */
+  color: #FAB25F;
+}
+
+/* На распознавании / В очереди */
+.status-data-refinement {
+  background-color: rgba(246, 198, 129, 0.2);  /* #F6C681 при 20% */
+  color: #F6C681;
+}
+
+/* Анализ */
+.status-analysis {
+  background-color: rgba(194, 126, 226, 0.2);  /* #C27EE2 при 20% */
+  color: #C27EE2;
+}
+
+/* Назначен эксперту / В работе */
+.status-assigned {
+  background-color: rgba(126, 173, 226, 0.2);  /* #7EADE2 при 20% */
+  color: #7EADE2;
+}
+
+/* Уточнение данных */
+.status-clarify {
+  background-color: rgba(187, 223, 251, 0.2);  /* #BBDFFB при 20% */
+  color: #BBDFFB;
+}
+
+/* Архивирован */
+.status-archived {
+  background-color: rgba(151, 151, 151, 0.2);  /* #979797 при 20% */
+  color: #979797;
+}
+
+
+/*    УВЕРЕННОСТЬ    */
+/* Линия */
+.confidence-bar {
+  width: 60px;
+  height: 6px;
+  background-color: #E5E5E5;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* Цвета */
+.confidence-fill.low { background-color: #E87373; }
+.confidence-fill.medium { background-color: #FAB25F; }
+.confidence-fill.high { background-color: #7EE29F; }
+
+/* Текст процента */
+.confidence-percent {
+  font-size: 12px;
+  margin-left: 8px;
+  color: var(--text-secondary);
+}
+
+
+
+/*      Ссылки      */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/*      Списки    */
+ul, ol {
+  list-style: none;
+}
+
+/*      Поля ввода      */
+input, textarea, select {
+  font-family: 'Inter', sans-serif;
+}
