@@ -107,7 +107,7 @@
   font-size: 24px;
   font-weight: 600;
   margin: 0;
-  color: #52e4c0;
+  color: #81D8D0;
 }
 
 .logo-block h3 {
@@ -137,7 +137,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #4ad3ca;
+  border-color: #81D8D0;
 }
 
 /*забыли пароль*/
@@ -157,10 +157,36 @@
   cursor: pointer;
 }
 
+.checkbox-wrapper input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: white;
+  border: 2px solid #81D8D0;
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked {
+  background-color: #81D8D0;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .forgot-link {
   background: none;
   border: none;
-  color: #56d9b6;
+  color: #81D8D0;
   font-size: 14px;
   cursor: pointer;
   padding: 0;
