@@ -1,16 +1,27 @@
-// карта для метрик
+import React, {FC} from "react";
 
 interface CardProps {
-  title: string;
-  value: number;
-  icon?: string;
+  width?: string;
+  height?: string;
+  children?: React.ReactNode
 }
 
-const Card = ({ title, value }: CardProps) => {
+const Card: FC<CardProps> =
+ ({
+    width,
+    height,
+    children
+  }) => {
   return (
-    <div className="card">
-      <h3>{title}</h3>
-      <p>{value}</p>
+    <div style={{
+      width, 
+      height, 
+      boxShadow: 'black 5px',
+      background: 'white'
+      }}>
+      {children}
     </div>
   );
 };
+
+export default Card
