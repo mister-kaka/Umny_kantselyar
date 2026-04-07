@@ -54,7 +54,6 @@ const LoginPage = () => {
     <div className="login-page">
       <div className="login-left">
         <div className="logo-block">
-          <div className="logo-placeholder"></div>
         </div>
 
         <div className="login-card">
@@ -122,7 +121,7 @@ const LoginPage = () => {
 
       <div className="login-right">
         <div className="info-card">
-          <div className="info-image">картиночка</div>
+          <img src="https://icon-icons.com/ko/icon/happy-emoji-smile-document-page/218637" alt="картинка" className="info-image" />
           <h2>Умная обработка документов</h2>
           <p>Автоматическое распознавание, классификация и маршрутизация входящих документов с использованием искусственного интеллекта</p>
         </div>

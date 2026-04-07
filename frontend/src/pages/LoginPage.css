@@ -1,4 +1,50 @@
-/* Весь экран — светло-серый фон */
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap');
+
+:root {
+    --color-bg-page: #FAFBFC;                /* фон страницы (поиск!) */
+    --color-bg-surface: #ffffff;             /* фон рабочей области (ячеек, карточек) */
+    --border-color: #E5E5E5;                 /* цвет обводки sidebar и header */
+
+    --color-accent: #81D8D0;                 /* контрастный цвет — фон кнопок, акценты */
+    --color-accent-hover: #6BCCC3;           /* темнее — при наведении на кнопку */
+    --color-accent-light: #CDEFEC;           /* полупрозрачный — активная вкладка в боковой панели */
+
+    /*    ЦВЕТА СТАТУСОВ    */
+    --color-status-loaded: #7EE29F;          /* загружен, обработан, успех, высокая уверенность */
+    --color-status-rejected: #E87373;        /* отклонен, низкая уверенность */
+    --color-status-low-confidence: #FAB25F;  /* средняя уверенность */
+    --color-status-data-refinement: #f6c681; /* на распознавании, в очереди */
+    --color-status-analysis: #C27EE2;        /* анализ */
+    --color-status-assigned: #7EADE2;        /* назначен эксперту / в работе (ручная проверка) */
+    --color-status-clarify: #BBDFFB;         /* уточнение данных */
+    --color-status-archived: #979797;        /* архивирован */
+
+    /*    ТИПОГРАФИЯ    */
+    --text-primary: #000000;                 /* основной текст и заголовки */
+    --text-secondary: #4b4b4b;               /* подтема, второстепенный текст */
+    --text-tertiary: #696969;                /* вводные данные (статистика, метаданные) */
+
+    /* Отступы */
+    --spacing-card: 20px;
+    --spacing-element: 16px;
+
+    /* Скругления */
+     --radius-card: 12px;
+     --radius-button: 8px;
+
+    /* Таблицы */
+     --table-row-height: 48px;
+     --table-border: #e2e4e8;
+
+    /* Шапка */
+    --header-height: 64px;
+
+    /* Sidebar */
+     --sidebar-width: 260px;
+}
+
+
+/* весь экран — светло-серый фон */
 .login-page {
   background-color: #f0f2f5;
   min-height: 100vh;
@@ -94,14 +140,7 @@
   text-align: left;
 }
 
-/* Закругленный квадратик под логотип (пустой) */
-.logo-placeholder {
-  width: 64px;
-  height: 64px;
-  background-color: #e8eaed;
-  border-radius: 16px;
-  flex-shrink: 0;
-}
+
 
 .logo-block h2 {
   font-size: 24px;
@@ -235,7 +274,11 @@
 }
 
 .info-image {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
   margin-bottom: 24px;
+  border-radius: 12px;
 }
 
 .info-emoji {
