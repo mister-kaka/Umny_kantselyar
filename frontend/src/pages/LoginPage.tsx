@@ -1,8 +1,55 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import './LoginPage.css';
 
 const LoginPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  // Сбрасываем ошибки
+  setEmailError('');
+  setPasswordError('');
+  setLoginError('');
+
+  let hasError = false;
+
+  // проверка почты
+  if (!email) {
+    setEmailError('Введите email');
+    hasError = true;
+  } else if (!email.includes('@')) {
+    setEmailError('Неверный формат email');
+    hasError = true;
+  }
+
+  // проверка пароля
+  if (!password) {
+    setPasswordError('Введите пароль');
+    hasError = true;
+  } else if (password.length < 4) {
+    setPasswordError('Пароль должен быть не менее 4 символов');
+    hasError = true;
+  }
+
+  // Если нет ошибок формата - проверяем логин и пароль
+  if (!hasError) {
+    const validEmail = "admin@example.ru";
+    const validPassword = "admin123";
+    
+    if (email !== validEmail || password !== validPassword) {
+      setLoginError('Неверный email или пароль');
+    }
+  }
+};
+
+
   return (
     <div className="login-page">
       <div className="login-left">
@@ -18,16 +65,44 @@ const LoginPage = () => {
             </h2>
             <h3>Автоматизация обработки входящих документов с помощью ИИ</h3>
           </div>
-          <form>
-            <div className="form-group">
-              <label>Электронная почта</label>
-              <input type="email" placeholder="йоу@example.ru" />
-            </div>
+          <form onSubmit={handleSubmit}>
 
-            <div className="form-group">
-              <label>Пароль</label>
-              <input type="password" placeholder="••••••••" />
-            </div>
+            
+<div className="form-group">
+  <label>Электронная почта</label>
+  <div className="input-wrapper">
+    <input
+      type="email"
+      placeholder="йоу@example.ru"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      className={emailError ? 'error-input' : ''}
+    />
+    {emailError && (
+      <div className="error-message-top-right">
+         {emailError}
+      </div>
+    )}
+  </div>
+</div>
+
+<div className="form-group">
+  <label>Пароль</label>
+  <div className="input-wrapper">
+    <input
+      type="password" 
+      placeholder="••••••••"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      className={passwordError ? 'error-input' : ''}
+    />
+    {passwordError && (
+      <div className="error-message-top-right">
+        {passwordError}
+      </div>
+    )}
+  </div>
+</div>
 
             <div className="checkbox-wrapper">
               <label>
@@ -44,10 +119,6 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
-
-
-
-        /*правая сторона*/
 
       <div className="login-right">
         <div className="info-card">
