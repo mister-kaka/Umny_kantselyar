@@ -17,7 +17,7 @@ export class Document {
     @Column({ name: 'document_type_id' })
     documentTypeId!: number;
 
-    @Column({ name: 'category_id', nullable: true })
+    @Column({ name: 'category_id', type: 'integer', nullable: true })
     categoryId!: number | null;
 
     @Column({ name: 'sender_name', length: 200 })
