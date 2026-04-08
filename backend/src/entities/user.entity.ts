@@ -8,7 +8,7 @@ export class User {
   @Column({ name: 'full_name' })
   fullName!: string;
 
-  @Column()
+  @Column({ unique: true })
   email!: string;
 
   @Column({ name: 'password_hash' })
