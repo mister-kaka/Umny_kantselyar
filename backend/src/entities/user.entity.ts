@@ -17,7 +17,7 @@ export class User {
   @Column({ name: 'role_id' })
   roleId!: number;
 
-  @Column({ name: 'department_id', nullable: true })
+  @Column({ name: 'department_id',  type: 'integer', nullable: true })
   departmentId!: number | null;  
 
   @Column({ default: 'active', length: 20 })
