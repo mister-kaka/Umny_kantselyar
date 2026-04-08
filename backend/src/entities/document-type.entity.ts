@@ -11,6 +11,6 @@ export class DocumentType {
   @Column({ length: 50, unique: true})
   code!: string;
 
-  @Column({ name: 'text', nullable: true})
+  @Column({ name: 'description', type: 'text', nullable: true})
   description!: string | null;
 }
