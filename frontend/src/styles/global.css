@@ -42,6 +42,9 @@
 
     /* Sidebar */
      --sidebar-width: 260px;
+
+    /* Additional ++*/
+    --sidebarButtAndHeaderButt-height: 42px;
 }
 
 
@@ -85,12 +88,16 @@ p {
 
 
 /*    КНОПКИ    */
-/* Кнопка с фоном (акцентная) */
+/* Кнопка с фоном (акцентная) ++*/
 .button-primary {
+  display: flex;
   background-color: var(--color-accent);
   color: #FFFFFF;           /* белый текст */
   border: none;
-  padding: 10px 20px;
+  align-items: center;
+  justify-content: center;
+  height: var(--sidebarButtAndHeaderButt-height);
+  width: var(--sidebarButtAndHeaderButt-height);
   border-radius: var(--radius-button);
   font-family: 'Inter', sans-serif;
   font-weight: 500;
@@ -104,10 +111,14 @@ p {
 
 /* Кнопка без фона (прозрачная) */
 .button-secondary {
+  display: flex;
   background-color: transparent;
   color: var(--color-accent);   /* акцентный цвет */
   border: none;
-  padding: 10px 20px;
+  align-items: center;
+  justify-content: center;
+  height: var(--sidebarButtAndHeaderButt-height);
+  width: var(--sidebarButtAndHeaderButt-height);
   border-radius: var(--radius-button);
   font-family: 'Inter', sans-serif;
   font-weight: 500;
@@ -171,7 +182,7 @@ tbody tr:hover {
 
 
 
-/*    SIDEBAR    */
+/*    SIDEBAR    ++*/
 .sidebar {
   width: var(--sidebar-width);
   background-color: var(--color-bg-surface);
@@ -180,16 +191,23 @@ tbody tr:hover {
   position: fixed;
   left: 0;
   top: 0;
-  padding-top: var(--header-height);
+  padding-top: 12px;
 }
 
-/* вкладка sidebar */
+/* вкладка sidebar ++*/
 .sidebar-item {
-  padding: 12px 20px;
-  margin: 4px 12px;
-  border-radius: 8px;
+  display: flex;
+  padding-left: 7px;
+  height: var(--sidebarButtAndHeaderButt-height);
+  width: stretch;
+  align-items: center;
+  margin: 4px 18px; 
+  border-radius: 8px; 
+  outline: none;
+  border: none; 
   cursor: pointer;
   color: var(--text-secondary);
+  background-color: white;
   transition: background-color 0.2s ease;
 }
 
@@ -207,7 +225,7 @@ tbody tr:hover {
 
 
 
-/*    HEADER    */
+/*    HEADER    ++*/
 .header {
   height: var(--header-height);
   background-color: var(--color-bg-surface);
@@ -215,10 +233,10 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0px 24px;
   position: fixed;
   top: 0;
-  left: 0;
+  left: var(--sidebar-width);
   right: 0;
   z-index: 100;
 }
@@ -334,4 +352,53 @@ ul, ol {
 /*      Поля ввода      */
 input, textarea, select {
   font-family: 'Inter', sans-serif;
+}
+
+/*     Поиск     ++*/
+.Search{
+  display: flex;
+  flex: 1;
+  height: var(--sidebarButtAndHeaderButt-height);
+  min-width: 24px;
+  max-width: none;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  background-color: rgba(129, 216, 208, 0.1);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-button);
+  padding-left: 12px;
+  margin-right: 24px;
+}
+
+.Search-icon {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+.Search-input {
+  background-color: transparent;
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+  margin-left: 36px;
+}
+
+.Search-input:focus {
+  outline: none;
+}
+
+.Search:focus-within {
+  border-color: var(--color-accent); 
+  box-shadow: 0 0 0 2px rgba(129, 216, 208, 0.2); 
+  outline: none;
+}
+
+/*    для иконок в sidebar и header(возможно ещё где то пригодиться)    ++*/
+
+.Casual-icon{
+  width: 24px;
+  margin: 5px;
+  height: 24px;
 }
