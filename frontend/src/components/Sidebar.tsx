@@ -1,18 +1,19 @@
 import React, { useState } from "react";
 import "../styles/global.css"
+import { NavLink } from 'react-router-dom';
 
 const Sidebar = () => {
   const [selectedButton, setSelectedButton] = useState<string>("Главная");
 
   const menuItems = [
-    "Главная",
-    "Входящие документы",
-    "Очередь проверки",
-    "Маршрутизация",
-    "Подразделения",
-    "Аналитика",
-    "Настройки",
-    "Уведомления",
+    {path: "../SubPages/MainMenu", label: "Главная"},
+    {path: "../SubPages/IncomingD", label: "Входящие документы"},
+    {path: "../SubPages/Verification", label: "Очередь проверки"},
+    {path: "../SubPages/Routing", label: "Маршрутизация"},
+    {path: "../SubPages/Departaments", label: "Подразделения"},
+    {path: "../SubPages/Analytics", label: "Аналитика"},
+    {path: "../SubPages/Settings", label: "Настройки"},
+    {path: "../SubPages/Notifications", label: "Уведомления"},
   ];
 
   return (
@@ -28,13 +29,13 @@ const Sidebar = () => {
         </div>
         <div style={{marginTop: "33.5px"}}>
           {menuItems.map((item) => (
-            <button
-              key={item}
-              className={`sidebar-item ${selectedButton === item ? "active" : ""}`}
-              onClick={() => setSelectedButton(item)}>
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({isActive}) => `sidebar-item ${isActive ? "active" : ""}`}>
               <img src="" className="Casual-icon" alt="" />
-              {item}
-            </button>
+              {item.label}
+            </NavLink>
           ))}
         </div>
       </div>
