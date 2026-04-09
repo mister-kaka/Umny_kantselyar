@@ -107,13 +107,13 @@ INSERT INTO document_categories (name, code, description) VALUES
 ('Финансовые документы', 'financial_docs', 'Документы, связанные с финансами и оплатами');
 
 INSERT INTO users (full_name, email, password_hash, role_id, department_id, status) VALUES 
-('Москалева Александра', 'alexandra@umny-kan.ru', 'admin123', 1, 1, 'active'),
-('Нехланова Алина', 'alina@umny-kan.ru', 'user123', 2, 5, 'active'),
-('Мельникова Виолетта', 'violetta@umny-kan.ru', 'user123', 2, 2, 'active'),
-('Ефанов Егор', 'egor@umny-kan.ru', 'user123', 2, 2, 'active'),
-('Мейсарош Карина', 'karina@umny-kan.ru', 'user123', 2, 4, 'active'),
-('Мотовилова Мария', 'maria.m@umny-kan.ru', 'user123', 2, 6, 'active'),
-('Начинова Мария', 'maria.n@umny-kan.ru', 'admin123', 1, 1, 'active');
+('Москалева Александра', 'alexandra@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', 1, 1, 'active'),
+('Нехланова Алина', 'alina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 5, 'active'),
+('Мельникова Виолетта', 'violetta@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 2, 'active'),
+('Ефанов Егор', 'egor@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 2, 'active'),
+('Мейсарош Карина', 'karina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 4, 'active'),
+('Мотовилова Мария', 'maria.m@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 6, 'active'),
+('Начинова Мария', 'maria.n@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', 1, 1, 'active');
 
 INSERT INTO documents (registration_number, title, received_date, document_type_id, category_id, sender_name, current_status, confidence_score, created_by) VALUES 
 ('ВХ-2026-001', 'Договор на поставку оборудования', '2026-04-01', 1, 3, 'ООО "ТехноПоставка"', 'in_review', 0.95, 1),
