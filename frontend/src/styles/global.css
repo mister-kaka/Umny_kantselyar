@@ -42,6 +42,17 @@
 
     /* Sidebar */
      --sidebar-width: 260px;
+
+    /* ошибки */
+    --color-error: #d93025;
+    --color-border-error: #d93025;
+
+    --color-label: #202124;
+    --color-checkbox-text: #464646;
+
+    --color-footer-text: #717171;
+    --color-border-light: #e1e1e1;
+    --color-placeholder: #dadce0;
 }
 
 
