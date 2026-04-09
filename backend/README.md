@@ -16,6 +16,7 @@ DB_USER=postgres
 DB_PASSWORD=12345
 DB_NAME=umny_kan_db
 PORT=3000
+JWT_SECRET=your_secret_key_here //любой секретный ключ
 
 Важно: .env - твои личные настройки (не в Git), как должен выглядеть файл .evn можно посмотреть в файле .env.exmple
 
