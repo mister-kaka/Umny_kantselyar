@@ -16,9 +16,9 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="sidebar" style={{display:"grid", paddingTop: "12px"}}>
+    <div className="sidebar" style={{display:"grid"}}>
       <div>
-        <div style={{margin: "12px"}}>
+        <div style={{margin: "18px"}}>
           <h3>
             Умный Канцеляр
           </h3>
@@ -26,24 +26,26 @@ const Sidebar = () => {
             Автоматизация обработки документов
           </h6>
         </div>
-        {menuItems.map((item) => (
-          <button style={{border: "none", width: "stretch"}}
-            key={item}
-            className={`sidebar-item ${selectedButton === item ? "active" : ""}`}
-            onClick={() => setSelectedButton(item)}>
-            <img src="" style={{ width: "10px", height: "10px" }} alt="" />
-            {item}
-          </button>
-        ))}
+        <div style={{marginTop: "33.5px"}}>
+          {menuItems.map((item) => (
+            <button
+              key={item}
+              className={`sidebar-item ${selectedButton === item ? "active" : ""}`}
+              onClick={() => setSelectedButton(item)}>
+              <img src="" className="Casual-icon" alt="" />
+              {item}
+            </button>
+          ))}
+        </div>
       </div>
-      <div style={{height: "55px", borderTop: "1px solid var(--border-color)"}}>
-        <button style={{border: "none", width: "stretch"}}
+      <div style={{height: "50px", borderTop: "1px solid var(--border-color)", paddingTop: "16px"}}>
+        <button
           onClick={() => { }}
           className="sidebar-item">
-          <img src="" style={{ width: "10px", height: "10px" }} alt="" />
+          <img src="" className="Casual-icon" alt="" />
           Выход из системы
         </button>
-        <h6 className="text-secondary" style={{margin: "12px"}}>
+        <h6 className="text-secondary" style={{margin: "15px"}}>
           Версия 1.0.2<br />© 2026 Умный Канцеляр
         </h6>
       </div>
