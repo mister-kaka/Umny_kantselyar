@@ -1,46 +1,64 @@
-# Getting Started with Create React App
+# Frontend для Умного Канцеляра
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Быстрый старт проекта: 
 
-## Available Scripts
+ВАЖНО: для ПОЛНОЦЕННОГО запуска проекта, необходимо поднять и бэкенд и фронтенд.
 
-In the project directory, you can run:
 
-### `npm start`
+### 1. Установка зависимостей 
+cd frontend
+npm install
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 2. Запуск фронтенда
+npm start
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Приложение будет доступно по адресу:    http://localhost:3000
 
-### `npm test`
+## Требования: 
+- Node.js 18 и выше;
+- npm 9 и выше
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Проверка работоспособности
+- http://localhost:3000  (при npm start открывается автоматически):
+    Пустая страница.
+- http://localhost:3000/login
+    Должна открыться страница логина
+- http://localhost:3000/dashboard
+    Должна открыться страница дашборда (Главная)
 
-### `npm run build`
+Важно: пока переход с авторизацией со страницы логина на страницу дашборда не осуществлен.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Полезные команды
+- npm start    // запуск в режиме разработки
+- Ctrl + C     // остановка процесса npm start
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Текущий статус части фронтенда
+1. Уже готово и работает:
+- Создан базовый каркас React-приложения, настроен TypeScript
+- Настроен роутинг:
+    1. Добавлена страница логина (в процессе доработки)
+    2. Добавлена страница дашборда (заглушка, в процессе)
+- Добавлены общие компоненты
+- Добавлены UI-правила: CSS-переменные и дизайн в Figma
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+ЛОГИН:
+- Добавлена верстка страницы логина
+- Добавлены состояния
+- Добавлена валидация формы и обработка отправки
 
-### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+2. В процессе (Часть Алины Нехлановой):
+- Доработка страницы логина (работа со стилями)
+- Подключение к API (отправка на бэкенд)
+- Переход на дашборд после успешного входа
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3. В процессе (часть Егора Ефанова):
+- Верстка главной страницы дашборда
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+5. В процессе (часть Александры Москалевой):
+- Сборка layout дашборда
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+4. В процессе (часть Виолетты Мельниковой и Марии Мотовиловой):
+- Адаптив страницы логина
+- Адаптив страницы дашборда
+- Глобальные адаптивные стили
