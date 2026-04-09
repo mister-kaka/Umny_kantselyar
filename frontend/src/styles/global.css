@@ -48,7 +48,6 @@
 }
 
 
-
 /*  Базовые стили  */
 
 * {
@@ -207,6 +206,7 @@ tbody tr:hover {
   border: none; 
   cursor: pointer;
   color: var(--text-secondary);
+  font-size: 14px;
   background-color: white;
   transition: background-color 0.2s ease;
 }
@@ -363,7 +363,7 @@ input, textarea, select {
   max-width: none;
   align-items: center;
   font-family: 'Inter', sans-serif;
-  background-color: rgba(129, 216, 208, 0.1);
+  background-color: var(--color-bg-page);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-button);
   padding-left: 12px;
