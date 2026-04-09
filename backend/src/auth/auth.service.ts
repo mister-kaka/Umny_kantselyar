@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 import { User } from '../entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 
@@ -25,7 +26,8 @@ export class AuthService {
       throw new HttpException('Пользователь не найден', HttpStatus.UNAUTHORIZED);
     }
 
-    if (user.passwordHash !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
       throw new HttpException('Неверный пароль', HttpStatus.UNAUTHORIZED);
     }
 
