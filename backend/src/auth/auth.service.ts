@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
@@ -20,11 +20,11 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new Error('Пользователь не найден');
+      throw new HttpException('Пользователь не найден', HttpStatus.UNAUTHORIZED);
     }
 
     if (user.passwordHash !== password) {
-      throw new Error('Неверный пароль');
+      throw new HttpException('Неверный пароль', HttpStatus.UNAUTHORIZED);
     }
 
     return {
