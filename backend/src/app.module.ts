@@ -11,6 +11,7 @@ import { DocumentType } from './entities/document-type.entity';
 import { DocumentCategory } from './entities/document-category.entity';
 import { Document } from './entities/document.entity';
 import { DocumentRoute } from './entities/document-route.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -42,6 +43,8 @@ import { DocumentRoute } from './entities/document-route.entity';
       }),
       inject: [ConfigService],
     }),
+
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
