@@ -5,8 +5,17 @@ export class RecentDocumentDto {
   date!: Date;
 }
 
+export class DepartmentRouteStatusDto {
+  departmentId!: number;
+  departmentName!: string;
+  routeStatus!: string;
+  count!: number;
+}
+
 export class DashboardResponseDto {
   totalDocuments!: number;
   inProgress!: number;
+  pendingCheck!: number;
   recentDocuments!: RecentDocumentDto[];
+   departmentRouteStatuses!: DepartmentRouteStatusDto[];
 }
