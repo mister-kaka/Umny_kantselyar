@@ -4,9 +4,10 @@ import { DashboardService } from './dashboard.service';
 import { DashboardController } from './dashboard.controller';
 import { Document } from '../entities/document.entity';
 import { DocumentRoute } from '../entities/document-route.entity';
+import { Department } from '../entities/department.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Document, DocumentRoute])],
+  imports: [TypeOrmModule.forFeature([Document, DocumentRoute, Department])],
   providers: [DashboardService],
   controllers: [DashboardController]
 })

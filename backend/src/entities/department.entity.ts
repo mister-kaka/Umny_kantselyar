@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { DocumentRoute } from './document-route.entity';
 
 @Entity('departments')
 export class Department {
@@ -13,4 +14,7 @@ export class Department {
 
   @Column({ name: 'is_active', default: true })
   isActive!: boolean;
+
+  @OneToMany(() => DocumentRoute, (documentRoute) => documentRoute.department)
+  documentRoutes!: DocumentRoute[];
 }

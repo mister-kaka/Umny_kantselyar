@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Department } from './department.entity';
 
 @Entity('document_routes')
 export class DocumentRoute {
@@ -19,5 +20,9 @@ export class DocumentRoute {
 
   @Column({ name: 'routed_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   routedAt!: Date;
+
+  @ManyToOne(() => Department, (department) => department.documentRoutes)
+  @JoinColumn({ name: 'department_id' })
+  department!: Department;
 }
 
