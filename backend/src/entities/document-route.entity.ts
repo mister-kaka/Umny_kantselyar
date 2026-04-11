@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Department } from './department.entity';
+import { Document } from './document.entity';
 
 @Entity('document_routes')
 export class DocumentRoute {
@@ -24,5 +25,9 @@ export class DocumentRoute {
   @ManyToOne(() => Department, (department) => department.documentRoutes)
   @JoinColumn({ name: 'department_id' })
   department!: Department;
+
+  @ManyToOne(() => Document, (document) => document.documentRoutes)
+  @JoinColumn({ name: 'document_id' })
+  document!: Document;
 }
 
