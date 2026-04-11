@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Document } from './document.entity';
 
 @Entity('document_types')
 export class DocumentType {
@@ -13,4 +14,7 @@ export class DocumentType {
 
     @Column({ name: 'description', type: 'text', nullable: true})
     description!: string | null;
+
+    @OneToMany(() => Document, (doc) => doc.documentType)
+    documents!: Document[];
 }
