@@ -3,8 +3,8 @@
 ## Быстрый запуск проекта (части бека):
 
 ### 1. Установка зависимостей
-cd backend
-npm install
+- cd backend
+- npm install
 
 ### 2. Настройка окружения
 cp .env.example .env 
@@ -21,19 +21,20 @@ JWT_SECRET=your_secret_key_here //любой секретный ключ
 Важно: .env - твои личные настройки (не в Git), как должен выглядеть файл .evn можно посмотреть в файле .env.exmple
 
 ### 3. Запуск PostgreSQL в Docker
-docker run --name umny_kan_postgres -e POSTGRES_PASSWORD=12345 -e POSTGRES_USER=postgres -e POSTGRES_DB=umny_kan_db -p 5432:5432 -d postgres:15
+- docker run --name umny_kan_postgres -e POSTGRES_PASSWORD=12345 -e POSTGRES_USER=postgres -e POSTGRES_DB=umny_kan_db -p 5432:5432 -d postgres:15
 
  Требования:
 - Установленный Docker Desktop
 - PostgreSQL 15 (запускается в Docker)
   
 ### 4. Инициализация базы данных (только при первом запуске)
-Get-Content src/db/seed.sql | docker exec -i umny_kan_postgres psql -U postgres -d umny_kan_db 
+- docker cp src/db/seed.sql umny_kan_postgres:/seed.sql
+- docker exec -it umny_kan_postgres psql -U postgres -d umny_kan_db -c "\encoding UTF8" -f /seed.sql
 
 ### 5. Запуск бэкенда
-npm run start:dev
+- npm run start:dev
 
-## Проверка работоспособности 
+### Проверка работоспособности 
 Открой браузер: http://localhost:3000 - должна появиться надпись "Hello World!"
 После инициализации в базе данных будут:
 - 7 таблиц (roles, users, departments, document_types, document_categories, documents, document_routes)
@@ -46,6 +47,9 @@ npm run start:dev
 - docker ps // Проверить, что контейнер запущен 
 - docker exec -it umny_kan_postgres psql -U postgres -d umny_kan_db -c "\dt" // Посмотреть список таблиц
 - docker exec -it umny_kan_postgres psql -U postgres -d umny_kan_db // Подключиться к PostgreSQL внутри контейнера
+- docker stop umny_kan_postgres // Остановить контейнер
+- docker start umny_kan_postgres // Запустить остановленный контейнер
+- docker rm umny_kan_postgres // Удалить контейнер 
 
 ## Текущий статус части бекэнда
 1. Уже готово и работает:
@@ -54,12 +58,10 @@ npm run start:dev
 - Тестовые данные загружены
 - TypeORM подключён и настроен
 - Все 7 сущностей с корректными типами
-- Бэкенд запускается без ошибок, эндпоинт GET / работает
-
-2. В процессе (часть Начинова Мария):
-- Модуль Auth с эндпоинтом /auth/login 
-- Модуль Dashboard с эндпоинтом /dashboard/data
-- Настройка CORS (фронт пока не может стучаться к бэку)
+- Бэкенд запускается без ошибок
+- Модуль Auth с эндпоинтом POST /auth/login (JWT + bcrypt)
+- Модуль Dashboard с защищённым эндпоинтом GET /dashboard/data
+- CORS настроен (фронт может стучаться к бэку)
 
 3. В процессе (часть Мейсарош Карины):
 - Написание API-функций для фронтенда (login, getDashboardData)

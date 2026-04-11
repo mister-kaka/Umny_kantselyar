@@ -12,6 +12,7 @@ import { DocumentCategory } from './entities/document-category.entity';
 import { Document } from './entities/document.entity';
 import { DocumentRoute } from './entities/document-route.entity';
 import { AuthModule } from './auth/auth.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -45,6 +46,8 @@ import { AuthModule } from './auth/auth.module';
     }),
 
     AuthModule,
+
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
