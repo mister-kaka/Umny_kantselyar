@@ -25,8 +25,9 @@
     --text-secondary: #4b4b4b;               /* подтема, второстепенный текст */
     --text-tertiary: #696969;                /* вводные данные (статистика, метаданные) */
 
-    /* Отступы */
-    --spacing-card: 20px;
+    /* Отступы ++*/
+    --margin-card: 10px;
+    --padding-card: 26px;
     --spacing-element: 16px;
 
     /* Скругления */
@@ -97,6 +98,8 @@ p {
   justify-content: center;
   height: var(--sidebarButtAndHeaderButt-height);
   width: var(--sidebarButtAndHeaderButt-height);
+  min-width: var(--sidebarButtAndHeaderButt-height);
+  min-height: var(--sidebarButtAndHeaderButt-height);
   border-radius: var(--radius-button);
   font-family: 'Inter', sans-serif;
   font-weight: 500;
@@ -108,7 +111,11 @@ p {
   background-color: var(--color-accent-hover);  /* темнее при наведении */
 }
 
-/* Кнопка без фона (прозрачная) */
+.button-primary:focus{
+  outline: none;
+}
+
+/* Кнопка без фона (прозрачная) ++*/
 .button-secondary {
   display: flex;
   background-color: transparent;
@@ -118,6 +125,8 @@ p {
   justify-content: center;
   height: var(--sidebarButtAndHeaderButt-height);
   width: var(--sidebarButtAndHeaderButt-height);
+  min-width: var(--sidebarButtAndHeaderButt-height);
+  min-height: var(--sidebarButtAndHeaderButt-height);
   border-radius: var(--radius-button);
   font-family: 'Inter', sans-serif;
   font-weight: 500;
@@ -130,15 +139,57 @@ p {
   background-color: rgba(129, 216, 208, 0.1); /* лёгкий фон при ховере (опционально) */
 }
 
+.button-secondary:focus{
+  outline: none;
+}
+
+/*    Кнопка скрытия сайдбара++    */
+.button-hide {
+  display: flex;
+  background-color: transparent;
+  color: var(--color-accent);   /* акцентный цвет */
+  border: none;
+  align-items: center;
+  justify-content: center;
+  height: var(--sidebarButtAndHeaderButt-height);
+  width: var(--sidebarButtAndHeaderButt-height);
+  min-width: var(--sidebarButtAndHeaderButt-height);
+  min-height: var(--sidebarButtAndHeaderButt-height);
+  border-radius: 50px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-hide:hover {
+  color: var(--color-accent-hover);  /* темнее при наведении */
+  background-color: rgba(129, 216, 208, 0.1); /* лёгкий фон при ховере (опционально) */
+}
+
+.button-hide:focus{
+  outline: none;
+}
 
 
-/*    КАРТОЧКИ    */
+
+/*    КАРТОЧКИ    ++*/
 .card {
+  display: flexbox;
   background-color: var(--color-bg-surface);
   border-radius: var(--radius-card);
-  padding: var(--spacing-card);
-  box-shadow: var(--shadow-card);
-  margin-bottom: var(--spacing-card);
+  padding: var(--padding-card);
+  box-shadow: 0 0px 5px rgba(0, 0, 0, 0.1);
+  margin: var(--margin-card);
+  min-width: 0;
+  overflow-wrap: break-word; 
+  word-break: break-word;
+  transition: 0.15s;
+}
+
+.card:hover{
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+  transition: 0.15s;
 }
 
 /*    ТАБЛИЦЫ    */
@@ -184,6 +235,7 @@ tbody tr:hover {
 /*    SIDEBAR    ++*/
 .sidebar {
   width: var(--sidebar-width);
+  grid-template-rows: 1fr auto;
   background-color: var(--color-bg-surface);
   border-right: 1px solid var(--border-color);
   height: 100vh;
@@ -191,6 +243,30 @@ tbody tr:hover {
   left: 0;
   top: 0;
   padding-top: 12px;
+  transition: width 0.2s ease;
+}
+
+
+/*     Сжатый сайдбар++    */
+.sidebar.collapsed{
+  width: 78px;
+  transition: width 0.2s ease;
+}
+
+/*    Нижний блок сайдбара++   */
+.sidebar-footer {
+  display: block;
+  height: auto;
+  min-height: 50px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+  transition: width 0.2s ease, border-top 0.2s ease;
+  overflow: hidden;
+}
+
+.sidebar-footer.collapsed {
+  width: 78px;
+  transition: width 0.2s ease;
 }
 
 /* вкладка sidebar ++*/
@@ -208,7 +284,7 @@ tbody tr:hover {
   color: var(--text-secondary);
   font-size: 14px;
   background-color: white;
-  transition: background-color 0.2s ease;
+  transition: margin 0.2s ease, padding 0.2s ease, justify-content 0.2s ease, width 0.2s;
 }
 
 /* активная вкладка sidebar */
@@ -221,6 +297,30 @@ tbody tr:hover {
 /* Ховер для неактивных вкладок sidebar */
 .sidebar-item:not(.active):hover {
   background-color: rgba(129, 216, 208, 0.1);
+}
+
+/*   Сжатые кнопки сайдбара++    */
+.sidebar.collapsed .sidebar-item{
+  align-content: center;
+  padding-left: 4px;
+  transition: 0.2s ease;
+}
+
+/*     Текст кнопки: плавное появление/исчезновение++     */
+.item-label {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.2s ease, width 0.2s ease, margin-left 0.2s ease;
+  opacity: 1;
+  width: auto;
+  margin-left: 8px;
+}
+
+.sidebar.collapsed .item-label {
+  opacity: 0;
+  width: 0;
+  margin-left: 0;
 }
 
 
@@ -238,14 +338,30 @@ tbody tr:hover {
   top: 0;
   left: var(--sidebar-width);
   right: 0;
+  transition: left 0.2s ease;
   z-index: 100;
 }
 
-/*    ОСНОВНОЙ КОНТЕНТ    */
+
+/*     Разжатый header++   */
+
+.header.collapsed{
+  left: 78px;
+  transition: left 0.2s ease;
+}
+
+/*    ОСНОВНОЙ КОНТЕНТ++    */
 .main-content {
   margin-left: var(--sidebar-width);
   margin-top: var(--header-height);
-  padding: 24px;
+  padding: 14px;
+  transition: margin-left 0.2s ease;
+}
+
+/*    Разжатый main++   */
+.main-content.collapsed{
+  margin-left: 78px;
+  transition: margin-left 0.2s ease;
 }
 
 /*    СТАТУСЫ    */
@@ -359,7 +475,7 @@ input, textarea, select {
   display: flex;
   flex: 1;
   height: var(--sidebarButtAndHeaderButt-height);
-  min-width: 24px;
+  min-width: 52px;
   max-width: none;
   align-items: center;
   font-family: 'Inter', sans-serif;
