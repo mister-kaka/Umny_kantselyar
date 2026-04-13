@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import './LoginPage.css';
 
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -121,7 +122,7 @@ const LoginPage = () => {
 
       <div className="login-right">
         <div className="info-card">
-          <img src="https://icon-icons.com/ko/icon/happy-emoji-smile-document-page/218637" alt="картинка" className="info-image" />
+          <img src="" alt="картинка" className="info-image" />
           <h2>Умная обработка документов</h2>
           <p>Автоматическое распознавание, классификация и маршрутизация входящих документов с использованием искусственного интеллекта</p>
         </div>

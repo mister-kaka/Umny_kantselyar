@@ -1,32 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap');
+@import url('../styles/global.css');
 
-:root {
-    --color-bg-page: #FAFBFC;
-    --color-bg-surface: #ffffff;
-    --border-color: #E5E5E5;
-    --color-accent: #81D8D0;
-    --color-accent-hover: #6BCCC3;
-    --color-accent-light: #CDEFEC;
-    --color-status-loaded: #7EE29F;
-    --color-status-rejected: #E87373;
-    --color-status-low-confidence: #FAB25F;
-    --color-status-data-refinement: #f6c681;
-    --color-status-analysis: #C27EE2;
-    --color-status-assigned: #7EADE2;
-    --color-status-clarify: #BBDFFB;
-    --color-status-archived: #979797;
-    --text-primary: #000000;
-    --text-secondary: #4b4b4b;
-    --text-tertiary: #696969;
-    --spacing-card: 20px;
-    --spacing-element: 16px;
-    --radius-card: 12px;
-    --radius-button: 8px;
-    --table-row-height: 48px;
-    --table-border: #e2e4e8;
-    --header-height: 64px;
-    --sidebar-width: 260px;
-}
+
 
 * {
     margin: 0;
@@ -88,11 +63,11 @@ p {
 
 /* Ошибки */
 .error-input {
-    border-color: #d93025 !important;
+    border-color: var(--color-border-error, #d93025);
 }
 
 .error-message {
-    color: #d93025;
+    color: var(--color-error, #d93025);
     font-size: 12px;
     margin-top: 6px;
     margin-bottom: 0;
@@ -109,7 +84,7 @@ p {
     top: -24px;
     right: 0;
     left: auto;
-    color: #d93025;
+    color: var(--color-error, #d93025);
     font-size: 11px;
     padding: 4px 8px;
     border-radius: 4px;
@@ -144,7 +119,7 @@ p {
     font-size: 13px;
     font-weight: 400;
     margin: 4px 0 0 0;
-    color: #5f6368;
+    color: var(--color-checkbox-text, #464646);
 }
 
 /* Белая карточка с формой */
@@ -172,7 +147,7 @@ p {
     width: 100%;
     padding: 12px 14px;
     font-size: 16px;
-    border: 1px solid #dadce0;
+    border: 1px solid var(--color-placeholder, #dadce0);
     border-radius: var(--radius-button, 8px);
     box-sizing: border-box;
     transition: border-color 0.2s;
@@ -197,7 +172,7 @@ p {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #464646;
+    color: var(--color-checkbox-text, #464646);
     cursor: pointer;
 }
 
@@ -220,7 +195,7 @@ p {
 .checkbox-wrapper input[type="checkbox"]:checked::after {
     content: '✓';
     position: absolute;
-    color: white;
+    color: var(--color-bg-surface, #ffffff);
     font-size: 12px;
     top: 50%;
     left: 50%;
@@ -261,10 +236,10 @@ p {
 .footer-text {
     text-align: center;
     font-size: 12px;
-    color: #717171;
+    color: var(--color-footer-text, #717171);
     margin-top: 32px;
     padding-top: 16px;
-    border-top: 1px solid #e1e1e1;
+    border-top: 1px solid var(--color-border-light, #e1e1e1);
 }
 
 /* Правая часть */
@@ -292,7 +267,7 @@ p {
 .info-emoji {
     font-size: 64px;
     display: inline-block;
-    background: rgba(129, 216, 208, 0.2);
+    background: var(--color-checkbox-text, #464646);
     padding: 16px;
     border-radius: 60px;
 }
