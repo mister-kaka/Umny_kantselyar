@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import './LoginPage.css';
+import './styles/LoginPage.css';
 
 
 const LoginPage = () => {
@@ -63,7 +63,7 @@ const LoginPage = () => {
               <span className="square"></span>
             Умный Канцеляр
             </h2>
-            <h3>Автоматизация обработки входящих документов с помощью ИИ</h3>
+            <h3 className="text-primary">Автоматизация обработки входящих документов с помощью ИИ</h3>
           </div>
           <form onSubmit={handleSubmit}>
 
