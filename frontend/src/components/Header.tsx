@@ -1,11 +1,14 @@
 import "../styles/global.css"
 import React, { useState } from "react";
+import "../contexts/SidebarContexts"
+import { useSidebar } from "../contexts/SidebarContexts";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onSearch }) => {
+  const { collapsed } = useSidebar();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -14,7 +17,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
     if (onSearch) onSearch(value);
   };
   return (
-    <div className="header">
+    <div className={`header ${collapsed ? 'collapsed' : ''}`}>
       <div className="Search">
         <img src="" className="Search-icon" alt="" />
         <input 
@@ -25,15 +28,15 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
         className="Search-input">
         </input>
       </div>
-      <div className="button-primary" style={{marginRight: "11px"}}>
+      <button className="button-primary" style={{marginRight: "11px"}}>
         <img src="" className="Casual-icon" alt="" />
-      </div>
-      <div className="button-secondary" style={{border: " 1px solid var(--border-color)", marginRight: "11px"}}>
+      </button>
+      <button className="button-secondary" style={{border: " 1px solid var(--border-color)", marginRight: "11px"}}>
         <img src="" className="Casual-icon" alt="" />
-      </div>
-      <div className="button-secondary" style={{marginRight: "11px"}}>
+      </button>
+      <button className="button-secondary" style={{marginRight: "11px"}}>
         <img src="" className="Casual-icon" alt="" />
-      </div>
+      </button>
       <div 
       style={{
         display: "block",
