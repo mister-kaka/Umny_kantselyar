@@ -2,6 +2,7 @@ import "../styles/global.css"
 import React, { useState } from "react";
 import "../contexts/SidebarContexts"
 import { useSidebar } from "../contexts/SidebarContexts";
+import "../styles/Dashboard.css"
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -28,28 +29,20 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
         className="Search-input">
         </input>
       </div>
-      <button className="button-primary" style={{marginRight: "11px"}}>
+      <button className="button-primary">
         <img src="" className="Casual-icon" alt="" />
       </button>
-      <button className="button-secondary" style={{border: " 1px solid var(--border-color)", marginRight: "11px"}}>
+      <button className="button-secondary-with-border">
         <img src="" className="Casual-icon" alt="" />
       </button>
-      <button className="button-secondary" style={{marginRight: "11px"}}>
+      <button className="button-secondary">
         <img src="" className="Casual-icon" alt="" />
       </button>
-      <div 
-      style={{
-        display: "block",
-        alignContent: "center",
-        justifyItems: "right",
-        paddingLeft: "11px",
-        height: "var(--sidebarButtAndHeaderButt-height)",
-        borderLeft: "1px solid var(--border-color)"
-      }}>
+      <div className="profile-block">
         <h5>{}Иванов И.И.</h5>
         <p><h6 className="text-secondary">{}Администратор</h6></p>
       </div>
-      <img src="" style={{width: "38px", height: "38px", marginLeft: "11px"}} />
+      <img src="" className="profile-image" />
     </div>
   );
 };
