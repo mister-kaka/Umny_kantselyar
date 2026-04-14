@@ -9,7 +9,7 @@ import Analytics from "../components/SubPages/Analytics";
 import Settings from "../components/SubPages/Settings";
 import Notifications from "../components/SubPages/Notifications";
 import "../styles/global.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, useSidebar } from "../contexts/SidebarContexts";
 
 const DashboardContent = () => {
@@ -20,6 +20,7 @@ const DashboardContent = () => {
       <Header />
       <main className={`main-content ${collapsed ? 'collapsed' : ''}`}>
         <Routes>
+          <Route path="/" element={<Navigate to="/SubPages/MainMenu" replace />} />
           <Route path="/SubPages/MainMenu" element={<MainMenu />} />
           <Route path="/SubPages/IncomingD" element={<IncomingD />} />
           <Route path="/SubPages/Verification" element={<Verification />} />
