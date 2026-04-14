@@ -26,6 +26,7 @@
     --text-tertiary: #696969;                /* вводные данные (статистика, метаданные) */
 
     /* Отступы ++*/
+    --spacing-card: 20px;
     --margin-card: 10px;
     --padding-card: 20px;
     --spacing-element: 16px;
@@ -54,8 +55,8 @@
     --color-footer-text: #717171;
     --color-border-light: #e1e1e1;
     --color-placeholder: #dadce0;
-
 }
+
 
 
 /*  Базовые стили  */
