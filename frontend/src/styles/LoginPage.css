@@ -304,3 +304,326 @@ p {
   position: relative;
   padding-left: 20;
 }
+/* ===== АДАПТИВНЫЙ ДИЗАЙН ===== */
+/* Планшеты и небольшие ноутбуки (1024px и меньше) */
+@media (max-width: 1024px) {
+    .login-page {
+        gap: 40px;
+        padding: 20px;
+    }
+    
+    .login-left {
+        max-width: 450px;
+    }
+    
+    .login-card {
+        padding: 28px 30px;
+    }
+    
+    .info-card {
+        padding: 32px 24px;
+    }
+}
+
+/* Планшеты в портретной ориентации (768px - 1023px) */
+@media (max-width: 900px) {
+    .login-page {
+        flex-direction: column;
+        justify-content: center;
+        gap: 30px;
+        padding: 40px 20px;
+    }
+    
+    .login-left {
+        max-width: 500px;
+        width: 100%;
+    }
+    
+    .login-right {
+        max-width: 500px;
+        width: 100%;
+    }
+    
+    .info-card {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        text-align: left;
+        padding: 30px;
+    }
+    
+    .info-card > div {
+        flex: 1;
+    }
+    
+    .info-image, .info-emoji {
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+    
+    .info-emoji {
+        font-size: 48px;
+        padding: 12px;
+    }
+    
+    .info-card h2 {
+        font-size: 22px;
+        margin-bottom: 12px;
+    }
+}
+
+/* Мобильные устройства (600px - 767px) */
+@media (max-width: 767px) {
+    .header {
+        padding: 0 16px;
+    }
+    
+    .login-page {
+        gap: 24px;
+        padding: 30px 16px;
+    }
+    
+    .login-card {
+        padding: 24px 20px;
+    }
+    
+    .logo-block {
+        margin-bottom: 24px;
+        justify-content: center;
+    }
+    
+    .logo-block h2 {
+        font-size: 22px;
+    }
+    
+    .logo-block h3 {
+        font-size: 12px;
+    }
+    
+    .form-group {
+        margin-bottom: 24px;
+    }
+    
+    .form-group label {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    
+    .form-group input {
+        padding: 10px 12px;
+        font-size: 15px;
+    }
+    
+    .checkbox-wrapper {
+        font-size: 13px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .login-btn {
+        padding: 11px;
+        font-size: 15px;
+    }
+    
+    .footer-text {
+        font-size: 11px;
+        margin-top: 24px;
+        padding-top: 12px;
+    }
+    
+    .info-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 28px 20px;
+        gap: 20px;
+    }
+    
+    .info-card h2 {
+        font-size: 20px;
+    }
+    
+    .info-card p {
+        font-size: 13px;
+    }
+    
+    .info-emoji {
+        font-size: 44px;
+        padding: 10px;
+    }
+}
+
+/* Маленькие мобильные устройства (480px и меньше) */
+@media (max-width: 480px) {
+    .login-page {
+        padding: 20px 12px;
+        gap: 20px;
+        min-height: auto;
+        padding-top: calc(var(--header-height, 64px) + 20px);
+        padding-bottom: 40px;
+    }
+    
+    .login-card {
+        padding: 20px 16px;
+    }
+    
+    .logo-block {
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .square {
+        width: 28px;
+        height: 28px;
+        margin-right: 8px;
+    }
+    
+    .logo-block h2 {
+        font-size: 20px;
+    }
+    
+    .logo-block h3 {
+        font-size: 11px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+    
+    .form-group input {
+        padding: 9px 11px;
+        font-size: 14px;
+    }
+    
+    .checkbox-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .forgot-link {
+        font-size: 13px;
+    }
+    
+    .login-btn {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .footer-text {
+        font-size: 10px;
+        margin-top: 20px;
+    }
+    
+    .error-message-top-right {
+        font-size: 10px;
+        top: -20px;
+        white-space: normal;
+        text-align: right;
+    }
+    
+    .info-card {
+        padding: 24px 16px;
+    }
+    
+    .info-card h2 {
+        font-size: 18px;
+    }
+    
+    .info-emoji {
+        font-size: 36px;
+        padding: 8px;
+    }
+    
+    .list li {
+        font-size: 12px;
+    }
+}
+
+/* Очень маленькие устройства (375px и меньше) */
+@media (max-width: 375px) {
+    .login-card {
+        padding: 16px 14px;
+    }
+    
+    .logo-block h2 {
+        font-size: 18px;
+    }
+    
+    .square {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+    }
+    
+    .form-group input {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .info-card h2 {
+        font-size: 17px;
+    }
+    
+    .info-card p {
+        font-size: 12px;
+    }
+}
+
+/* Альбомная ориентация на мобильных */
+@media (max-width: 900px) and (orientation: landscape) {
+    .login-page {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 30px;
+    }
+    
+    .login-left, .login-right {
+        max-width: 45%;
+    }
+    
+    .info-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .login-page {
+        padding-top: calc(var(--header-height, 64px) + 20px);
+    }
+}
+
+/* Высокие экраны (маленькая высота) */
+@media (max-height: 700px) and (min-width: 768px) {
+    .login-page {
+        padding: 30px 20px;
+    }
+    
+    .login-card {
+        padding: 20px 30px;
+    }
+    
+    .info-card {
+        padding: 25px 20px;
+    }
+    
+    .logo-block {
+        margin-bottom: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+}
+
+/* Для экранов с высоким разрешением (Retina) */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .form-group input {
+        border-width: 0.5px;
+    }
+}
