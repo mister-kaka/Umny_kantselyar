@@ -69,7 +69,7 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: var(--color-bg-page);
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 2.5;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -78,6 +78,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   font-weight: 600;
   line-height: 1.2;
+  margin-bottom: 0.5em;
 }
 
 /*    ТЕКСТ    */
