@@ -27,7 +27,7 @@
 
     /* Отступы ++*/
     --margin-card: 10px;
-    --padding-card: 26px;
+    --padding-card: 20px;
     --spacing-element: 16px;
 
     /* Скругления */
@@ -44,8 +44,17 @@
     /* Sidebar */
      --sidebar-width: 260px;
 
-    /* Additional ++*/
-    --sidebarButtAndHeaderButt-height: 42px;
+    /* ошибки */
+    --color-error: #d93025;
+    --color-border-error: #d93025;
+
+    --color-label: #202124;
+    --color-checkbox-text: #464646;
+
+    --color-footer-text: #717171;
+    --color-border-light: #e1e1e1;
+    --color-placeholder: #dadce0;
+
 }
 
 
@@ -61,7 +70,7 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: var(--color-bg-page);
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 2.5;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -70,6 +79,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   font-weight: 600;
   line-height: 1.2;
+  margin-bottom: 0.5em;
 }
 
 /*    ТЕКСТ    */
@@ -105,6 +115,7 @@ p {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin: 5.5px;
 }
 
 .button-primary:hover {
@@ -132,6 +143,7 @@ p {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin: 5.5px;
 }
 
 .button-secondary:hover {
@@ -140,34 +152,6 @@ p {
 }
 
 .button-secondary:focus{
-  outline: none;
-}
-
-/*    Кнопка скрытия сайдбара++    */
-.button-hide {
-  display: flex;
-  background-color: transparent;
-  color: var(--color-accent);   /* акцентный цвет */
-  border: none;
-  align-items: center;
-  justify-content: center;
-  height: var(--sidebarButtAndHeaderButt-height);
-  width: var(--sidebarButtAndHeaderButt-height);
-  min-width: var(--sidebarButtAndHeaderButt-height);
-  min-height: var(--sidebarButtAndHeaderButt-height);
-  border-radius: 50px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.button-hide:hover {
-  color: var(--color-accent-hover);  /* темнее при наведении */
-  background-color: rgba(129, 216, 208, 0.1); /* лёгкий фон при ховере (опционально) */
-}
-
-.button-hide:focus{
   outline: none;
 }
 
@@ -182,21 +166,14 @@ p {
   box-shadow: 0 0px 5px rgba(0, 0, 0, 0.1);
   margin: var(--margin-card);
   min-width: 0;
-  overflow-wrap: break-word; 
-  word-break: break-word;
-  transition: 0.15s;
 }
 
-.card:hover{
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
-  transition: 0.15s;
-}
-
-/*    ТАБЛИЦЫ    */
+/*    ТАБЛИЦЫ++   */
 .table {
   width: 100%;
   border-collapse: collapse;
-  background-color: var(--bg-surface);
+  background-color: var(--color-bg-surface);
+  overflow-x: auto;
 }
 
 th, td {
@@ -205,6 +182,7 @@ th, td {
   border-bottom: 1px solid var(--table-border);
   text-align: left;
   vertical-align: middle;
+  cursor: pointer;
 }
 
 /* Заголовки таблицы */
@@ -221,6 +199,11 @@ td:first-child {
   color: var(--text-primary);
 }
 
+td:first-child:hover {
+  font-weight: 600;
+  color: var(--color-accent-hover);
+}
+
 td:not(:first-child) {
   color: var(--text-secondary);
 }
@@ -234,6 +217,7 @@ tbody tr:hover {
 
 /*    SIDEBAR    ++*/
 .sidebar {
+  display: grid;
   width: var(--sidebar-width);
   grid-template-rows: 1fr auto;
   background-color: var(--color-bg-surface);
@@ -284,7 +268,7 @@ tbody tr:hover {
   color: var(--text-secondary);
   font-size: 14px;
   background-color: white;
-  transition: margin 0.2s ease, padding 0.2s ease, justify-content 0.2s ease, width 0.2s;
+  transition: 0.2s ease;
 }
 
 /* активная вкладка sidebar */
@@ -306,7 +290,7 @@ tbody tr:hover {
   transition: 0.2s ease;
 }
 
-/*     Текст кнопки: плавное появление/исчезновение++     */
+/* Текст кнопки sidebar: плавное появление/исчезновение++ */
 .item-label {
   display: inline-block;
   white-space: nowrap;
@@ -322,7 +306,6 @@ tbody tr:hover {
   width: 0;
   margin-left: 0;
 }
-
 
 
 /*    HEADER    ++*/
@@ -468,53 +451,4 @@ ul, ol {
 /*      Поля ввода      */
 input, textarea, select {
   font-family: 'Inter', sans-serif;
-}
-
-/*     Поиск     ++*/
-.Search{
-  display: flex;
-  flex: 1;
-  height: var(--sidebarButtAndHeaderButt-height);
-  min-width: 52px;
-  max-width: none;
-  align-items: center;
-  font-family: 'Inter', sans-serif;
-  background-color: var(--color-bg-page);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-button);
-  padding-left: 12px;
-  margin-right: 24px;
-}
-
-.Search-icon {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  pointer-events: none;
-}
-
-.Search-input {
-  background-color: transparent;
-  border: none;
-  width: 100%;
-  box-sizing: border-box;
-  margin-left: 36px;
-}
-
-.Search-input:focus {
-  outline: none;
-}
-
-.Search:focus-within {
-  border-color: var(--color-accent); 
-  box-shadow: 0 0 0 2px rgba(129, 216, 208, 0.2); 
-  outline: none;
-}
-
-/*    для иконок в sidebar и header(возможно ещё где то пригодиться)    ++*/
-
-.Casual-icon{
-  width: 24px;
-  margin: 5px;
-  height: 24px;
 }
