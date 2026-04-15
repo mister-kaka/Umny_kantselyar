@@ -3,8 +3,6 @@ import "../styles/global.css"
 import "../styles/Dashboard.css"
 
 interface TableProps {
-  width?: string;
-  height?: string;
   className?: string;
   title?: React.ReactNode;
   rightTitle?: React.ReactNode;
