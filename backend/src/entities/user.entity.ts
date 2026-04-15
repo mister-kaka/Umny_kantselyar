@@ -1,4 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Role } from './role.entity';
+import { Department } from './department.entity';
+import { Document } from './document.entity';
 
 @Entity('users')
 export class User {
@@ -25,4 +28,15 @@ export class User {
 
   @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt!: Date;
+
+  @ManyToOne(() => Role)
+  @JoinColumn({ name: 'role_id' })
+  role!: Role;
+
+  @ManyToOne(() => Department)
+  @JoinColumn({ name: 'department_id' })
+  department!: Department | null;
+
+  @OneToMany(() => Document, (doc) => doc.creator)
+  createdDocuments!: Document[];
 }

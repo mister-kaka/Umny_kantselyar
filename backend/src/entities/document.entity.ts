@@ -1,4 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { DocumentType } from './document-type.entity';
+import { DocumentCategory } from './document-category.entity';
+import { User } from './user.entity';
+import { DocumentRoute } from './document-route.entity';
 
 @Entity('documents')
 export class Document {
@@ -34,4 +38,21 @@ export class Document {
 
     @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     createdAt!: Date;
+
+    @ManyToOne(() => DocumentType)
+    @JoinColumn({ name: 'document_type_id' })
+    documentType!: DocumentType;
+
+    @ManyToOne(() => DocumentCategory)
+    @JoinColumn({ name: 'category_id' })
+    category!: DocumentCategory | null;
+
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'created_by' })
+    creator!: User;
+
+    @OneToMany(() => DocumentRoute, (route) => route.document)
+    documentRoutes!: DocumentRoute[];
+
+
 }
