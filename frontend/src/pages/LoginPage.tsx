@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import './LoginPage.css';
 import { login } from '../services/api';
@@ -34,8 +33,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   if (!password) {
     setPasswordError('Введите пароль');
     hasError = true;
-  } else if (password.length < 4) {
-    setPasswordError('Пароль должен быть не менее 4 символов');
+  } else if (password.length < 6) {
+    setPasswordError('Пароль должен быть не менее 6 символов');
     hasError = true;
   }
 
@@ -64,7 +63,7 @@ if (!hasError) {
               <span className="square"></span>
             Умный Канцеляр
             </h2>
-            <h3>Автоматизация обработки входящих документов с помощью ИИ</h3>
+            <h3 className="text-primary">Автоматизация обработки входящих документов с помощью ИИ</h3>
           </div>
           <form onSubmit={handleSubmit}>
 
@@ -74,7 +73,7 @@ if (!hasError) {
   <div className="input-wrapper">
     <input
       type="email"
-      placeholder="йоу@example.ru"
+      placeholder="admin@example.ru"
       value={email}
       onChange={(e) => setEmail(e.target.value)}
       className={emailError ? 'error-input' : ''}
@@ -109,7 +108,6 @@ if (!hasError) {
               <label>
                 <input type="checkbox" /> Запомнить меня
               </label>
-              <button type="button" className="forgot-link">Забыли пароль?</button>
             </div>
 
             {loginError && <div className="error-message">{loginError}</div>}
@@ -124,14 +122,17 @@ if (!hasError) {
 
       <div className="login-right">
         <div className="info-card">
-          <img src="https://icon-icons.com/ko/icon/happy-emoji-smile-document-page/218637" alt="картинка" className="info-image" />
+          <img src="/paper.png" alt="картинка" className="info-image" />
           <h2>Умная обработка документов</h2>
           <p>Автоматическое распознавание, классификация и маршрутизация входящих документов с использованием искусственного интеллекта</p>
         </div>
-        <p>OCR и извлечение данных</p>
-        <p>Автоклассификация документов</p>
-        <p>Интеллектуальная маршрутизация</p>
-        <p>Аналитика в реальном времени</p>
+        
+        <div className="list">
+          <li>OCR и извлечение данных</li>
+          <li>Автоклассификация документов</li>
+          <li>Интеллектуальная маршрутизация</li>
+          <li>Аналитика в реальном времени</li>
+        </div>
       </div>
     </div>
   );

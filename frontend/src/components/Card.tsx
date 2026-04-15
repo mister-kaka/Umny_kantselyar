@@ -1,16 +1,31 @@
-// карта для метрик
+import React, {FC} from "react";
+import "../styles/global.css"
 
 interface CardProps {
-  title: string;
-  value: number;
-  icon?: string;
+  className?: string;
+  title?: React.ReactNode;
+  children?: React.ReactNode;
+  onClick?: () => void;
 }
 
-const Card = ({ title, value }: CardProps) => {
+const Card: FC<CardProps> =
+ ({
+    className = '',
+    title,
+    children,
+    onClick
+  }) => {
   return (
-    <div className="card">
-      <h3>{title}</h3>
-      <p>{value}</p>
+    <div style={{
+      }}
+      className={`card ${className}`}
+      onClick={onClick}>
+      <div className="card-header">
+        {title && <div className="card-title">{title}</div>}       
+      </div>
+      {children}
     </div>
   );
 };
+
+export default Card
