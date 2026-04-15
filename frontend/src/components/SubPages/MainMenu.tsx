@@ -29,182 +29,114 @@ const MainMenu = () => {
                 <img src="" className="Main-cards-image" alt="📄"/>
                 <h1>{}1,284</h1>
                 <h5 className="text-secondary">Всего входящих</h5>
-                <h6 className="text-tertiary">{}+12% за месяц</h6>
             </Card>
             <Card className="main-card">
                 <img src="" className="Main-cards-image" alt="✔️"/>
                 <h1>{}47</h1>
-                <h5 className="text-secondary">Обработано сегодня</h5>
-                <h6 className="text-tertiary">{}8 в процессе</h6>
-            </Card>
-            <Card className="main-card">
-                <img src="" className="Main-cards-image" alt="🔝"/>
-                <h1>{}92,4</h1>
-                <h5 className="text-secondary">Автоклассифицировано</h5>
-                <h6 className="text-tertiary">{}+2.1% за неделю</h6>
+                <h5 className="text-secondary">Обработано за всё время</h5>
             </Card>
             <Card className="main-card">
                 <img src="" className="Main-cards-image" alt="❕"/>
                 <h1>{}8</h1>
-                <h5 className="text-secondary">Низкая уверенность</h5>
-                <h6 className="text-tertiary">{}требуют проверки</h6>
+                <h5 className="text-secondary">Требуют проверки</h5>
             </Card>
         </div>
         <div className="tableAndSubCardsContainer">
             <Card>
                 <Table
                 title={<h3>Недавние документы</h3>}
-                rightTitle={<h4><a className="bluesrc" href="">Все документы &#8594;</a></h4>}
-                className="main-table">
+                rightTitle={<h4><a className="bluesrc" href="">Все документы &#8594;</a></h4>}>
                     <thead>
                         <tr>
-                            <th>Рег. номер</th>
-                            <th>Отправитель</th>
-                            <th>Тип документа</th>
-                            <th>Уверенность</th>
+                            <th>Номер</th>
+                            <th>Название</th>
                             <th>Статус</th>
+                            <th>Дата</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
+                            <td><span>данные</span></td>
                             <td>данные</td>
                             <td>данные</td>
-                            <td>данные</td>
-                            <td>
-                                <div className="container-for-table-bar">
-                                    <div className="progress-table-bar">
-                                        <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
-                                    </div>
-                                    <h6 className="confidence-percent">92.1%</h6>
-                                </div>
-                            </td>
                             <td>данные</td>
                         </tr>
                         <tr>
+                            <td><span>данные</span></td>
                             <td>данные</td>
                             <td>данные</td>
-                            <td>данные</td>
-                            <td>
-                                <div className="container-for-table-bar">
-                                    <div className="progress-table-bar">
-                                        <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
-                                    </div>
-                                    <h6 className="confidence-percent">92.1%</h6>
-                                </div>
-                            </td>
                             <td>данные</td>
                         </tr>
                         <tr>
+                            <td><span>данные</span></td>
                             <td>данные</td>
                             <td>данные</td>
-                            <td>данные</td>
-                            <td>
-                                <div className="container-for-table-bar">
-                                    <div className="progress-table-bar">
-                                        <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
-                                    </div>
-                                    <h6 className="confidence-percent">92.1%</h6>
-                                </div>
-                            </td>
                             <td>данные</td>
                         </tr>
                         <tr>
+                            <td><span>данные</span></td>
                             <td>данные</td>
                             <td>данные</td>
-                            <td>данные</td>
-                            <td>
-                                <div className="container-for-table-bar">
-                                    <div className="progress-table-bar">
-                                        <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
-                                    </div>
-                                    <h6 className="confidence-percent">92.1%</h6>
-                                </div>
-                            </td>
                             <td>данные</td>
                         </tr>
                         <tr>
+                            <td><span>данные</span></td>
                             <td>данные</td>
                             <td>данные</td>
-                            <td>данные</td>
-                            <td>
-                                <div className="container-for-table-bar">
-                                    <div className="progress-table-bar">
-                                        <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
-                                    </div>
-                                    <h6 className="confidence-percent">92.1%</h6>
-                                </div>
-                            </td>
                             <td>данные</td>
                         </tr>
                         <tr>
+                            <td><span>данные</span></td>
                             <td>данные</td>
                             <td>данные</td>
-                            <td>данные</td>
-                            <td>
-                                <div className="container-for-table-bar">
-                                    <div className="progress-table-bar">
-                                        <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
-                                    </div>
-                                    <h6 className="confidence-percent">92.1%</h6>
-                                </div>
-                            </td>
                             <td>данные</td>
                         </tr>
                     </tbody>
                 </Table>
             </Card>
             <div className="subCards-container">
-                <Card title={<h4>Рекомендации</h4>}>
-                    <Card title={<h5>Высокая нагрузка на Юридический отдел</h5>}
-                    className="card-in-card-medium-cortisol">
-                        <h6 className="text-tertiary">15 документов ожидают обработки более 6 часов</h6>
-                        <h6><a href="" className="bluesrc">Перераспределить &#8594;</a></h6>
+                <Card title={<h4>Статусы маршрутов по отделам</h4>}>
+                    <Card title={<h5>Управление</h5>}
+                    className="card-in-card-blue-cortisol">
+                        <h6 className="text-tertiary">3 в работе</h6>
+                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">1 завершено</h6>
                     </Card>
-                    <Card title={<h5>Низкая уверенность классификации</h5>}
-                    className="card-in-card-low-cortisol">
-                        <h6 className="text-tertiary">8 документов требуют ручной проверки</h6>
-                        <h6><a href="" className="bluesrc">Проверить &#8594;</a></h6>
+                    <Card title={<h5>Технический отдел</h5>}
+                    className="card-in-card-blue-cortisol">
+                        <h6 className="text-tertiary">3 в работе</h6>
+                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">1 завершено</h6>
                     </Card>
-                    <Card title={<h5>Отличная производительность</h5>}
-                    className="card-in-card-lowest-cortisol">
-                        <h6 className="text-tertiary">Точность маршрутизации выросла до 94.1%</h6>
-                        <h6><a href="" className="bluesrc">Подробнее &#8594;</a></h6>
+                    <Card title={<h5>Бухгалтерия</h5>}
+                    className="card-in-card-blue-cortisol">
+                        <h6 className="text-tertiary">3 в работе</h6>
+                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">1 завершено</h6>
                     </Card>
-                </Card>
-                <Card title={<h4>Качество обработки</h4>}>
-                    <div className="container-for-bar-card">
-                        <div className="bar-card-container-block-left"><h5 className="text-secondary">Точность классификации</h5></div>
-                        <div className="bar-card-container-block-right"><h4>92.4%</h4></div>
-                    </div>
-                    <div className="progress-bar">
-                        <div className="progress-bar-fill" style={{width: "92.4%"}}></div>
-                    </div>
-                    <div className="container-for-bar-card">
-                        <div className="bar-card-container-block-left"><h5 className="text-secondary">Точность извлечения</h5></div>
-                        <div className="bar-card-container-block-right"><h4>89.7%</h4></div>
-                    </div>
-                    <div className="progress-bar">
-                        <div className="progress-bar-fill" style={{width: "89.7%"}}></div>
-                    </div>
-                    <div className="container-for-bar-card">
-                        <div className="bar-card-container-block-left"><h5 className="text-secondary">Корректность маршрутизации</h5></div>
-                        <div className="bar-card-container-block-right"><h4>92.1%</h4></div>
-                    </div>
-                    <div className="progress-bar">
-                        <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
-                    </div>
-                </Card>
-                <Card className="card-blue">
-                    <img className="Main-cards-image" alt="🕓"/>
-                    <h4>Очередь проверки</h4>
-                    <h5>8 документов требуют вашего внимания</h5>
-                    <h5><a href="">Перейти к проверке</a></h5>
+                    <Card title={<h5>Отдел закупок</h5>}
+                    className="card-in-card-blue-cortisol">
+                        <h6 className="text-tertiary">3 в работе</h6>
+                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">1 завершено</h6>
+                    </Card>
+                    <Card title={<h5>Юридический отдел</h5>}
+                    className="card-in-card-blue-cortisol">
+                        <h6 className="text-tertiary">3 в работе</h6>
+                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">1 завершено</h6>
+                    </Card>
+                    <Card title={<h5>Отдел кадров</h5>}
+                    className="card-in-card-blue-cortisol">
+                        <h6 className="text-tertiary">3 в работе</h6>
+                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">1 завершено</h6>
+                    </Card>
                 </Card>
             </div>
         </div>
     </div>
     )
 }
-
 
 export default MainMenu
