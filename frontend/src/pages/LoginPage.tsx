@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import './LoginPage.css';
+import { login } from '../services/api';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -10,7 +11,7 @@ const LoginPage = () => {
   const [loginError, setLoginError] = useState('');
 
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
   // Сбрасываем ошибки
@@ -38,16 +39,17 @@ const LoginPage = () => {
     hasError = true;
   }
 
-  // Если нет ошибок формата - проверяем логин и пароль
-  if (!hasError) {
-    const validEmail = "admin@example.ru";
-    const validPassword = "admin123";
-    
-    if (email !== validEmail || password !== validPassword) {
-      setLoginError('Неверный email или пароль');
-    }
+// если нет ошибок формата - вызываем API
+if (!hasError) {
+  try {
+    const data = await login(email, password); // вызываем твой API login
+    localStorage.setItem('access_token', data.token); // сохраняем токен
+    window.location.href = '/dashboard'; // переходим на дашборд
+  } catch (error) {
+    setLoginError('Ошибка логина: неверный email/пароль или сервер недоступен');
   }
-};
+}
+  };
 
 
   return (
@@ -110,6 +112,7 @@ const LoginPage = () => {
               <button type="button" className="forgot-link">Забыли пароль?</button>
             </div>
 
+            {loginError && <div className="error-message">{loginError}</div>}
             <button type="submit" className="login-btn">Войти</button>
           </form>
 
