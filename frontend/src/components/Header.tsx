@@ -38,9 +38,9 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
       <button className="button-secondary">
         <img src="" className="Casual-icon" alt="🔔" />
       </button>
-      <div className="profile-block">
+      <div className="profile-info">
         <h5>Иванов И.И.</h5>
-        <p><h6 className="text-secondary">Администратор</h6></p>
+        <h6 className="text-secondary">Администратор</h6>
       </div>
       <img src="" className="profile-image" alt="👤" />
     </div>

@@ -8,14 +8,14 @@ const Sidebar = () => {
   const { collapsed, toggleSidebar } = useSidebar();
 
   const menuItems = [
-    {path: "../SubPages/MainMenu", label: "Главная", icon: "", alt: "🏠"},
-    {path: "../SubPages/IncomingD", label: "Входящие документы", icon: "", alt: "📥"},
-    {path: "../SubPages/Verification", label: "Очередь проверки", icon: "", alt: "🚶🚶🚶🚶🚶🚶🚶"},
-    {path: "../SubPages/Routing", label: "Маршрутизация", icon: "", alt: "☑️"},
-    {path: "../SubPages/Departaments", label: "Подразделения", icon: "", alt: "📍"},
-    {path: "../SubPages/Analytics", label: "Аналитика", icon: "", alt: "🏢"},
-    {path: "../SubPages/Settings", label: "Настройки", icon: "", alt: "📊"},
-    {path: "../SubPages/Notifications", label: "Уведомления", icon: "", alt: "🔔"},
+    {path: "/dashboard/SubPages/MainMenu", label: "Главная", icon: "", alt: "🏠"},
+    {path: "/dashboard/SubPages/IncomingD", label: "Входящие документы", icon: "", alt: "📥"},
+    {path: "/dashboard/SubPages/Verification", label: "Очередь проверки", icon: "", alt: "🚶🚶🚶🚶🚶🚶🚶"},
+    {path: "/dashboard/SubPages/Routing", label: "Маршрутизация", icon: "", alt: "☑️"},
+    {path: "/dashboard/SubPages/Departaments", label: "Подразделения", icon: "", alt: "📍"},
+    {path: "/dashboard/SubPages/Analytics", label: "Аналитика", icon: "", alt: "🏢"},
+    {path: "/dashboard/SubPages/Settings", label: "Настройки", icon: "", alt: "📊"},
+    {path: "/dashboard/SubPages/Notifications", label: "Уведомления", icon: "", alt: "🔔"},
   ];
 
   return (

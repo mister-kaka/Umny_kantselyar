@@ -9,7 +9,7 @@ import Analytics from "../components/SubPages/Analytics";
 import Settings from "../components/SubPages/Settings";
 import Notifications from "../components/SubPages/Notifications";
 import "../styles/global.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, useSidebar } from "../contexts/SidebarContexts";
 
 const DashboardContent = () => {
@@ -20,15 +20,15 @@ const DashboardContent = () => {
       <Header />
       <main className={`main-content ${collapsed ? 'collapsed' : ''}`}>
         <Routes>
-          <Route path="/" element={<Navigate to="/SubPages/MainMenu" replace />} />
-          <Route path="/SubPages/MainMenu" element={<MainMenu />} />
-          <Route path="/SubPages/IncomingD" element={<IncomingD />} />
-          <Route path="/SubPages/Verification" element={<Verification />} />
-          <Route path="/SubPages/Routing" element={<Routing />} />
-          <Route path="/SubPages/Departaments" element={<Departments />} />
-          <Route path="/SubPages/Analytics" element={<Analytics />} />
-          <Route path="/SubPages/Settings" element={<Settings />} />
-          <Route path="/SubPages/Notifications" element={<Notifications />} />
+          <Route path="/" element={<Navigate to="SubPages/MainMenu" replace />} />
+          <Route path="SubPages/MainMenu" element={<MainMenu />} />
+          <Route path="SubPages/IncomingD" element={<IncomingD />} />
+          <Route path="SubPages/Verification" element={<Verification />} />
+          <Route path="SubPages/Routing" element={<Routing />} />
+          <Route path="SubPages/Departaments" element={<Departments />} />
+          <Route path="SubPages/Analytics" element={<Analytics />} />
+          <Route path="SubPages/Settings" element={<Settings />} />
+          <Route path="SubPages/Notifications" element={<Notifications />} />
         </Routes>
       </main>
     </div>
@@ -38,9 +38,7 @@ const DashboardContent = () => {
 const DashboardPage = () => {
   return (
     <SidebarProvider>
-      <BrowserRouter>
-        <DashboardContent />
-      </BrowserRouter>
+      <DashboardContent />
     </SidebarProvider>
   );
 };
