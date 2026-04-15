@@ -2,8 +2,6 @@ import React, {FC} from "react";
 import "../styles/global.css"
 
 interface CardProps {
-  width?: string;
-  height?: string;
   className?: string;
   title?: React.ReactNode;
   children?: React.ReactNode;
@@ -12,8 +10,6 @@ interface CardProps {
 
 const Card: FC<CardProps> =
  ({
-    width,
-    height,
     className = '',
     title,
     children,
@@ -21,8 +17,6 @@ const Card: FC<CardProps> =
   }) => {
   return (
     <div style={{
-      width, 
-      height, 
       }}
       className={`card ${className}`}
       onClick={onClick}>
