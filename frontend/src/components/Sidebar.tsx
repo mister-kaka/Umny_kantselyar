@@ -8,14 +8,14 @@ const Sidebar = () => {
   const { collapsed, toggleSidebar } = useSidebar();
 
   const menuItems = [
-    {path: "../SubPages/MainMenu", label: "Главная"},
-    {path: "../SubPages/IncomingD", label: "Входящие документы"},
-    {path: "../SubPages/Verification", label: "Очередь проверки"},
-    {path: "../SubPages/Routing", label: "Маршрутизация"},
-    {path: "../SubPages/Departaments", label: "Подразделения"},
-    {path: "../SubPages/Analytics", label: "Аналитика"},
-    {path: "../SubPages/Settings", label: "Настройки"},
-    {path: "../SubPages/Notifications", label: "Уведомления"},
+    {path: "../SubPages/MainMenu", label: "Главная", icon: "", alt: "🏠"},
+    {path: "../SubPages/IncomingD", label: "Входящие документы", icon: "", alt: "📥"},
+    {path: "../SubPages/Verification", label: "Очередь проверки", icon: "", alt: "🚶🚶🚶🚶🚶🚶🚶"},
+    {path: "../SubPages/Routing", label: "Маршрутизация", icon: "", alt: "☑️"},
+    {path: "../SubPages/Departaments", label: "Подразделения", icon: "", alt: "📍"},
+    {path: "../SubPages/Analytics", label: "Аналитика", icon: "", alt: "🏢"},
+    {path: "../SubPages/Settings", label: "Настройки", icon: "", alt: "📊"},
+    {path: "../SubPages/Notifications", label: "Уведомления", icon: "", alt: "🔔"},
   ];
 
   return (
@@ -23,7 +23,7 @@ const Sidebar = () => {
       <div>
         <button className={`button-hide ${collapsed ? 'collapsed' : ''}`}
         onClick={toggleSidebar}>
-          <img src="" className="Casual-icon" alt="" />
+          <img src="" className="Casual-icon" alt={collapsed ? ">" : "<"} />
         </button>
         {!collapsed && (
         <div className="Umny-cantselyar-text">
@@ -48,7 +48,7 @@ const Sidebar = () => {
               to={item.path}
               className={({isActive}) => `sidebar-item
               ${isActive ? "active" : ""}`}>
-              <img src="" className="Casual-icon" alt="" />
+              <img src={item.icon} className="Casual-icon" alt={item.alt} />
               <span className="item-label">{item.label}</span>
             </NavLink>
           ))}
@@ -58,7 +58,7 @@ const Sidebar = () => {
         <button
           onClick={() => { }}
           className="sidebar-item">
-          <img src="" className="Casual-icon" alt="" />
+          <img src="" className="Casual-icon" alt="🚪⬅️" />
           <span className="item-label">Выход из системы</span>
         </button>
         <h6 className={`version-text ${collapsed ? "collapsed" : ""}`}>
