@@ -25,8 +25,10 @@
     --text-secondary: #4b4b4b;               /* подтема, второстепенный текст */
     --text-tertiary: #696969;                /* вводные данные (статистика, метаданные) */
 
-    /* Отступы */
+    /* Отступы ++*/
     --spacing-card: 20px;
+    --margin-card: 10px;
+    --padding-card: 20px;
     --spacing-element: 16px;
 
     /* Скругления */
@@ -97,34 +99,48 @@ p {
 
 
 /*    КНОПКИ    */
-/* Кнопка с фоном (акцентная) */
+/* Кнопка с фоном (акцентная) ++*/
 .button-primary {
+  display: flex;
   background-color: var(--color-accent);
   color: #FFFFFF;           /* белый текст */
   border: none;
-  padding: 10px 20px;
+  align-items: center;
+  justify-content: center;
+  height: var(--sidebarButtAndHeaderButt-height);
+  width: var(--sidebarButtAndHeaderButt-height);
+  min-width: var(--sidebarButtAndHeaderButt-height);
+  min-height: var(--sidebarButtAndHeaderButt-height);
   border-radius: var(--radius-button);
   font-family: 'Inter', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin: 5.5px;
 }
 
 .button-primary:hover {
   background-color: var(--color-accent-hover);  /* темнее при наведении */
 }
 
-/* Кнопка без фона (прозрачная) */
+/* Кнопка без фона (прозрачная) ++*/
 .button-secondary {
+  display: flex;
   background-color: transparent;
   color: var(--color-accent);   /* акцентный цвет */
   border: none;
-  padding: 10px 20px;
+  align-items: center;
+  justify-content: center;
+  height: var(--sidebarButtAndHeaderButt-height);
+  width: var(--sidebarButtAndHeaderButt-height);
+  min-width: var(--sidebarButtAndHeaderButt-height);
+  min-height: var(--sidebarButtAndHeaderButt-height);
   border-radius: var(--radius-button);
   font-family: 'Inter', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin: 5.5px;
 }
 
 .button-secondary:hover {
@@ -133,21 +149,23 @@ p {
 }
 
 
-
-/*    КАРТОЧКИ    */
+/*    КАРТОЧКИ    ++*/
 .card {
+  display: flexbox;
   background-color: var(--color-bg-surface);
   border-radius: var(--radius-card);
-  padding: var(--spacing-card);
-  box-shadow: var(--shadow-card);
-  margin-bottom: var(--spacing-card);
+  padding: var(--padding-card);
+  box-shadow: 0 0px 5px rgba(0, 0, 0, 0.1);
+  margin: var(--margin-card);
+  min-width: 0;
 }
 
-/*    ТАБЛИЦЫ    */
+/*    ТАБЛИЦЫ++   */
 .table {
   width: 100%;
   border-collapse: collapse;
-  background-color: var(--bg-surface);
+  background-color: var(--color-bg-surface);
+  overflow-x: auto;
 }
 
 th, td {
@@ -156,6 +174,7 @@ th, td {
   border-bottom: 1px solid var(--table-border);
   text-align: left;
   vertical-align: middle;
+  cursor: pointer;
 }
 
 /* Заголовки таблицы */
@@ -179,30 +198,42 @@ td:not(:first-child) {
 /*    подсветка строки ПРИ НАВЕДЕНИИ    */
 tbody tr:hover {
   background-color: rgba(0, 0, 0, 0.02);
+  transition: 0.2s;
 }
 
 
 
-/*    SIDEBAR    */
+/*    SIDEBAR    ++*/
 .sidebar {
+  display: grid;
   width: var(--sidebar-width);
+  grid-template-rows: 1fr auto;
   background-color: var(--color-bg-surface);
   border-right: 1px solid var(--border-color);
   height: 100vh;
   position: fixed;
   left: 0;
   top: 0;
-  padding-top: var(--header-height);
+  padding-top: 12px;
+  transition: width 0.2s ease;
 }
 
-/* вкладка sidebar */
+/* вкладка sidebar ++*/
 .sidebar-item {
-  padding: 12px 20px;
-  margin: 4px 12px;
-  border-radius: 8px;
+  display: flex;
+  padding-left: 7px;
+  height: var(--sidebarButtAndHeaderButt-height);
+  width: stretch;
+  align-items: center;
+  margin: 4px 18px; 
+  border-radius: 8px; 
+  outline: none;
+  border: none; 
   cursor: pointer;
   color: var(--text-secondary);
-  transition: background-color 0.2s ease;
+  font-size: 14px;
+  background-color: white;
+  transition: 0.2s ease;
 }
 
 /* активная вкладка sidebar */
@@ -218,8 +249,7 @@ tbody tr:hover {
 }
 
 
-
-/*    HEADER    */
+/*    HEADER    ++*/
 .header {
   height: var(--header-height);
   background-color: var(--color-bg-surface);
@@ -227,19 +257,22 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0px 24px;
   position: fixed;
   top: 0;
-  left: 0;
+  left: var(--sidebar-width);
   right: 0;
+  transition: left 0.2s ease;
   z-index: 100;
 }
 
-/*    ОСНОВНОЙ КОНТЕНТ    */
+
+/*    ОСНОВНОЙ КОНТЕНТ++    */
 .main-content {
   margin-left: var(--sidebar-width);
   margin-top: var(--header-height);
-  padding: 24px;
+  padding: 14px;
+  transition: margin-left 0.2s ease;
 }
 
 /*    СТАТУСЫ    */
