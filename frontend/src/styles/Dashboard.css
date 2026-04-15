@@ -128,7 +128,7 @@
   vertical-align: middle;
 }
 
-td:first-child > span:hover {
+td:first-child > a:hover {
   font-weight: 600;
   color: var(--color-accent-hover);
 }
