@@ -58,7 +58,7 @@
 
 .Main-cards-container{
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
 }
 
 .Main-cards-image{
@@ -78,129 +78,10 @@
   padding-top: 0.09em;
 }
 
-.card-in-card-high-cortisol{
-  background-color: #f6818134;
-  border: 1px solid var(--color-status-rejected);
+.card-in-card-blue-cortisol{
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent);
   box-shadow: none;
-}
-
-.card-in-card-high-cortisol a {
-  display: inline-block;
-  margin-top: 1em;
-}
-
-.card-in-card-medium-cortisol{
-  background-color: #f6e58127;
-  border: 1px solid var(--color-status-data-refinement);
-  box-shadow: none;
-}
-
-.card-in-card-medium-cortisol a {
-  display: inline-block;
-  margin-top: 1em;
-}
-
-.card-in-card-low-cortisol{
-  background-color: #81f69334;
-  border: 1px solid rgba(0, 189, 0, 0.629);
-  box-shadow: none;
-}
-
-.card-in-card-low-cortisol a {
-  display: inline-block;
-  margin-top: 1em;
-}
-
-.card-in-card-lowest-cortisol{
-  background-color: rgba(148, 246, 129, 0.125);
-  border: 1px solid var(--color-status-loaded);
-  box-shadow: none;
-}
-
-.card-in-card-lowest-cortisol a {
-  display: inline-block;
-  margin-top: 1em;
-}
-
-.card-blue{
-  background: linear-gradient(to bottom right, #6ce5d9, var(--color-accent-hover));
-  box-shadow: none;
-}
-
-.card-blue a {
-  display: inline-block;
-  padding: 10px;
-  background-color: rgb(154, 221, 214);
-  border-radius: 12px;
-  margin-top: 1em;
-  color: white;
-  transition: 0.2s;
-}
-
-.card-blue a:hover{
-  background-color: rgb(162, 230, 225);
-  transition: 0.2s;
-}
-
-.container-for-bar-card{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin-top: 15px;
-}
-
-.bar-card-container-block-left {
-  text-align: left;
-}
-
-.bar-card-container-block-right {
-  text-align: right;
-}
-
-/*    Шкала для карточки   */
-.progress-bar {
-  width: 100%;
-  height: 8px;        
-  background-color: var(--color-bg-page);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  width: 0%;  
-  background-color: var(--color-accent);
-  border-radius: 999px;
-  transition: width 0.3s ease;
-}
-
-
-/*    Шкала для таблицы  */
-
-.container-for-table-bar{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  text-align: center;
-}
-
-.container-for-table-bar h6 {
-  margin: 0;
-  line-height: 1;      
-  white-space: nowrap;
-}
-
-.progress-table-bar {
-  width: 100%;
-  height: 6px;        
-  background-color: var(--color-bg-page);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  transition: width 0.3s ease, background-color 0.3s ease;
-  border-radius: 999px;
 }
 
 
@@ -247,7 +128,7 @@
   vertical-align: middle;
 }
 
-td:first-child:hover {
+td:first-child > span:hover {
   font-weight: 600;
   color: var(--color-accent-hover);
 }
@@ -255,6 +136,7 @@ td:first-child:hover {
 tbody tr {
   transition: 0.2s;
 }
+
 /*    Загрузки и ошибки    */
 
 .loader {
@@ -435,36 +317,36 @@ tbody tr {
   margin-left: 0;
 }
 
-/*     Сжатый сайдбар++    */
+/*     Сжатый сайдбар    */
 .sidebar.collapsed{
   width: 78px;
   transition: width 0.2s ease;
 }
 
-/*    Нижний блок сайдбара++   */
+/*    Нижний блок сайдбара   */
 .sidebar-footer {
   display: block;
   height: auto;
   min-height: 50px;
   border-top: 1px solid var(--border-color);
   padding-top: 16px;
-  transition: width 0.2s ease, border-top 0.2s ease;
+  transition: 0.2s ease;
   overflow: hidden;
 }
 
 .sidebar-footer.collapsed {
   width: 78px;
-  transition: width 0.2s ease;
+  transition: 0.2s ease;
 }
 
-/*   Сжатые кнопки сайдбара++    */
+/*   Сжатые кнопки сайдбара    */
 .sidebar.collapsed .sidebar-item{
   align-content: center;
   padding-left: 4px;
   transition: 0.2s ease;
 }
 
-/* Текст кнопки sidebar: плавное появление/исчезновение++ */
+/* Текст кнопки sidebar: плавное появление/исчезновение */
 .item-label {
   display: inline-block;
   white-space: nowrap;
@@ -483,7 +365,7 @@ tbody tr {
 
 /*     Header     */
 
-/* Кнопка без фона c обводкой (прозрачная) ++*/
+/* Кнопка без фона c обводкой (прозрачная) */
 .button-secondary-with-border {
   display: flex;
   background-color: transparent;
@@ -532,10 +414,9 @@ tbody tr {
     height: var(--sidebarButtAndHeaderButt-height);
     margin-left: 11px;
     border-radius: 420px;
-    border: #000000 solid 1px; /* для наглядности   */
 }
 
-/*     Разжатый header++   */
+/*     Разжатый header   */
 
 .header.collapsed{
   left: 78px;
