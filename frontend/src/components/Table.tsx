@@ -19,8 +19,7 @@ const Table: FC<TableProps> =
     onClick
   }) => {
   return (
-    <div style={{
-      }}
+    <div
       className={className}
       onClick={onClick}>
       {(title || rightTitle) && (
