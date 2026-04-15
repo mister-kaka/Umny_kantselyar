@@ -19,7 +19,7 @@ const MainMenu = () => {
     return (
     <div>
         <div className="Heading-main-text">
-            <h2>Добро пожаловать, {}</h2>
+            <h2>Добро пожаловать! </h2>
             <h4 className="text-secondary">
                 Сегодня {date}
             </h4>
@@ -33,7 +33,7 @@ const MainMenu = () => {
             <Card className="main-card">
                 <img src="" className="Main-cards-image" alt="✔️"/>
                 <h1>{}47</h1>
-                <h5 className="text-secondary">Обработано за всё время</h5>
+                <h5 className="text-secondary">В обработке</h5>
             </Card>
             <Card className="main-card">
                 <img src="" className="Main-cards-image" alt="❕"/>
