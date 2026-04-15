@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import '../styles/LoginPage.css';
 
@@ -34,20 +33,11 @@ const LoginPage = () => {
   if (!password) {
     setPasswordError('Введите пароль');
     hasError = true;
-  } else if (password.length < 4) {
-    setPasswordError('Пароль должен быть не менее 4 символов');
+  } else if (password.length < 6) {
+    setPasswordError('Пароль должен быть не менее 6 символов');
     hasError = true;
   }
-
-  // Если нет ошибок формата - проверяем логин и пароль
-  if (!hasError) {
-    const validEmail = "admin@example.ru";
-    const validPassword = "admin123";
-    
-    if (email !== validEmail || password !== validPassword) {
-      setLoginError('Неверный email или пароль');
-    }
-  }
+  
 };
 
 
@@ -73,7 +63,7 @@ const LoginPage = () => {
   <div className="input-wrapper">
     <input
       type="email"
-      placeholder="йоу@example.ru"
+      placeholder="admin@example.ru"
       value={email}
       onChange={(e) => setEmail(e.target.value)}
       className={emailError ? 'error-input' : ''}
@@ -108,7 +98,6 @@ const LoginPage = () => {
               <label>
                 <input type="checkbox" /> Запомнить меня
               </label>
-              <button type="button" className="forgot-link">Забыли пароль?</button>
             </div>
 
             <button type="submit" className="login-btn">Войти</button>
@@ -122,7 +111,7 @@ const LoginPage = () => {
 
       <div className="login-right">
         <div className="info-card">
-          <img src="" alt="картинка" className="info-image" />
+          <img src="/paper.png" alt="картинка" className="info-image" />
           <h2>Умная обработка документов</h2>
           <p>Автоматическое распознавание, классификация и маршрутизация входящих документов с использованием искусственного интеллекта</p>
         </div>
