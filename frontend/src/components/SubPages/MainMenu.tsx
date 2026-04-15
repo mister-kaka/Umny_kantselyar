@@ -26,25 +26,25 @@ const MainMenu = () => {
         </div>
         <div className="Main-cards-container">
             <Card className="main-card">
-                <img src="" className="Main-cards-image"/>
+                <img src="" className="Main-cards-image" alt="📄"/>
                 <h1>{}1,284</h1>
                 <h5 className="text-secondary">Всего входящих</h5>
                 <h6 className="text-tertiary">{}+12% за месяц</h6>
             </Card>
             <Card className="main-card">
-                <img src="" className="Main-cards-image"/>
+                <img src="" className="Main-cards-image" alt="✔️"/>
                 <h1>{}47</h1>
                 <h5 className="text-secondary">Обработано сегодня</h5>
                 <h6 className="text-tertiary">{}8 в процессе</h6>
             </Card>
             <Card className="main-card">
-                <img src="" className="Main-cards-image"/>
+                <img src="" className="Main-cards-image" alt="🔝"/>
                 <h1>{}92,4</h1>
                 <h5 className="text-secondary">Автоклассифицировано</h5>
                 <h6 className="text-tertiary">{}+2.1% за неделю</h6>
             </Card>
             <Card className="main-card">
-                <img src="" className="Main-cards-image"/>
+                <img src="" className="Main-cards-image" alt="❕"/>
                 <h1>{}8</h1>
                 <h5 className="text-secondary">Низкая уверенность</h5>
                 <h6 className="text-tertiary">{}требуют проверки</h6>
@@ -75,7 +75,7 @@ const MainMenu = () => {
                                     <div className="progress-table-bar">
                                         <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
                                     </div>
-                                    <h6 className="text-secondary">92.1%</h6>
+                                    <h6 className="confidence-percent">92.1%</h6>
                                 </div>
                             </td>
                             <td>данные</td>
@@ -89,7 +89,7 @@ const MainMenu = () => {
                                     <div className="progress-table-bar">
                                         <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
                                     </div>
-                                    <h6 className="text-secondary">92.1%</h6>
+                                    <h6 className="confidence-percent">92.1%</h6>
                                 </div>
                             </td>
                             <td>данные</td>
@@ -103,7 +103,7 @@ const MainMenu = () => {
                                     <div className="progress-table-bar">
                                         <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
                                     </div>
-                                    <h6 className="text-secondary">92.1%</h6>
+                                    <h6 className="confidence-percent">92.1%</h6>
                                 </div>
                             </td>
                             <td>данные</td>
@@ -117,7 +117,7 @@ const MainMenu = () => {
                                     <div className="progress-table-bar">
                                         <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
                                     </div>
-                                    <h6 className="text-secondary">92.1%</h6>
+                                    <h6 className="confidence-percent">92.1%</h6>
                                 </div>
                             </td>
                             <td>данные</td>
@@ -131,7 +131,7 @@ const MainMenu = () => {
                                     <div className="progress-table-bar">
                                         <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
                                     </div>
-                                    <h6 className="text-secondary">92.1%</h6>
+                                    <h6 className="confidence-percent">92.1%</h6>
                                 </div>
                             </td>
                             <td>данные</td>
@@ -145,7 +145,7 @@ const MainMenu = () => {
                                     <div className="progress-table-bar">
                                         <div className="progress-bar-fill" style={{width: "92.1%"}}></div>
                                     </div>
-                                    <h6 className="text-secondary">92.1%</h6>
+                                    <h6 className="confidence-percent">92.1%</h6>
                                 </div>
                             </td>
                             <td>данные</td>
@@ -195,7 +195,7 @@ const MainMenu = () => {
                     </div>
                 </Card>
                 <Card className="card-blue">
-                    <img className="Main-cards-image"/>
+                    <img className="Main-cards-image" alt="🕓"/>
                     <h4>Очередь проверки</h4>
                     <h5>8 документов требуют вашего внимания</h5>
                     <h5><a href="">Перейти к проверке</a></h5>
