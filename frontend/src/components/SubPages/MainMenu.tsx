@@ -56,40 +56,40 @@ const MainMenu = () => {
                     </thead>
                     <tbody>
                         <tr>
-                            <td><span>данные</span></td>
-                            <td>данные</td>
-                            <td>данные</td>
-                            <td>данные</td>
+                            <td><a href="">ВХ-2026-015</a></td>
+                            <td>Акт сверки взаимных расчётов</td>
+                            <td>Завершён</td>
+                            <td>2026-04-11</td>
                         </tr>
                         <tr>
-                            <td><span>данные</span></td>
-                            <td>данные</td>
-                            <td>данные</td>
-                            <td>данные</td>
+                            <td><a href="">ВХ-2026-014</a></td>
+                            <td>Счёт на оплату услуг связи</td>
+                            <td>Одобрен</td>
+                            <td>2026-04-10</td>
                         </tr>
                         <tr>
-                            <td><span>данные</span></td>
-                            <td>данные</td>
-                            <td>данные</td>
-                            <td>данные</td>
+                            <td><a href="">ВХ-2026-013</a></td>
+                            <td>Уведомление о повышении цен</td>
+                            <td>На рассмотрении</td>
+                            <td>2026-04-10</td>
                         </tr>
                         <tr>
-                            <td><span>данные</span></td>
-                            <td>данные</td>
-                            <td>данные</td>
-                            <td>данные</td>
+                            <td><a href="">ВХ-2026-012</a></td>
+                            <td>Обращение сотрудника по кадровому вопросу</td>
+                            <td>На проверке</td>
+                            <td>2026-04-09</td>
                         </tr>
                         <tr>
-                            <td><span>данные</span></td>
-                            <td>данные</td>
-                            <td>данные</td>
-                            <td>данные</td>
+                            <td><a href="">ВХ-2026-011</a></td>
+                            <td>Письмо о продлении гарантии</td>
+                            <td>На проверке</td>
+                            <td>2026-04-09</td>
                         </tr>
                         <tr>
-                            <td><span>данные</span></td>
-                            <td>данные</td>
-                            <td>данные</td>
-                            <td>данные</td>
+                            <td><a href="">ВХ-2026-010</a></td>
+                            <td>Договор аренды помещения</td>
+                            <td>Одобрен</td>
+                            <td>2026-04-08</td>
                         </tr>
                     </tbody>
                 </Table>
@@ -99,37 +99,37 @@ const MainMenu = () => {
                     <Card title={<h5>Управление</h5>}
                     className="card-in-card-blue-cortisol">
                         <h6 className="text-tertiary">3 в работе</h6>
-                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">2 на проверке</h6>
                         <h6 className="text-tertiary">1 завершено</h6>
                     </Card>
                     <Card title={<h5>Технический отдел</h5>}
                     className="card-in-card-blue-cortisol">
                         <h6 className="text-tertiary">3 в работе</h6>
-                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">2 на проверке</h6>
                         <h6 className="text-tertiary">1 завершено</h6>
                     </Card>
                     <Card title={<h5>Бухгалтерия</h5>}
                     className="card-in-card-blue-cortisol">
                         <h6 className="text-tertiary">3 в работе</h6>
-                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">2 на проверке</h6>
                         <h6 className="text-tertiary">1 завершено</h6>
                     </Card>
                     <Card title={<h5>Отдел закупок</h5>}
                     className="card-in-card-blue-cortisol">
                         <h6 className="text-tertiary">3 в работе</h6>
-                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">2 на проверке</h6>
                         <h6 className="text-tertiary">1 завершено</h6>
                     </Card>
                     <Card title={<h5>Юридический отдел</h5>}
                     className="card-in-card-blue-cortisol">
                         <h6 className="text-tertiary">3 в работе</h6>
-                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">2 на проверке</h6>
                         <h6 className="text-tertiary">1 завершено</h6>
                     </Card>
                     <Card title={<h5>Отдел кадров</h5>}
                     className="card-in-card-blue-cortisol">
                         <h6 className="text-tertiary">3 в работе</h6>
-                        <h6 className="text-tertiary">2 на проверки</h6>
+                        <h6 className="text-tertiary">2 на проверке</h6>
                         <h6 className="text-tertiary">1 завершено</h6>
                     </Card>
                 </Card>
