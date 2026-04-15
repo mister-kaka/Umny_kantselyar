@@ -14,8 +14,6 @@ interface TableProps {
 
 const Table: FC<TableProps> =
  ({
-    width,
-    height,
     className = '',
     title,
     rightTitle,
@@ -24,10 +22,8 @@ const Table: FC<TableProps> =
   }) => {
   return (
     <div style={{
-      width, 
-      height, 
       }}
-      className={`table ${className}`}
+      className={className}
       onClick={onClick}>
       {(title || rightTitle) && (
         <div className="table-header">
