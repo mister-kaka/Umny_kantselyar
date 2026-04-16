@@ -37,7 +37,7 @@ const Sidebar = () => {
         ) || (
         <div className="Umny-cantselyar-text">
           <h3>
-            Ум. <br/>К.
+            {/* Ум. <br/>К. */}
           </h3>
         </div>
         )}
