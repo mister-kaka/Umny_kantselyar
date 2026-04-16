@@ -19,25 +19,26 @@ const MainMenu = () => {
     return (
     <div>
         <div className="Heading-main-text">
-            <h2>Добро пожаловать! </h2>
+            <h2>Добро пожаловать, {}</h2>
             <h4 className="text-secondary">
                 Сегодня {date}
             </h4>
         </div>
         <div className="Main-cards-container">
             <Card className="main-card">
-                <img src="" className="Main-cards-image" alt="📄"/>
-                <h1>{}1,284</h1>
+                <img src="https://png.pngtree.com/png-clipart/20230928/original/pngtree-3d-editable-document-png-image_13162498.png" className="Main-cards-image" alt="📄"/>
+                <h1>1,284</h1>
                 <h5 className="text-secondary">Всего входящих</h5>
             </Card>
             <Card className="main-card">
-                <img src="" className="Main-cards-image" alt="✔️"/>
-                <h1>{}47</h1>
-                <h5 className="text-secondary">В обработке</h5>
+                <img src="https://static.vecteezy.com/system/resources/previews/009/591/713/non_2x/check-mark-icon-free-png.png" className="Main-cards-image" alt="✔️"/>
+                <h1>47</h1>
+                <h5 className="text-secondary">Обработано за всё время</h5>
             </Card>
             <Card className="main-card">
-                <img src="" className="Main-cards-image" alt="❕"/>
-                <h1>{}8</h1>
+                <img src="https://static.vecteezy.com/system/resources/previews/017/172/375/non_2x/warning-message-concept-represented-by-exclamation-mark-icon-exclamation-symbol-in-circle-png.png"
+                    className="Main-cards-image" alt="❕"/>
+                <h1>8</h1>
                 <h5 className="text-secondary">Требуют проверки</h5>
             </Card>
         </div>
