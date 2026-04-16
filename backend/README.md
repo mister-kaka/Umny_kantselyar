@@ -78,7 +78,7 @@ JWT_SECRET=your_secret_key_here //любой секретный ключ
 ### Логирование
 - Логируются POST /auth/login 
 - Логируются GET /dashboard/data 
-- Московское время (ДД.ММ.ГГГГ, ЧЧ:ММ:СС)
+- Московское время 
 - Пароль и токен скрыты
 - logs.json в .gitignore
 
