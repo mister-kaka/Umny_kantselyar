@@ -1,7 +1,5 @@
-// frontend/src/types/index.ts
-
 export interface LoginResponse {
-  access_token: string;  // было token
+  access_token: string; 
 }
 
 export interface RecentDocument {
@@ -24,4 +22,15 @@ export interface DashboardData {
   pendingCheck: number;
   recentDocuments: RecentDocument[];
   departmentRouteStatuses: DepartmentRouteStatus[];
+}
+
+export interface DepartmentStatus {
+  routeStatus: string;
+  count: number;
+}
+
+export interface GroupedDepartment {
+  departmentId: number;
+  departmentName: string;
+  statuses: DepartmentStatus[];
 }
