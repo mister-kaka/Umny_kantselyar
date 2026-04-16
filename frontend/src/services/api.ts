@@ -8,8 +8,8 @@ export const api = axios.create({
 
 api.interceptors.request.use(config => {
  const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');// берем токен
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`; // добавляем в заголовок
+   if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`; 
   }
   return config;
 });
@@ -18,7 +18,7 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
-      if (!error.config.url.includes('/auth/login')) {
+      if (!error.config?.url?.includes('/auth/login')) {
         localStorage.removeItem('access_token');
         sessionStorage.removeItem('access_token');
         window.location.href = '/login';

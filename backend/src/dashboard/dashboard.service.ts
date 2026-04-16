@@ -5,6 +5,18 @@ import { Document } from '../entities/document.entity';
 import { DocumentRoute } from '../entities/document-route.entity';
 import { Department } from '../entities/department.entity';
 import { DashboardResponseDto } from './dto/dashboard.dto';
+import * as fs from 'fs';
+import * as path from 'path';
+
+interface LogEntry {
+  timestamp: string;
+  type: string;
+  url: string;
+  action: string;
+  status: string;
+  errorCode?: number;
+  errorMessage?: string;
+}
 
 @Injectable()
 export class DashboardService {
@@ -30,8 +42,38 @@ export class DashboardService {
         private departmentRepository: Repository<Department>,
     ) {}
 
-    async getDashboardData(): Promise<DashboardResponseDto> {
+    private getMoscowTime(): string {
+        return new Date().toLocaleString('ru-RU', {
+            timeZone: 'Europe/Moscow',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+    }
 
+    private writeLog(logEntry: LogEntry) {
+        const logFilePath = path.join(__dirname, '../../logs.json');
+        let logs: LogEntry[] = [];
+        
+        if (fs.existsSync(logFilePath)) {
+            try {
+                const fileContent = fs.readFileSync(logFilePath, 'utf8');
+                logs = JSON.parse(fileContent);
+            } catch (e) {
+                logs = [];
+            }
+        }
+        
+        logs.push(logEntry);
+        fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2));
+    }
+
+    async getDashboardData(): Promise<DashboardResponseDto> {
+        const timestamp = this.getMoscowTime();
         try {
              const [
                 totalDocuments,
@@ -46,6 +88,16 @@ export class DashboardService {
                 this.getRecentDocuments(),         
                 this.getDepartmentRouteStatuses() 
             ]);
+
+        this.writeLog({
+                timestamp,
+                type: 'GET',
+                url: '/dashboard/data',
+                action: 'получение данных на дашборд',
+                status: 'success',
+                errorCode: 200,
+                errorMessage: 'Данные успешно получены',
+            });
 
         const recentDocuments = recentDocumentsRaw.map(doc => ({
             id: doc.id,
@@ -70,6 +122,18 @@ export class DashboardService {
         };
 
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера при получении данных';
+            
+            this.writeLog({
+                timestamp,
+                type: 'GET',
+                url: '/dashboard/data',
+                action: 'получение данных на дашборд',
+                status: 'error',
+                errorCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                errorMessage: errorMessage,
+            });
+
             console.error('Ошибка при получении данных дашборда:', error);
             throw new HttpException(
                 'Ошибка сервера при получении данных',
