@@ -8,14 +8,14 @@ const Sidebar = () => {
   const { collapsed, toggleSidebar } = useSidebar();
 
   const menuItems = [
-    {path: "/dashboard/SubPages/MainMenu", label: "Главная", icon: "", alt: "🏠"},
-    {path: "/dashboard/SubPages/IncomingD", label: "Входящие документы", icon: "", alt: "📥"},
-    {path: "/dashboard/SubPages/Verification", label: "Очередь проверки", icon: "", alt: "🚶🚶🚶🚶🚶🚶🚶"},
-    {path: "/dashboard/SubPages/Routing", label: "Маршрутизация", icon: "", alt: "☑️"},
-    {path: "/dashboard/SubPages/Departaments", label: "Подразделения", icon: "", alt: "📍"},
-    {path: "/dashboard/SubPages/Analytics", label: "Аналитика", icon: "", alt: "🏢"},
-    {path: "/dashboard/SubPages/Settings", label: "Настройки", icon: "", alt: "📊"},
-    {path: "/dashboard/SubPages/Notifications", label: "Уведомления", icon: "", alt: "🔔"},
+    {path: "../SubPages/MainMenu", label: "Главная", icon: "/kartinochki(vremennie)/MainMenu.jpg", alt: "🏠"},
+    {path: "../SubPages/IncomingD", label: "Входящие документы", icon: "/kartinochki(vremennie)/Incoming.jpg", alt: "📥"},
+    {path: "../SubPages/Verification", label: "Очередь проверки", icon: "/kartinochki(vremennie)/Queue.jpg", alt: "🚶🚶🚶🚶🚶🚶🚶"},
+    {path: "../SubPages/Routing", label: "Маршрутизация", icon: "/kartinochki(vremennie)/Routing.jpg", alt: "☑️"},
+    {path: "../SubPages/Departments", label: "Подразделения", icon: "/kartinochki(vremennie)/Departments.jpg", alt: "📍"},
+    {path: "../SubPages/Analytics", label: "Аналитика", icon: "/kartinochki(vremennie)/Analytics.jpg", alt: "🏢"},
+    {path: "../SubPages/Settings", label: "Настройки", icon: "/kartinochki(vremennie)/Settings.jpg", alt: "📊"},
+    {path: "../SubPages/Notifications", label: "Уведомления", icon: "/kartinochki(vremennie)/Notifications.jpg", alt: "🔔"},
   ];
 
   return (
@@ -23,7 +23,8 @@ const Sidebar = () => {
       <div>
         <button className={`button-hide ${collapsed ? 'collapsed' : ''}`}
         onClick={toggleSidebar}>
-          <img src="" className="Casual-icon" alt={collapsed ? ">" : "<"} />
+          <img src={collapsed ? "https://cdn-icons-png.freepik.com/256/98/98703.png" : "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Small_arrow_pointing_left.svg/1280px-Small_arrow_pointing_left.svg.png"}
+           className="Casual-icon" alt={collapsed ? ">" : "<"} />
         </button>
         {!collapsed && (
         <div className="Umny-cantselyar-text">
@@ -58,7 +59,7 @@ const Sidebar = () => {
         <button
           onClick={() => { }}
           className="sidebar-item">
-          <img src="" className="Casual-icon" alt="🚪⬅️" />
+          <img src="/kartinochki(vremennie)/Log_out.jpg" className="Casual-icon" alt="🚪⬅️" />
           <span className="item-label">Выход из системы</span>
         </button>
         <h6 className={`version-text ${collapsed ? "collapsed" : ""}`}>
