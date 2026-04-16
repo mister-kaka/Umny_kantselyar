@@ -7,7 +7,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('access_token'); // берем токен
+ const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');// берем токен
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`; // добавляем в заголовок
   }
@@ -18,8 +18,11 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('access_token');
-      window.location.href = '/login'; 
+      if (!error.config.url.includes('/auth/login')) {
+        localStorage.removeItem('access_token');
+        sessionStorage.removeItem('access_token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -27,7 +30,7 @@ api.interceptors.response.use(
 
 export const login = async (email: string, password: string): Promise<LoginResponse> => {
   try {
-    const response = await api.post<LoginResponse>('/api/auth/login', {  email, password });
+    const response = await api.post<LoginResponse>('/auth/login', {  email, password });
     return response.data;
   } catch (error) {
     console.error('Ошибка логина', error);
