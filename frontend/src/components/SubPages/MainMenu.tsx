@@ -58,28 +58,28 @@ const MainMenu = () => {
         setDate(formatted);
     }, []);
 
+    const fetchDashboard = async () => {
+        try {
+            setLoading(true);
+            const response = await getDashboard();
+            setData(response);
+            setError('');
+        } catch (e) {
+            setError('Ошибка загрузки дашборда');
+        } finally {
+            setLoading(false);
+        }
+    };
     useEffect(() => {
-        const fetchDashboard = async () => {
-            try {
-                setLoading(true);
-                const response = await getDashboard();
-                setData(response);
-                setError('');
-            } catch (e) {
-                setError('Ошибка загрузки дашборда');
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchDashboard();
-    }, []);
+    }, []); 
 
     const groupedDepartments = groupByDepartment(data);
 
     if (loading) return <p>Загрузка...</p>;
     if (error) return (
         <div>
-            {error} <button onClick={() => window.location.reload()}>Повторить</button>
+            <button onClick={fetchDashboard}>Повторить</button>
         </div>
     );
 

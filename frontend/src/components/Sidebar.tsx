@@ -39,7 +39,7 @@ const Sidebar = () => {
           </div>
         ) : (
           <div className="Umny-cantselyar-text">
-            <h3>Ум. <br/>К.</h3>
+            {/* <h3>Ум. <br/>К.</h3> */}
           </div>
         )}
         
