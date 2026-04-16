@@ -1,20 +1,24 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 
 const AppRoutes = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-    if (token) {
+    const isLoginPage = location.pathname === '/login';
+    
+    if (token && isLoginPage) {
       navigate('/dashboard');
     }
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard/*" element={<DashboardPage />} />
     </Routes>

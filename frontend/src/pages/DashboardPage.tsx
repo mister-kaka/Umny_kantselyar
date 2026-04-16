@@ -11,8 +11,6 @@ import Notifications from "../components/SubPages/Notifications";
 import "../styles/global.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, useSidebar } from "../contexts/SidebarContexts";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 const DashboardContent = () => {
   const { collapsed } = useSidebar();
@@ -38,15 +36,6 @@ const DashboardContent = () => {
 };
 
 const DashboardPage = () => {
-  const navigate = useNavigate(); // создаём navigate
-
-  // проверка токена
-  useEffect(() => {
-    const token = localStorage.getItem("access_token"); 
-    if (!token) {
-      navigate("/login"); 
-    }
-  }, [navigate]);
 
   return (
     <SidebarProvider>
