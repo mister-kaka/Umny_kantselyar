@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/LoginPage.css';
-
+import { login } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -8,38 +9,51 @@ const LoginPage = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const navigate = useNavigate();
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setEmailError('');
+    setPasswordError('');
+    setLoginError('');
+    let hasError = false;
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+    // проверка почты
+    if (!email) {
+      setEmailError('Введите email');
+      hasError = true;
+    } else if (!email.includes('@')) {
+      setEmailError('Неверный формат email');
+      hasError = true;
+    }
 
-  // Сбрасываем ошибки
-  setEmailError('');
-  setPasswordError('');
-  setLoginError('');
+    // проверка пароля
+    if (!password) {
+      setPasswordError('Введите пароль');
+      hasError = true;
+    } else if (password.length < 6) {
+      setPasswordError('Пароль должен быть не менее 6 символов');
+      hasError = true;
+    }
 
-  let hasError = false;
+    // если нет ошибок формата - вызываем API
+    if (!hasError) {
+      try {
+        const data = await login(email, password);
 
-  // проверка почты
-  if (!email) {
-    setEmailError('Введите email');
-    hasError = true;
-  } else if (!email.includes('@')) {
-    setEmailError('Неверный формат email');
-    hasError = true;
-  }
-
-  // проверка пароля
-  if (!password) {
-    setPasswordError('Введите пароль');
-    hasError = true;
-  } else if (password.length < 6) {
-    setPasswordError('Пароль должен быть не менее 6 символов');
-    hasError = true;
-  }
-  
-};
-
+        if (rememberMe) {
+          localStorage.setItem('access_token', data.access_token);
+        } else {
+          sessionStorage.setItem('access_token', data.access_token);
+        }
+        
+        navigate('/dashboard');
+      } catch (error) {
+        setLoginError('Ошибка логина: неверный email/пароль или сервер недоступен');
+      }
+    }
+  };
 
   return (
     <div className="login-page">
@@ -51,55 +65,60 @@ const LoginPage = () => {
           <div>
             <h2>
               <span className="square"></span>
-            Умный Канцеляр
+              Умный Канцеляр
             </h2>
             <h3 className="text-primary">Автоматизация обработки входящих документов с помощью ИИ</h3>
           </div>
+          
           <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Электронная почта</label>
+              <div className="input-wrapper">
+                <input
+                  type="email"
+                  placeholder="admin@example.ru"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={emailError ? 'error-input' : ''}
+                />
+                {emailError && (
+                  <div className="error-message-top-right">
+                    {emailError}
+                  </div>
+                )}
+              </div>
+            </div>
 
-            
-<div className="form-group">
-  <label>Электронная почта</label>
-  <div className="input-wrapper">
-    <input
-      type="email"
-      placeholder="admin@example.ru"
-      value={email}
-      onChange={(e) => setEmail(e.target.value)}
-      className={emailError ? 'error-input' : ''}
-    />
-    {emailError && (
-      <div className="error-message-top-right">
-         {emailError}
-      </div>
-    )}
-  </div>
-</div>
-
-<div className="form-group">
-  <label>Пароль</label>
-  <div className="input-wrapper">
-    <input
-      type="password" 
-      placeholder="••••••••"
-      value={password}
-      onChange={(e) => setPassword(e.target.value)}
-      className={passwordError ? 'error-input' : ''}
-    />
-    {passwordError && (
-      <div className="error-message-top-right">
-        {passwordError}
-      </div>
-    )}
-  </div>
-</div>
+            <div className="form-group">
+              <label>Пароль</label>
+              <div className="input-wrapper">
+                <input
+                  type="password" 
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={passwordError ? 'error-input' : ''}
+                />
+                {passwordError && (
+                  <div className="error-message-top-right">
+                    {passwordError}
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className="checkbox-wrapper">
               <label>
-                <input type="checkbox" /> Запомнить меня
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                /> 
+                Запомнить меня
               </label>
             </div>
 
+            {loginError && <div className="error-message">{loginError}</div>}
             <button type="submit" className="login-btn">Войти</button>
           </form>
 
