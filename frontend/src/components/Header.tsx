@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
       <div className="Search">
-        <img src="" className="Search-icon" alt="🔍" />
+        <img src="/kartinochki(vremennie)/Search.jpg" className="Search-icon" alt="🔍" />
         <input 
         type="text"
         placeholder="Поиск по документам, номерам, отправителям"
@@ -30,19 +30,19 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
         </input>
       </div>
       <button className="button-primary">
-        <img src="" className="Casual-icon" alt="📩" />
+        <img src="/kartinochki(vremennie)/Upload.png" className="Casual-icon" alt="📩" />
       </button>
       <button className="button-secondary-with-border">
-        <img src="" className="Casual-icon" alt="☐" />
+        <img src="/kartinochki(vremennie)/Full_screen.png" className="Casual-icon" alt="☐" />
       </button>
       <button className="button-secondary">
-        <img src="" className="Casual-icon" alt="🔔" />
+        <img src="/kartinochki(vremennie)/Notifications.jpg" className="Casual-icon" alt="🔔" />
       </button>
-      <div className="profile-info">
+      <div className="profile-block">
         <h5>Иванов И.И.</h5>
-        <h6 className="text-secondary">Администратор</h6>
+        <p><h6 className="text-secondary">Администратор</h6></p>
       </div>
-      <img src="" className="profile-image" alt="👤" />
+      <img src="https://i.pinimg.com/originals/3e/1d/2c/3e1d2cd96b7c93d45577d630a7fdc129.jpg" className="profile-image" alt="👤" />
     </div>
   );
 };
