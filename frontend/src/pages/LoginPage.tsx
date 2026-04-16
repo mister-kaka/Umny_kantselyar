@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './LoginPage.css';
 import { login } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +9,7 @@ const LoginPage = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loginError, setLoginError] = useState('');
+  const navigate = useNavigate();
 
 
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,8 +44,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 if (!hasError) {
   try {
     const data = await login(email, password); // вызываем твой API login
-    localStorage.setItem('access_token', data.token); // сохраняем токен
-    window.location.href = '/dashboard'; // переходим на дашборд
+    localStorage.setItem('access_token', data.access_token); // ← изменено token → access_token
+    navigate('/dashboard'); // ← заменили window.location.href на useNavigate
   } catch (error) {
     setLoginError('Ошибка логина: неверный email/пароль или сервер недоступен');
   }
