@@ -3,7 +3,7 @@ import "../../styles/global.css";
 const Routing = () => {
     return (
     <div>
-        Здравствуйте, Иван.
+        Маршрутизация
     </div>
     )
 

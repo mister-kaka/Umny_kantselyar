@@ -3,7 +3,7 @@ import "../../styles/global.css";
 const Settings = () => {
     return (
     <div>
-        Здравствуйте, Иван.
+        Настротйки
     </div>
     )
 

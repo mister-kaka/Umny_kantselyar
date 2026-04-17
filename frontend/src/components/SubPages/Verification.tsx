@@ -3,7 +3,7 @@ import "../../styles/global.css";
 const Verification = () => {
     return (
     <div>
-        Здравствуйте, Иван.
+        Очередь проверки
     </div>
     )
 

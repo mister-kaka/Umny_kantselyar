@@ -3,7 +3,7 @@ import "../../styles/global.css";
 const Notifications = () => {
     return (
     <div>
-        Здравствуйте, Иван.
+        Уведомления
     </div>
     )
 
