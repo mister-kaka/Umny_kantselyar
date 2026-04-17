@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
       <div className="Search">
-        <img src="/Dashboard_images/Search.jpg" className="Search-icon" alt="🔍" />
+        <img src="/Dashboard_Images/Search.jpg" className="Search-icon" alt="🔍" />
         <input 
         type="text"
         placeholder="Поиск по документам, номерам, отправителям"
@@ -30,19 +30,19 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
         </input>
       </div>
       <button className="button-primary">
-        <img src="/Dashboard_images/Upload.png" className="Casual-icon" alt="📩" />
+        <img src="/Dashboard_Images/Upload.png" className="Casual-icon" alt="📩" />
       </button>
       <button className="button-secondary-with-border">
-        <img src="/Dashboard_images/Scanner.png" className="Casual-icon" alt="☐" />
+        <img src="/Dashboard_Images/Scanner.png" className="Casual-icon" alt="☐" />
       </button>
       <button className="button-secondary">
-        <img src="/Dashboard_images/Notifications.jpg" className="Casual-icon" alt="🔔" />
+        <img src="/Dashboard_Images/Notifications.jpg" className="Casual-icon" alt="🔔" />
       </button>
       <div className="profile-block">
         <h5></h5>
         <p><h6 className="text-secondary"></h6></p>
       </div>
-      <img src="/Dashboard_images/Profile.jpg" className="profile-image" alt="👤" />
+      <img src="/Dashboard_Images/Profile.jpg" className="profile-image" alt="👤" />
     </div>
   );
 };
