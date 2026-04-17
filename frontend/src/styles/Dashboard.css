@@ -1,10 +1,7 @@
  @import url('../styles/global.css');
 :root{
     --main-card-margin: 10px;
-
-        /* Additional */
     --sidebarButtAndHeaderButt-height: 42px;
-
     --optional-Hover: 
 }
 
@@ -242,11 +239,10 @@ tbody tr {
 }
 
 /*    Sidebar    */
-/*    Кнопка скрытия сайдбара    */
 .button-hide {
   display: flex;
   background-color: transparent;
-  color: var(--color-accent);   /* акцентный цвет */
+  color: var(--color-accent);  
   border: none;
   align-items: center;
   justify-content: center;
@@ -263,8 +259,8 @@ tbody tr {
 }
 
 .button-hide:hover {
-  color: var(--color-accent-hover);  /* темнее при наведении */
-  background-color: var(--optional-Hover); /* лёгкий фон при ховере (опционально) */
+  color: var(--color-accent-hover); 
+  background-color: var(--optional-Hover);
 }
 
 .button-hide:focus{
@@ -340,14 +336,12 @@ tbody tr {
   transition: 0.2s ease;
 }
 
-/*   Сжатые кнопки сайдбара    */
 .sidebar.collapsed .sidebar-item{
   align-content: center;
   padding-left: 4px;
   transition: 0.2s ease;
 }
 
-/* Текст кнопки sidebar: плавное появление/исчезновение */
 .item-label {
   display: inline-block;
   white-space: nowrap;
@@ -366,11 +360,10 @@ tbody tr {
 
 /*     Header     */
 
-/* Кнопка без фона c обводкой (прозрачная) */
 .button-secondary-with-border {
   display: flex;
   background-color: transparent;
-  color: var(--color-accent);   /* акцентный цвет */
+  color: var(--color-accent);  
   border: 1px solid var(--border-color);
   align-items: center;
   justify-content: center;
@@ -387,8 +380,8 @@ tbody tr {
 }
 
 .button-secondary-with-border:hover {
-  color: var(--color-accent-hover);  /* темнее при наведении */
-  background-color: var(--optional-Hover); /* лёгкий фон при ховере (опционально) */
+  color: var(--color-accent-hover); 
+  background-color: var(--optional-Hover); 
 }
 
 .button-secondary-with-border:focus{

@@ -127,7 +127,7 @@ const MainMenu = () => {
                                 <tr key={doc.id}>
                                     <td><a href="#">{doc.id}</a></td>
                                     <td>{doc.title}</td>
-                                    <td>{translateStatus(doc.status)}</td>  {/* ← перевод статуса */}
+                                    <td>{translateStatus(doc.status)}</td> 
                                     <td>{doc.date}</td>
                                 </tr>
                             ))}
