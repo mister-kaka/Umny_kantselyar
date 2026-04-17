@@ -9,14 +9,14 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const menuItems = [
-    {path: "../SubPages/MainMenu", label: "Главная", icon: "/kartinochki(vremennie)/MainMenu.jpg", alt: "🏠"},
-    {path: "../SubPages/IncomingD", label: "Входящие документы", icon: "/kartinochki(vremennie)/Incoming.jpg", alt: "📥"},
-    {path: "../SubPages/Verification", label: "Очередь проверки", icon: "/kartinochki(vremennie)/Queue.jpg", alt: "🚶🚶🚶🚶🚶🚶🚶"},
-    {path: "../SubPages/Routing", label: "Маршрутизация", icon: "/kartinochki(vremennie)/Routing.jpg", alt: "☑️"},
-    {path: "../SubPages/Departments", label: "Подразделения", icon: "/kartinochki(vremennie)/Departments.jpg", alt: "📍"},
-    {path: "../SubPages/Analytics", label: "Аналитика", icon: "/kartinochki(vremennie)/Analytics.jpg", alt: "🏢"},
-    {path: "../SubPages/Settings", label: "Настройки", icon: "/kartinochki(vremennie)/Settings.jpg", alt: "📊"},
-    {path: "../SubPages/Notifications", label: "Уведомления", icon: "/kartinochki(vremennie)/Notifications.jpg", alt: "🔔"},
+    {path: "/dashboard/SubPages/MainMenu", label: "Главная", icon: "/Dashboard_Images/MainMenu.jpg", alt: "🏠"},
+    {path: "/dashboard/SubPages/IncomingD", label: "Входящие документы", icon: "/Dashboard_Images/Incoming.jpg", alt: "📥"},
+    {path: "/dashboard/SubPages/Verification", label: "Очередь проверки", icon: "/Dashboard_Images/Queue.jpg", alt: "🚶🚶🚶🚶🚶🚶🚶"},
+    {path: "/dashboard/SubPages/Routing", label: "Маршрутизация", icon: "/Dashboard_Images/Routing.jpg", alt: "☑️"},
+    {path: "/dashboard/SubPages/Departments", label: "Подразделения", icon: "/Dashboard_Images/Departments.jpg", alt: "📍"},
+    {path: "/dashboard/SubPages/Analytics", label: "Аналитика", icon: "/Dashboard_Images/Analytics.jpg", alt: "🏢"},
+    {path: "/dashboard/SubPages/Settings", label: "Настройки", icon: "/Dashboard_Images/Settings.jpg", alt: "📊"},
+    {path: "/dashboard/SubPages/Notifications", label: "Уведомления", icon: "/Dashboard_Images/Notifications.jpg", alt: "🔔"},
   ];
 
   const handleLogout = () => {
@@ -29,8 +29,8 @@ const Sidebar = () => {
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div>
         <button className={`button-hide ${collapsed ? 'collapsed' : ''}`} onClick={toggleSidebar}>
-          <img src={collapsed ? "https://cdn-icons-png.freepik.com/256/98/98703.png" 
-            : "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Small_arrow_pointing_left.svg/1280px-Small_arrow_pointing_left.svg.png"}
+          <img src={collapsed ? "/Dashboard_Images/Right_Arrow.png" 
+            : "/Dashboard_Images/Left_Arrow.png"}
             className="Casual-icon" alt={collapsed ? ">" : "<"} />
         </button>
         
@@ -61,7 +61,7 @@ const Sidebar = () => {
       
       <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
         <button onClick={handleLogout} className="sidebar-item">
-          <img src="/kartinochki(vremennie)/Log_out.jpg" className="Casual-icon" alt="🚪⬅️" />
+          <img src="/Dashboard_Images/Log_out.jpg" className="Casual-icon" alt="🚪⬅️" />
           <span className="item-label">Выход из системы</span>
         </button>
         <h6 className={`version-text ${collapsed ? "collapsed" : ""}`}>
