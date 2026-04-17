@@ -3,7 +3,7 @@ import "../../styles/global.css";
 const Departments = () => {
     return (
     <div>
-        Здравствуйте, Иван.
+        Подразделения
     </div>
     )
 
