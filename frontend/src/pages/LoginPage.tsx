@@ -130,7 +130,7 @@ const LoginPage = () => {
 
       <div className="login-right">
         <div className="info-card">
-          <img src="../LoginPageImg/paper.png" alt="картинка" className="info-image" />
+          <img src="../LoginPage_Images/paper.png" alt="картинка" className="info-image" />
           <h2>Умная обработка документов</h2>
           <p>Автоматическое распознавание, классификация и маршрутизация входящих документов с использованием искусственного интеллекта</p>
         </div>
