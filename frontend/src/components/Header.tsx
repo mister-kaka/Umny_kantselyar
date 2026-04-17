@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
       <div className="Search">
-        <img src="" className="Search-icon" alt="🔍" />
+        <img src="/kartinochki(vremennie)/Search.jpg" className="Search-icon" alt="🔍" />
         <input 
         type="text"
         placeholder="Поиск по документам, номерам, отправителям"

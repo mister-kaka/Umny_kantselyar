@@ -36,6 +36,7 @@ const DashboardContent = () => {
 };
 
 const DashboardPage = () => {
+
   return (
     <SidebarProvider>
       <DashboardContent />

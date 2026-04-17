@@ -1,17 +1,35 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';  
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-//   import './App.css';
+import ProtectedRoute from './components/ProtectedRoute';
+
+const AppRoutes = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+    const isLoginPage = location.pathname === '/login';
+    
+    if (token && isLoginPage) {
+      navigate('/dashboard');
+    }
+  }, [navigate, location.pathname]);
+
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+       <Route path="/dashboard/*" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+    </Routes>
+  );
+};
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />  
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard/*" element={<DashboardPage />} />
-      </Routes>
+      <AppRoutes />
     </BrowserRouter>
   );
 }
