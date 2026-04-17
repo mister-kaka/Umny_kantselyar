@@ -25,7 +25,7 @@ const DashboardContent = () => {
           <Route path="SubPages/IncomingD" element={<IncomingD />} />
           <Route path="SubPages/Verification" element={<Verification />} />
           <Route path="SubPages/Routing" element={<Routing />} />
-          <Route path="SubPages/Departaments" element={<Departments />} />
+          <Route path="SubPages/Departments" element={<Departments />} />
           <Route path="SubPages/Analytics" element={<Analytics />} />
           <Route path="SubPages/Settings" element={<Settings />} />
           <Route path="SubPages/Notifications" element={<Notifications />} />

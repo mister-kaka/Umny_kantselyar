@@ -9,14 +9,14 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const menuItems = [
-    {path: "/dashboard/SubPages/MainMenu", label: "Главная", icon: "", alt: "🏠"},
-    {path: "/dashboard/SubPages/IncomingD", label: "Входящие документы", icon: "", alt: "📥"},
-    {path: "/dashboard/SubPages/Verification", label: "Очередь проверки", icon: "", alt: "🚶🚶🚶🚶🚶🚶🚶"},
-    {path: "/dashboard/SubPages/Routing", label: "Маршрутизация", icon: "", alt: "☑️"},
-    {path: "/dashboard/SubPages/Departaments", label: "Подразделения", icon: "", alt: "📍"},
-    {path: "/dashboard/SubPages/Analytics", label: "Аналитика", icon: "", alt: "🏢"},
-    {path: "/dashboard/SubPages/Settings", label: "Настройки", icon: "", alt: "📊"},
-    {path: "/dashboard/SubPages/Notifications", label: "Уведомления", icon: "", alt: "🔔"},
+    {path: "/dashboard/SubPages/MainMenu", label: "Главная", icon: "/Dashboard_Images/MainMenu.jpg", alt: "🏠"},
+    {path: "/dashboard/SubPages/IncomingD", label: "Входящие документы", icon: "/Dashboard_Images/Incoming.jpg", alt: "📥"},
+    {path: "/dashboard/SubPages/Verification", label: "Очередь проверки", icon: "/Dashboard_Images/Queue.jpg", alt: "🚶🚶🚶🚶🚶🚶🚶"},
+    {path: "/dashboard/SubPages/Routing", label: "Маршрутизация", icon: "/Dashboard_Images/Routing.jpg", alt: "☑️"},
+    {path: "/dashboard/SubPages/Departments", label: "Подразделения", icon: "/Dashboard_Images/Departments.jpg", alt: "📍"},
+    {path: "/dashboard/SubPages/Analytics", label: "Аналитика", icon: "/Dashboard_Images/Analytics.jpg", alt: "🏢"},
+    {path: "/dashboard/SubPages/Settings", label: "Настройки", icon: "/Dashboard_Images/Settings.jpg", alt: "📊"},
+    {path: "/dashboard/SubPages/Notifications", label: "Уведомления", icon: "/Dashboard_Images/Notifications.jpg", alt: "🔔"},
   ];
 
   const handleLogout = () => {
@@ -29,7 +29,9 @@ const Sidebar = () => {
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div>
         <button className={`button-hide ${collapsed ? 'collapsed' : ''}`} onClick={toggleSidebar}>
-          <img src="" className="Casual-icon" alt={collapsed ? ">" : "<"} />
+          <img src={collapsed ? "/Dashboard_Images/Right_Arrow.png" 
+            : "/Dashboard_Images/Left_Arrow.png"}
+            className="Casual-icon" alt={collapsed ? ">" : "<"} />
         </button>
         
         {!collapsed ? (
@@ -59,7 +61,7 @@ const Sidebar = () => {
       
       <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
         <button onClick={handleLogout} className="sidebar-item">
-          <img src="" className="Casual-icon" alt="🚪⬅️" />
+          <img src="/Dashboard_Images/Log_out.jpg" className="Casual-icon" alt="🚪⬅️" />
           <span className="item-label">Выход из системы</span>
         </button>
         <h6 className={`version-text ${collapsed ? "collapsed" : ""}`}>

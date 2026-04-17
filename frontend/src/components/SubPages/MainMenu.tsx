@@ -92,17 +92,21 @@ const MainMenu = () => {
             
             <div className="Main-cards-container">
                 <Card className="main-card">
-                    <img src="" className="Main-cards-image" alt="📄"/>
+                    <img src="/Dashboard_Images/Docs.png"
+                        className="Main-cards-image" alt="📄"/>
                     <h1>{data?.totalDocuments}</h1>
                     <h5 className="text-secondary">Всего входящих</h5>
                 </Card>
                 <Card className="main-card">
-                    <img src="" className="Main-cards-image" alt="✔️"/>
+                    <img src="/Dashboard_Images/check-mark-icon.png"
+                        className="Main-cards-image" alt="✔️"/>
                     <h1>{data?.inProgress}</h1>
                     <h5 className="text-secondary">В обработке</h5>
                 </Card>
                 <Card className="main-card">
-                    <img src="" className="Main-cards-image" alt="❕"/>
+                    <img src=
+                        "/Dashboard_Images/exclamation-mark-icon.png"
+                        className="Main-cards-image" alt="❕"/>
                     <h1>{data?.pendingCheck}</h1>
                     <h5 className="text-secondary">Требуют проверки</h5>
                 </Card>
