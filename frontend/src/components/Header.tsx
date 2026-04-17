@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
       <div className="Search">
-        <img src="/kartinochki(vremennie)/Search.jpg" className="Search-icon" alt="🔍" />
+        <img src="" className="Search-icon" alt="🔍" />
         <input 
         type="text"
         placeholder="Поиск по документам, номерам, отправителям"
@@ -38,10 +38,10 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
       <button className="button-secondary">
         <img src="/kartinochki(vremennie)/Notifications.jpg" className="Casual-icon" alt="🔔" />
       </button>
-      <div className="profile-block">
+      {/* <div className="profile-info">
         <h5>Иванов И.И.</h5>
-        <p><h6 className="text-secondary">Администратор</h6></p>
-      </div>
+        <h6 className="text-secondary">Администратор</h6>
+      </div> */}
       <img src="https://i.pinimg.com/originals/3e/1d/2c/3e1d2cd96b7c93d45577d630a7fdc129.jpg" className="profile-image" alt="👤" />
     </div>
   );
