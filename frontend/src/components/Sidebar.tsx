@@ -29,7 +29,9 @@ const Sidebar = () => {
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div>
         <button className={`button-hide ${collapsed ? 'collapsed' : ''}`} onClick={toggleSidebar}>
-          <img src="" className="Casual-icon" alt={collapsed ? ">" : "<"} />
+          <img src={collapsed ? "https://cdn-icons-png.freepik.com/256/98/98703.png" 
+            : "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Small_arrow_pointing_left.svg/1280px-Small_arrow_pointing_left.svg.png"}
+            className="Casual-icon" alt={collapsed ? ">" : "<"} />
         </button>
         
         {!collapsed ? (
@@ -59,7 +61,7 @@ const Sidebar = () => {
       
       <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
         <button onClick={handleLogout} className="sidebar-item">
-          <img src="" className="Casual-icon" alt="🚪⬅️" />
+          <img src="/kartinochki(vremennie)/Log_out.jpg" className="Casual-icon" alt="🚪⬅️" />
           <span className="item-label">Выход из системы</span>
         </button>
         <h6 className={`version-text ${collapsed ? "collapsed" : ""}`}>
