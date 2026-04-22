@@ -11,6 +11,8 @@ DROP TABLE IF EXISTS roles CASCADE;
 
 -- Создание таблиц бд
 
+-- Таблицы этапа 2
+
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -70,6 +72,49 @@ CREATE TABLE document_routes (
     route_status VARCHAR(50) NOT NULL,
     route_reason TEXT,
     routed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблицы этапа 2
+
+CREATE TABLE document_sources (
+    id SERIAL PRIMARY KEY,
+    document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    source_type VARCHAR(50) NOT NULL,
+    organization_name VARCHAR(200),
+    sender_name VARCHAR(200),
+    contact_info VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE document_files (
+    id SERIAL PRIMARY KEY,
+    document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    file_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(50) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size INTEGER NOT NULL,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ocr_results (
+    id SERIAL PRIMARY KEY,
+    document_id INTEGER NOT NULL UNIQUE REFERENCES documents(id) ON DELETE CASCADE,
+    raw_text TEXT,
+    normalized_text TEXT,
+    language VARCHAR(10) DEFAULT 'ru',
+    ocr_confidence DECIMAL(5,2),
+    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE document_classifications (
+    id SERIAL PRIMARY KEY,
+    document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    type_id INTEGER REFERENCES document_types(id),
+    category_id INTEGER REFERENCES document_categories(id),
+    type_confidence DECIMAL(5,2),
+    category_confidence DECIMAL(5,2),
+    is_verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
