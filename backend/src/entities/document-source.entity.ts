@@ -12,13 +12,13 @@ export class DocumentSource {
     @Column({ name: 'source_type', length: 50 })
     sourceType!: string; 
 
-    @Column({ name: 'organization_name', length: 200, nullable: true })
+    @Column({ name: 'organization_name', length: 200, nullable: true, type: 'varchar' })
     organizationName!: string | null;
 
-    @Column({ name: 'sender_name', length: 200, nullable: true })
+    @Column({ name: 'sender_name', length: 200, nullable: true, type: 'varchar' })
     senderName!: string | null;
 
-    @Column({ name: 'contact_info', length: 255, nullable: true })
+    @Column({ name: 'contact_info', length: 255, nullable: true, type: 'varchar' })
     contactInfo!: string | null;
 
     @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
