@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, OneToOne, JoinColumn } from 'typeorm';
 import { DocumentType } from './document-type.entity';
 import { DocumentCategory } from './document-category.entity';
 import { User } from './user.entity';
@@ -66,5 +66,8 @@ export class Document {
 
     @OneToMany(() => DocumentSource, (source) => source.document)
     sources!: DocumentSource[];
+
+    @OneToOne(() => OcrResult, (ocr) => ocr.document)
+    ocrResult!: OcrResult | null;
 
 }
