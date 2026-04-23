@@ -64,4 +64,7 @@ export class Document {
     @OneToMany(() => DocumentClassification, (classification) => classification.document)
     classifications!: DocumentClassification[];
 
+    @OneToMany(() => DocumentSource, (source) => source.document)
+    sources!: DocumentSource[];
+
 }
