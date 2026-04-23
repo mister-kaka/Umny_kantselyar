@@ -37,6 +37,21 @@
 - npm run dev
 - Фронтенд будет доступен на **http://localhost:3001**
 
+### Что делать, если порт 5432 уже занят
+Нужно запустить контейнер на другом порту (например, 5433):
+
+#### 1. Удалить старый контейнер (если создавался)
+docker stop umny_kan_postgres
+docker rm umny_kan_postgres
+
+#### 2. Создать контейнер на порту 5433
+docker run --name umny_kan_postgres -e POSTGRES_PASSWORD=12345 -e POSTGRES_USER=postgres -e POSTGRES_DB=umny_kan_db -p 5433:5432 -d postgres:15
+
+#### 3. Инициализация базы данных, запуск бэкенда и запуск фронтенда производятся как в инструкции выше
+
+#### 4. И затем в файле backend/.env изменить порт:
+DB_PORT=5433   # вместо 5432
+
 ## Тестовые данные для входа 
 - **почта**: alexandra@umny-kan.ru; **пароль**: admin123
 - **почта**: maria.n@umny-kan.ru; **пароль**: admin123
