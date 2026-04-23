@@ -3,6 +3,7 @@ import { DocumentType } from './document-type.entity';
 import { DocumentCategory } from './document-category.entity';
 import { User } from './user.entity';
 import { DocumentRoute } from './document-route.entity';
+import { DocumentFile } from './document-file.entity';
 
 @Entity('documents')
 export class Document {
@@ -53,6 +54,9 @@ export class Document {
 
     @OneToMany(() => DocumentRoute, (route) => route.document)
     documentRoutes!: DocumentRoute[];
+
+    @OneToMany(() => DocumentFile, (file) => file.document)
+    files!: DocumentFile[];
 
 
 }
