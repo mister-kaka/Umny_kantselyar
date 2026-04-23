@@ -6,6 +6,9 @@ export class DocumentFile {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Column({ name: 'document_id' })
+  documentId!: number;
+
   @Column({ name: 'file_name', length: 255 })
   fileName!: string;
 
@@ -20,10 +23,7 @@ export class DocumentFile {
 
   @Column({ name: 'uploaded_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   uploadedAt!: Date;
-
-  @Column({ name: 'document_id' })
-  documentId!: number;
-    
+  
   @ManyToOne(() => Document, (document) => document.files)
   @JoinColumn({ name: 'document_id' })
   document!: Document;
