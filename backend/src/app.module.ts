@@ -18,6 +18,8 @@ import { DocumentClassification } from './entities/document-classification.entit
 
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { DocumentsModule } from './documents/documents.module';
+import { DepartmentsModule } from './departments/departments.module';
 
 @Module({
   imports: [
@@ -57,6 +59,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
     AuthModule,
 
     DashboardModule,
+
+    DocumentsModule,
+
+    DepartmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
