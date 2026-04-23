@@ -10,6 +10,7 @@ const Sidebar = () => {
 
   const menuItems = [
     {path: "/dashboard/SubPages/MainMenu", label: "Главная", icon: "/DashboardPage_Images/MainMenu.jpg", alt: "🏠"},
+    {path: "/documents", label: "Документы", icon: "", alt: ""},
     {path: "/dashboard/SubPages/IncomingD", label: "Входящие документы", icon: "/DashboardPage_Images/Incoming.jpg", alt: "📥"},
     {path: "/dashboard/SubPages/Verification", label: "Очередь проверки", icon: "/DashboardPage_Images/Queue.jpg", alt: "🚶🚶🚶🚶🚶🚶🚶"},
     {path: "/dashboard/SubPages/Routing", label: "Маршрутизация", icon: "/DashboardPage_Images/Routing.jpg", alt: "☑️"},
