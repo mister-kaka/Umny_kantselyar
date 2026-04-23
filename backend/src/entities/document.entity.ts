@@ -5,6 +5,8 @@ import { User } from './user.entity';
 import { DocumentRoute } from './document-route.entity';
 import { DocumentFile } from './document-file.entity';
 import { DocumentClassification } from './document-classification.entity';
+import { DocumentSource } from './document-source.entity';
+import { OcrResult } from './ocr-result.entity';
 
 @Entity('documents')
 export class Document {
