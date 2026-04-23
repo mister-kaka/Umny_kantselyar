@@ -11,6 +11,11 @@ import { DocumentType } from './entities/document-type.entity';
 import { DocumentCategory } from './entities/document-category.entity';
 import { Document } from './entities/document.entity';
 import { DocumentRoute } from './entities/document-route.entity';
+import { DocumentSource } from './entities/document-source.entity';
+import { DocumentFile } from './entities/document-file.entity';
+import { OcrResult } from './entities/ocr-result.entity';
+import { DocumentClassification } from './entities/document-classification.entity';
+
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 
@@ -38,6 +43,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
           DocumentCategory,
           Document,
           DocumentRoute,
+          DocumentSource,       
+          DocumentFile,         
+          OcrResult,             
+          DocumentClassification,
         ],
         synchronize: false, 
         logging: true,   
