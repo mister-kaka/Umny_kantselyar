@@ -7,7 +7,7 @@ import { DocumentCategoryDto } from './dto/document-category.dto';
 @Controller('documents')
 export class DocumentsController {
     constructor(
-        private readonly documentsService: DocumentsService,             // ← твоё: внедряем сервис
+        private readonly documentsService: DocumentsService,         
     ) {}
 
     @Get()
