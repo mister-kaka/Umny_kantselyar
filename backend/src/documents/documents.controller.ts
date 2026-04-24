@@ -25,8 +25,6 @@ export class DocumentsController {
         return { message: 'POST /documents - будет реализовано Маше Н' };
     }
 
-
-
     @Get('document-types')
     @UseGuards(AuthGuard('jwt'))
     async getDocumentTypes(): Promise<DocumentTypeDto[]> {
