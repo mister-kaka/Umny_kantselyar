@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS roles CASCADE;
 
 -- Создание таблиц бд
 
--- Таблицы этапа 2
+-- Таблицы этапа 1
 
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
