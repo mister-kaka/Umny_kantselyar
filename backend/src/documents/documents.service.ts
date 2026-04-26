@@ -13,6 +13,7 @@ import { GetDocumentsDto } from './dto/get-documents.dto';
 import { DocumentsListResponseDto, DocumentListItemDto } from './dto/document-list.dto';
 import { DocumentTypeDto } from './dto/document-type.dto';
 import { DocumentCategoryDto } from './dto/document-category.dto';
+import { DocumentCardDto } from './dto/document-card.dto';
 
 interface LogEntry {
     timestamp: string;
@@ -74,7 +75,7 @@ export class DocumentsService {
         try {
             const page = filters.page ?? 1;
             const limit = filters.limit ?? 10;
-            const skip = (page - 1) * limit; 
+            const skip = (page - 1) * limit;
 
             const query = this.documentRepository
                 .createQueryBuilder('doc')
@@ -174,5 +175,112 @@ export class DocumentsService {
             code: category.code,
             description: category.description,
         }));
+    }
+
+    async findOne(id: number): Promise<DocumentCardDto> {
+        const timestamp = this.getMoscowTime();
+
+        try {
+            const document = await this.documentRepository.findOne({
+                where: { id },
+                relations: [
+                    'documentType',
+                    'category',
+                    'creator',
+                    'files',
+                    'ocrResult',
+                    'classifications',
+                    'documentRoutes',
+                    'documentRoutes.department',
+                ],
+            });
+
+            if (!document) {
+                await this.writeLog({
+                    timestamp, 
+                    type: 'GET', 
+                    url: `/documents/${id}`,
+                    action: 'получение карточки документа', 
+                    status: 'error',
+                    statusCode: 404, 
+                    message: `Документ с id ${id} не найден`,
+                });
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            document.classifications?.sort((a, b) => 
+                b.createdAt.getTime() - a.createdAt.getTime()
+            );
+
+            const result: DocumentCardDto = {
+                id: document.id,
+                registrationNumber: document.registrationNumber,
+                title: document.title,
+                senderName: document.senderName,
+                receivedDate: document.receivedDate,
+                currentStatus: document.currentStatus,
+                confidenceScore: document.confidenceScore,
+                documentType: document.documentType?.name || null,
+                category: document.category?.name || null,
+                createdBy: document.creator?.fullName || 'Неизвестно',
+                createdAt: document.createdAt,
+                files: document.files?.map(f => ({
+                    id: f.id, 
+                    fileName: f.fileName, 
+                    fileType: f.fileType,
+                    filePath: f.filePath, 
+                    fileSize: f.fileSize, 
+                    uploadedAt: f.uploadedAt,
+                })) || [],
+                ocrResult: document.ocrResult ? {
+                    id: document.ocrResult.id, 
+                    rawText: document.ocrResult.rawText,
+                    normalizedText: document.ocrResult.normalizedText, 
+                    language: document.ocrResult.language,
+                    ocrConfidence: document.ocrResult.ocrConfidence, 
+                    processedAt: document.ocrResult.processedAt,
+                } : null,
+                classification: document.classifications?.[0] ? {
+                    id: document.classifications[0].id,
+                    typeId: document.classifications[0].typeId,
+                    categoryId: document.classifications[0].categoryId,
+                    typeConfidence: document.classifications[0].typeConfidence,
+                    categoryConfidence: document.classifications[0].categoryConfidence,
+                    isVerified: document.classifications[0].isVerified,
+                    createdAt: document.classifications[0].createdAt,
+                } : null,
+                routes: document.documentRoutes?.map(r => ({
+                    departmentName: r.department?.name || 'Не указан',
+                    routeStatus: r.routeStatus, routeReason: r.routeReason, routedAt: r.routedAt,
+                })) || [],
+            };
+
+            await this.writeLog({
+                timestamp, 
+                type: 'GET', 
+                url: `/documents/${id}`,
+                action: 'получение карточки документа', 
+                status: 'success',
+                statusCode: 200, 
+                message: `Документ получен`,
+            });
+
+            return result;
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.writeLog({
+                timestamp, 
+                type: 'GET', 
+                url: `/documents/${id}`,
+                action: 'получение карточки документа', 
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException('Ошибка сервера при получении карточки документа', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

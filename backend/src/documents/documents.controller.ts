@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { DocumentsService } from './documents.service';
 import { GetDocumentsDto } from './dto/get-documents.dto';
 import { DocumentsListResponseDto } from './dto/document-list.dto';
 import { DocumentTypeDto } from './dto/document-type.dto';
 import { DocumentCategoryDto } from './dto/document-category.dto';
+import { DocumentCardDto } from './dto/document-card.dto';
 
 @Controller('documents')
 export class DocumentsController {
@@ -31,13 +32,13 @@ export class DocumentsController {
 
     @UseGuards(AuthGuard('jwt'))
     @Get(':id')
-    getDocumentById(@Param('id') id: string) {
-        return { message: 'GET /documents/${id} - будет реализовано марией н. позже' };
+    async getDocumentById(@Param('id', ParseIntPipe) id: number): Promise<DocumentCardDto> {
+        return this.documentsService.findOne(id);
     }
 
     @UseGuards(AuthGuard('jwt'))
     @Post()
     createDocument() {
-        return { message: 'POST /documents -  будет реализовано марией н. позже' };
+        return { message: 'POST /documents -  будет реализовано марией н. позже при необходимости' };
     }
 }
