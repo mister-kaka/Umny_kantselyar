@@ -1,20 +1,161 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+
+import { Document } from '../entities/document.entity';
 import { DocumentType } from '../entities/document-type.entity';
 import { DocumentCategory } from '../entities/document-category.entity';
+import { DocumentRoute } from '../entities/document-route.entity';
+
+import { GetDocumentsDto } from './dto/get-documents.dto';
+import { DocumentsListResponseDto, DocumentListItemDto } from './dto/document-list.dto';
 import { DocumentTypeDto } from './dto/document-type.dto';
 import { DocumentCategoryDto } from './dto/document-category.dto';
+
+interface LogEntry {
+    timestamp: string;
+    type: string;
+    url: string;
+    action: string;
+    status: string;
+    statusCode: number;
+    message: string;
+}
+
 @Injectable()
 export class DocumentsService {
     constructor(
-    @InjectRepository(DocumentType)
-    private documentTypeRepository: Repository<DocumentType>,
+        @InjectRepository(Document)
+        private documentRepository: Repository<Document>,
 
-    @InjectRepository(DocumentCategory)
-    private documentCategoryRepository: Repository<DocumentCategory>,
+        @InjectRepository(DocumentType)
+        private documentTypeRepository: Repository<DocumentType>,
+
+        @InjectRepository(DocumentCategory)
+        private documentCategoryRepository: Repository<DocumentCategory>,
+
+        @InjectRepository(DocumentRoute)
+        private documentRouteRepository: Repository<DocumentRoute>,
     ) {}
-    
+
+    private getMoscowTime(): string {
+        return new Date().toLocaleString('ru-RU', {
+            timeZone: 'Europe/Moscow',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+    }
+
+    private async writeLog(logEntry: LogEntry): Promise<void> {
+        const logFilePath = path.join(__dirname, '../../logs.json');
+        let logs: LogEntry[] = [];
+
+        try {
+            const fileContent = await fs.readFile(logFilePath, 'utf8');
+            logs = JSON.parse(fileContent);
+        } catch {
+            logs = [];
+        }
+
+        logs.push(logEntry);
+        await fs.writeFile(logFilePath, JSON.stringify(logs, null, 2));
+    }
+
+    async findAll(filters: GetDocumentsDto): Promise<DocumentsListResponseDto> {
+        const timestamp = this.getMoscowTime();
+
+        try {
+            const page = filters.page ?? 1;
+            const limit = filters.limit ?? 10;
+            const skip = (page - 1) * limit; 
+
+            const query = this.documentRepository
+                .createQueryBuilder('doc')
+                .leftJoinAndSelect('doc.documentType', 'documentType')
+                .leftJoinAndSelect('doc.category', 'category')
+                .leftJoinAndSelect(
+                    'doc.documentRoutes',
+                    'route',
+                    'route.id = (SELECT dr.id FROM document_routes dr WHERE dr.document_id = doc.id ORDER BY dr.routed_at DESC LIMIT 1)'
+                )
+                .leftJoinAndSelect('route.department', 'department');
+
+            if (filters.typeId) {
+                query.andWhere('doc.documentTypeId = :typeId', { typeId: filters.typeId });
+            }
+
+            if (filters.categoryId) {
+                query.andWhere('doc.categoryId = :categoryId', { categoryId: filters.categoryId });
+            }
+
+            if (filters.status) {
+                query.andWhere('doc.currentStatus = :status', { status: filters.status });
+            }
+
+            const [documents, total] = await query
+                .orderBy('doc.receivedDate', 'DESC')
+                .skip(skip)
+                .take(limit)
+                .getManyAndCount();
+
+            const items: DocumentListItemDto[] = documents.map(doc => ({
+                id: doc.id,
+                registrationNumber: doc.registrationNumber,
+                title: doc.title,
+                senderName: doc.senderName,
+                receivedDate: doc.receivedDate,
+                documentType: doc.documentType?.name ?? 'Не указан',
+                category: doc.category?.name ?? null,
+                currentStatus: doc.currentStatus,
+                department: doc.documentRoutes?.[0]?.department?.name ?? null,
+            }));
+
+            await this.writeLog({
+                timestamp,
+                type: 'GET',
+                url: '/documents',
+                action: 'получение списка документов',
+                status: 'success',
+                statusCode: 200,
+                message: `Найдено документов: ${total}`,
+            });
+
+            return {
+                items,
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            };
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.writeLog({
+                timestamp,
+                type: 'GET',
+                url: '/documents',
+                action: 'получение списка документов',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
+
+            console.error('Ошибка при получении списка документов:', error);
+            throw new HttpException(
+                'Ошибка сервера при получении списка документов',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
     async findAllDocumentTypes(): Promise<DocumentTypeDto[]> {
         const types = await this.documentTypeRepository.find();
         return types.map(type => ({
@@ -25,7 +166,6 @@ export class DocumentsService {
         }));
     }
 
-  
     async findAllDocumentCategories(): Promise<DocumentCategoryDto[]> {
         const categories = await this.documentCategoryRepository.find();
         return categories.map(category => ({
