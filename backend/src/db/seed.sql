@@ -1,5 +1,9 @@
 -- Удаление старых таблицы (чтобы при повторном запуске не было ошибок)
 
+DROP TABLE IF EXISTS document_classifications CASCADE;
+DROP TABLE IF EXISTS ocr_results CASCADE;
+DROP TABLE IF EXISTS document_files CASCADE;
+DROP TABLE IF EXISTS document_sources CASCADE;
 DROP TABLE IF EXISTS document_routes CASCADE;
 DROP TABLE IF EXISTS documents CASCADE;
 DROP TABLE IF EXISTS document_categories CASCADE;
