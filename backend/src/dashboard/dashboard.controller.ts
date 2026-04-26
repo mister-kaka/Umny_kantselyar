@@ -7,8 +7,8 @@ import { DashboardResponseDto } from './dto/dashboard.dto';
 export class DashboardController {
     constructor(private readonly dashboardService: DashboardService) {}
 
-    @Get('data')
     @UseGuards(AuthGuard('jwt'))  
+    @Get('data')
     async getDashboardData(): Promise<DashboardResponseDto> {
         return this.dashboardService.getDashboardData();
     }
