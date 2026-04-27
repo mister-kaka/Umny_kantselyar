@@ -5,7 +5,7 @@ import { Document } from '../entities/document.entity';
 import { DocumentRoute } from '../entities/document-route.entity';
 import { Department } from '../entities/department.entity';
 import { DashboardResponseDto } from './dto/dashboard.dto';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import * as path from 'path';
 
 interface LogEntry {
@@ -14,8 +14,15 @@ interface LogEntry {
   url: string;
   action: string;
   status: string;
-  errorCode?: number;
-  errorMessage?: string;
+  statusCode?: number;
+  message?: string;
+}
+
+interface DepartmentRouteRaw {
+  departmentId: string;  
+  departmentName: string;
+  routeStatus: string;
+  count: string;         
 }
 
 @Injectable()
@@ -55,21 +62,19 @@ export class DashboardService {
         });
     }
 
-    private writeLog(logEntry: LogEntry) {
+   private async writeLog(logEntry: LogEntry): Promise<void> {
         const logFilePath = path.join(__dirname, '../../logs.json');
         let logs: LogEntry[] = [];
         
-        if (fs.existsSync(logFilePath)) {
-            try {
-                const fileContent = fs.readFileSync(logFilePath, 'utf8');
-                logs = JSON.parse(fileContent);
-            } catch (e) {
-                logs = [];
-            }
+        try {
+            const fileContent = await fs.readFile(logFilePath, 'utf8');
+            logs = JSON.parse(fileContent);
+        } catch {
+            logs = [];
         }
         
         logs.push(logEntry);
-        fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2));
+        await fs.writeFile(logFilePath, JSON.stringify(logs, null, 2));
     }
 
     async getDashboardData(): Promise<DashboardResponseDto> {
@@ -89,14 +94,14 @@ export class DashboardService {
                 this.getDepartmentRouteStatuses() 
             ]);
 
-        this.writeLog({
+        await this.writeLog({
                 timestamp,
                 type: 'GET',
                 url: '/dashboard/data',
                 action: 'получение данных на дашборд',
                 status: 'success',
-                errorCode: 200,
-                errorMessage: 'Данные успешно получены',
+                statusCode: 200,
+                message: 'Данные успешно получены',
             });
 
         const recentDocuments = recentDocumentsRaw.map(doc => ({
@@ -124,14 +129,14 @@ export class DashboardService {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера при получении данных';
             
-            this.writeLog({
+            await this.writeLog({
                 timestamp,
                 type: 'GET',
                 url: '/dashboard/data',
                 action: 'получение данных на дашборд',
                 status: 'error',
-                errorCode: HttpStatus.INTERNAL_SERVER_ERROR,
-                errorMessage: errorMessage,
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
             });
 
             console.error('Ошибка при получении данных дашборда:', error);
@@ -152,21 +157,21 @@ export class DashboardService {
         });
     }
 
-    private async getPendingCheckCount(): Promise<number> { // rоличество документов, требующих проверки
+    private async getPendingCheckCount(): Promise<number> { // rоличество документов, требующих проверки   
         return this.documentRepository.count({
             where: { currentStatus: 'pending' },
         });
     }
 
-    private async getRecentDocuments(): Promise<Document[]> {  // последние 5 документов 
+   private async getRecentDocuments(): Promise<Pick<Document, 'id' | 'title' | 'currentStatus' | 'receivedDate'>[]> {  // последние 5 документов
         return this.documentRepository.find({
             order: { receivedDate: 'DESC' },
             take: 5,
             select: ['id', 'title', 'currentStatus', 'receivedDate'],
-        });
+        }) as Promise<Pick<Document, 'id' | 'title' | 'currentStatus' | 'receivedDate'>[]>;
     }
 
-     private async getDepartmentRouteStatuses(): Promise<any[]> {  // cтатусы маршрутов по отделам
+    private async getDepartmentRouteStatuses(): Promise<DepartmentRouteRaw[]> {  // cтатусы маршрутов по отделам
         return this.documentRouteRepository.query(this.departmentRoutesSQL);
     }
 }
