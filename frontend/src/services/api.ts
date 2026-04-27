@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
+import { DocumentType, DocumentCategory } from '../types';
 
 export const api = axios.create({
   baseURL: 'http://localhost:3000',
@@ -73,6 +74,26 @@ export const getDocumentById = async (id: number): Promise<DocumentCard> => {
     return response.data;
   } catch (error) {
     console.error('Ошибка получения карточки документа', error);
+    throw error;
+  }
+};
+
+export const getDocumentTypes = async (): Promise<DocumentType[]> => {
+  try {
+    const response = await api.get<DocumentType[]>('/documents/document-types');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения типов документов', error);
+    throw error;
+  }
+};
+
+export const getDocumentCategories = async (): Promise<DocumentCategory[]> => {
+  try {
+    const response = await api.get<DocumentCategory[]>('/documents/document-categories');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения категорий документов', error);
     throw error;
   }
 };

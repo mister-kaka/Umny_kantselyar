@@ -111,3 +111,17 @@ export interface DocumentsListResponse {
   limit: number;
   totalPages: number;
 }
+
+export interface DocumentType {
+  id: number;
+  name: string;
+  code: string;
+  description: string | null;
+}
+
+export interface DocumentCategory {
+  id: number;
+  name: string;
+  code: string;
+  description: string | null;
+}
