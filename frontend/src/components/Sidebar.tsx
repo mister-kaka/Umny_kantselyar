@@ -13,7 +13,7 @@ const Sidebar = () => {
     {path: "/dashboard/SubPages/IncomingD", label: "Входящие документы", icon: "/DashboardPage_Images/Incoming.jpg", alt: "📥"},
     {path: "/dashboard/SubPages/Verification", label: "Очередь проверки", icon: "/DashboardPage_Images/Queue.jpg", alt: "🚶🚶🚶🚶🚶🚶🚶"},
     {path: "/dashboard/SubPages/Routing", label: "Маршрутизация", icon: "/DashboardPage_Images/Routing.jpg", alt: "☑️"},
-    {path: "/dashboard/SubPages/documents", label: "Документы", icon: "/DashboardPage_Images/DocumentType.png", alt: "📥"},
+    {path: "/dashboard/SubPages/documents", label: "Архив документов", icon: "/DashboardPage_Images/DocumentType.png", alt: "📥"},
     {path: "/dashboard/SubPages/Departments", label: "Подразделения", icon: "/DashboardPage_Images/Departments.jpg", alt: "📍"},
     {path: "/dashboard/SubPages/Analytics", label: "Аналитика", icon: "/DashboardPage_Images/Analytics.jpg", alt: "🏢"},
     {path: "/dashboard/SubPages/Settings", label: "Настройки", icon: "/DashboardPage_Images/Settings.jpg", alt: "📊"},
