@@ -5,8 +5,9 @@ import Table from "../Table";
 import "../../styles/Dashboard.css";
 import { getDashboard } from "../../services/api";
 import { DashboardData, GroupedDepartment } from "../../types";
+import { NavLink, useNavigate } from 'react-router-dom';
 
-const translateStatus = (status: string): string => {
+export const translateStatus = (status: string): string => {
     const statusMap: Record<string, string> = {
         'in_progress': 'в работе',
         'pending': 'на проверке',
@@ -19,7 +20,7 @@ const translateStatus = (status: string): string => {
     return statusMap[status] || status;
 };
 
-const groupByDepartment = (data: DashboardData | null): GroupedDepartment[] => {
+export const groupByDepartment = (data: DashboardData | null): GroupedDepartment[] => {
   if (!data?.departmentRouteStatuses) return [];
   
   const departmentMap = new Map<number, GroupedDepartment>();
@@ -116,8 +117,10 @@ const MainMenu = () => {
                 <Card>
                     <Table
                         title={<h3>Последние документы</h3>}
-                        rightTitle={<h4><a className="bluesrc" href="">Все документы →</a></h4>}
-                    >
+                        rightTitle={<h4><NavLink
+                            key="/documents"
+                            to="/documents"
+                            className="bluesrc">Все документы →</NavLink></h4>}>
                         <thead>
                             <tr>
                                 <th>ID</th>
