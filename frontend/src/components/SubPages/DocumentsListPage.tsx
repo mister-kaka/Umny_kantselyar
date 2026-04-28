@@ -52,13 +52,13 @@ const DocumentsListPage = () => {
             defaultLabel="Категория"
             isOpen={activeFilter === 'category'}
             onToggle={() => toggleFilter('category')}/>
-          <DropdownButton
+          {/* <DropdownButton
             options={['100%', '99% - 90%', '89% - 80%', '79% - 0%']}
             onSelect={(option) => console.log(option)}
             icon={<img src="/DashboardPage_Images/Confidence.png" alt="💯" />}
             defaultLabel="Уверенность"
             isOpen={activeFilter === 'confidence'}
-            onToggle={() => toggleFilter('confidence')}/>
+            onToggle={() => toggleFilter('confidence')}/> */}
           <DropdownButton
             options={['Маршрутизирован', 'Готов к проверке', 'В работе', 'Завершено']}
             onSelect={(option) => console.log(option)}
