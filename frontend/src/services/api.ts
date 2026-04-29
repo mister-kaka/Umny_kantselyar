@@ -81,7 +81,7 @@ export const getDocumentById = async (id: number): Promise<DocumentCard> => {
 
 export const getDocumentTypes = async (): Promise<DocumentType[]> => {
   try {
-    const response = await api.get<DocumentType[]>('/documents/document-types');
+    const response = await api.get<DocumentType[]>('/document-types');
     return response.data;
   } catch (error) {
     console.error('Ошибка получения типов документов', error);
@@ -91,7 +91,7 @@ export const getDocumentTypes = async (): Promise<DocumentType[]> => {
 
 export const getDocumentCategories = async (): Promise<DocumentCategory[]> => {
   try {
-    const response = await api.get<DocumentCategory[]>('/documents/document-categories');
+    const response = await api.get<DocumentCategory[]>('/document-categories');
     return response.data;
   } catch (error) {
     console.error('Ошибка получения категорий документов', error);
