@@ -19,7 +19,7 @@ const DocumentsListPage = () => {
   };
 
   const handleRowClick = (id: number) => {
-    navigate(`/documents/${id}`);
+  navigate(`/dashboard/documents/${id}`); 
   };
 
   return (
@@ -84,7 +84,7 @@ const DocumentsListPage = () => {
           </thead>
           <tbody>
             <tr onClick={() => handleRowClick(1)} style={{ cursor: 'pointer' }}>
-              <td><a href="#">Данные</a></td>
+              <td><span>Данные</span></td>
               <td>Данные</td>
               <td>Данные</td>
               <td>Данные</td>
