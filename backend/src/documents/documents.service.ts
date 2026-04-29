@@ -4,15 +4,11 @@ import { Repository } from 'typeorm';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-import { Document } from '../entities/document.entity';
-import { DocumentType } from '../entities/document-type.entity';
-import { DocumentCategory } from '../entities/document-category.entity';
+import { Document } from '../entities/document.entity';;
 import { DocumentRoute } from '../entities/document-route.entity';
 
 import { GetDocumentsDto } from './dto/get-documents.dto';
 import { DocumentsListResponseDto, DocumentListItemDto } from './dto/document-list.dto';
-import { DocumentTypeDto } from './dto/document-type.dto';
-import { DocumentCategoryDto } from './dto/document-category.dto';
 import { DocumentCardDto } from './dto/document-card.dto';
 
 interface LogEntry {
@@ -30,12 +26,6 @@ export class DocumentsService {
     constructor(
         @InjectRepository(Document)
         private documentRepository: Repository<Document>,
-
-        @InjectRepository(DocumentType)
-        private documentTypeRepository: Repository<DocumentType>,
-
-        @InjectRepository(DocumentCategory)
-        private documentCategoryRepository: Repository<DocumentCategory>,
 
         @InjectRepository(DocumentRoute)
         private documentRouteRepository: Repository<DocumentRoute>,
@@ -157,26 +147,6 @@ export class DocumentsService {
         }
     }
 
-    async findAllDocumentTypes(): Promise<DocumentTypeDto[]> {
-        const types = await this.documentTypeRepository.find();
-        return types.map(type => ({
-            id: type.id,
-            name: type.name,
-            code: type.code,
-            description: type.description,
-        }));
-    }
-
-    async findAllDocumentCategories(): Promise<DocumentCategoryDto[]> {
-        const categories = await this.documentCategoryRepository.find();
-        return categories.map(category => ({
-            id: category.id,
-            name: category.name,
-            code: category.code,
-            description: category.description,
-        }));
-    }
-
     async findOne(id: number): Promise<DocumentCardDto> {
         const timestamp = this.getMoscowTime();
 
@@ -190,6 +160,8 @@ export class DocumentsService {
                     'files',
                     'ocrResult',
                     'classifications',
+                    'classifications.documentType',     
+                    'classifications.documentCategory',
                     'documentRoutes',
                     'documentRoutes.department',
                 ],
@@ -242,8 +214,8 @@ export class DocumentsService {
                 } : null,
                 classification: document.classifications?.[0] ? {
                     id: document.classifications[0].id,
-                    typeId: document.classifications[0].typeId,
-                    categoryId: document.classifications[0].categoryId,
+                    type: document.classifications[0].documentType?.name || null,
+                    category: document.classifications[0].documentCategory?.name || null,
                     typeConfidence: document.classifications[0].typeConfidence,
                     categoryConfidence: document.classifications[0].categoryConfidence,
                     isVerified: document.classifications[0].isVerified,
@@ -262,7 +234,7 @@ export class DocumentsService {
                 action: 'получение карточки документа', 
                 status: 'success',
                 statusCode: 200, 
-                message: `Документ получен`,
+                message: 'Документ получен',
             });
 
             return result;

@@ -1,10 +1,14 @@
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom'; 
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
-import { useState } from "react";
+import { getDocumentById } from '../services/api';
+import { DocumentCard } from '../types';
 
 const DocumentCardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"overview" | "ocr" | "entities" | "history">("overview");
-
+  const { id } = useParams<{ id: string }>(); 
+  const [activeTab, setActiveTab] = useState<"overview" | "ocr" | "entities" | "history" >("overview");
+  
   return (
     <div className="document-page">
       {/* Шапка */}
@@ -17,7 +21,6 @@ const DocumentCardPage: React.FC = () => {
       </div>
 
       <div className="two-columns">
-        {/* ========== ЛЕВАЯ КОЛОНКА ========== */}
         <div className="document-preview">
           <h2>ДОГОВОР ПОСТАВКИ № 2026/ТТ-145</h2>
           <p className="doc-date">От 20 марта 2026 года</p>
@@ -38,7 +41,6 @@ const DocumentCardPage: React.FC = () => {
           <p><strong>Срок поставки:</strong> до 30 июня 2026 года.</p>
         </div>
 
-        {/* ========== ПРАВАЯ КОЛОНКА ========== */}
         <div className="right-panel">
           <div className="tabs">
             <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Обзор</button>
@@ -48,7 +50,6 @@ const DocumentCardPage: React.FC = () => {
           </div>
 
           <div className="tab-content">
-            {/* Вкладка 1: Обзор */}
             {activeTab === "overview" && (
               <>
                 <div className="info-block">
@@ -92,29 +93,29 @@ const DocumentCardPage: React.FC = () => {
               </>
             )}
 
-            {/* Вкладка 2: Текст OCR */}
+           
             {activeTab === "ocr" && (
               <>
                 <div className="ocr-block">
                   <h3>Raw text</h3>
-                  <pre>ДОГОВОР ПОСТАВКИ № 2026/ТТ-145
-От 20 марта 2026 года
+                  <pre> ДОГОВОР ПОСТАВКИ № 2026/ТТ-145
+                        От 20 марта 2026 года
 
-Настоящий договор заключен между:
+                        Настоящий договор заключен между:
+                        Заказчик: АО "Московский Метрополитен"
 
-Заказчик: АО "Московский Метрополитен"
-Адрес: г. Москва, ул. Каланчевская, д. 13
-ИНН: 7702005605
+                        Адрес: г. Москва, ул. Каланчевская, д. 13
+                        ИНН: 7702005605
 
-Поставщик: ООО "Транспортные Технологии"
-Адрес: г. Москва, Варшавское шоссе, д. 47
-ИНН: 7725123456
+                        Поставщик: ООО "Транспортные Технологии"
+                        Адрес: г. Москва, Варшавское шоссе, д. 47
+                        ИНН: 7725123456
 
-Предмет договора: Поставка запасных частей для вагонов метро модели 81-765/766/767 "Москва" в количестве согласно спецификации.
+                        Предмет договора: Поставка запасных частей для вагонов метро модели 81-765/766/767 "Москва" в количестве согласно спецификации.
 
-Сумма договора: 12 450 000 (Двенадцать миллионов четыреста пятьдесят тысяч) рублей 00 копеек, включая НДС 20%.
+                        Сумма договора: 12 450 000 (Двенадцать миллионов четыреста пятьдесят тысяч) рублей 00 копеек, включая НДС 20%.
 
-Срок поставки: до 30 июня 2026 года.</pre>
+                        Срок поставки: до 30 июня 2026 года.</pre>
                 </div>
                 <div className="ocr-block">
                   <h3>Normalized text</h3>
@@ -123,7 +124,6 @@ const DocumentCardPage: React.FC = () => {
               </>
             )}
 
-            {/* Вкладка 3: Сущности */}
             {activeTab === "entities" && (
               <div className="entities-list">
                 <div className="entity-row"><span className="entity-label">Организация</span><span className="entity-value">ООО "Транспортные Технологии"</span><span className="entity-count">3x</span></div>
@@ -136,7 +136,6 @@ const DocumentCardPage: React.FC = () => {
               </div>
             )}
 
-            {/* Вкладка 4: История маршрутов */}
             {activeTab === "history" && (
               <table className="history-table">
                 <thead>

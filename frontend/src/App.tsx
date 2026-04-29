@@ -2,8 +2,6 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import DocumentCardPage from './pages/DocumentCardPage';
-import DocumentsListPage from './pages/DocumentsListPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const AppRoutes = () => {
@@ -24,9 +22,6 @@ const AppRoutes = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard/*" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-
-      <Route path="/documents" element={<ProtectedRoute><DocumentsListPage /></ProtectedRoute>} />
-      <Route path="/documents/:id" element={<ProtectedRoute><DocumentCardPage /></ProtectedRoute>} />
     </Routes>
   );
 };
