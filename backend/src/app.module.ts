@@ -20,6 +20,8 @@ import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DocumentsModule } from './documents/documents.module';
 import { DepartmentsModule } from './departments/departments.module';
+import { DocumentTypesModule } from './document-types/document-types.module';
+import { DocumentCategoriesModule } from './document-categories/document-categories.module';
 
 @Module({
   imports: [
@@ -63,6 +65,10 @@ import { DepartmentsModule } from './departments/departments.module';
     DocumentsModule,
 
     DepartmentsModule,
+
+    DocumentTypesModule,
+
+    DocumentCategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

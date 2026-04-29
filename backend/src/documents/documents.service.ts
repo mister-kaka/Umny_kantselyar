@@ -4,15 +4,11 @@ import { Repository } from 'typeorm';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-import { Document } from '../entities/document.entity';
-import { DocumentType } from '../entities/document-type.entity';
-import { DocumentCategory } from '../entities/document-category.entity';
+import { Document } from '../entities/document.entity';;
 import { DocumentRoute } from '../entities/document-route.entity';
 
 import { GetDocumentsDto } from './dto/get-documents.dto';
 import { DocumentsListResponseDto, DocumentListItemDto } from './dto/document-list.dto';
-import { DocumentTypeDto } from './dto/document-type.dto';
-import { DocumentCategoryDto } from './dto/document-category.dto';
 import { DocumentCardDto } from './dto/document-card.dto';
 
 interface LogEntry {
@@ -30,12 +26,6 @@ export class DocumentsService {
     constructor(
         @InjectRepository(Document)
         private documentRepository: Repository<Document>,
-
-        @InjectRepository(DocumentType)
-        private documentTypeRepository: Repository<DocumentType>,
-
-        @InjectRepository(DocumentCategory)
-        private documentCategoryRepository: Repository<DocumentCategory>,
 
         @InjectRepository(DocumentRoute)
         private documentRouteRepository: Repository<DocumentRoute>,
@@ -125,7 +115,7 @@ export class DocumentsService {
                 action: 'получение списка документов',
                 status: 'success',
                 statusCode: 200,
-                message: `Найдено документов: ${total}`,
+                message: 'Найдено документов: ${total}',
             });
 
             return {
@@ -157,26 +147,6 @@ export class DocumentsService {
         }
     }
 
-    async findAllDocumentTypes(): Promise<DocumentTypeDto[]> {
-        const types = await this.documentTypeRepository.find();
-        return types.map(type => ({
-            id: type.id,
-            name: type.name,
-            code: type.code,
-            description: type.description,
-        }));
-    }
-
-    async findAllDocumentCategories(): Promise<DocumentCategoryDto[]> {
-        const categories = await this.documentCategoryRepository.find();
-        return categories.map(category => ({
-            id: category.id,
-            name: category.name,
-            code: category.code,
-            description: category.description,
-        }));
-    }
-
     async findOne(id: number): Promise<DocumentCardDto> {
         const timestamp = this.getMoscowTime();
 
@@ -199,11 +169,11 @@ export class DocumentsService {
                 await this.writeLog({
                     timestamp, 
                     type: 'GET', 
-                    url: `/documents/${id}`,
+                    url: '/documents/${id}',
                     action: 'получение карточки документа', 
                     status: 'error',
                     statusCode: 404, 
-                    message: `Документ с id ${id} не найден`,
+                    message: 'Документ с id ${id} не найден',
                 });
                 throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
             }
@@ -258,11 +228,11 @@ export class DocumentsService {
             await this.writeLog({
                 timestamp, 
                 type: 'GET', 
-                url: `/documents/${id}`,
+                url: '/documents/${id}',
                 action: 'получение карточки документа', 
                 status: 'success',
                 statusCode: 200, 
-                message: `Документ получен`,
+                message: 'Документ получен',
             });
 
             return result;
@@ -273,7 +243,7 @@ export class DocumentsService {
             await this.writeLog({
                 timestamp, 
                 type: 'GET', 
-                url: `/documents/${id}`,
+                url: '/documents/${id}',
                 action: 'получение карточки документа', 
                 status: 'error',
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
