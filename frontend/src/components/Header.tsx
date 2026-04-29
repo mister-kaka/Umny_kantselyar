@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
       </button>
       <div className="profile-block">
         <h5></h5>
-        <p><h6 className="text-secondary"></h6></p>
+        <h6 className="text-secondary"></h6>
       </div>
       <img src="/DashboardPage_Images/Profile.jpg" className="profile-image" alt="👤" />
     </div>
