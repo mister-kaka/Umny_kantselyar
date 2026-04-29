@@ -4,6 +4,7 @@ import MainMenu from "../components/SubPages/MainMenu";
 import IncomingD from "../components/SubPages/IncomingD";
 import Verification from "../components/SubPages/Verification";
 import Routing from "../components/SubPages/Routing";
+import DocumentsListPage from "../components/SubPages/DocumentsListPage";
 import Departments from "../components/SubPages/Departments";
 import Analytics from "../components/SubPages/Analytics";
 import Settings from "../components/SubPages/Settings";
@@ -25,6 +26,7 @@ const DashboardContent = () => {
           <Route path="SubPages/IncomingD" element={<IncomingD />} />
           <Route path="SubPages/Verification" element={<Verification />} />
           <Route path="SubPages/Routing" element={<Routing />} />
+          <Route path="SubPages/documents" element={<DocumentsListPage />} />
           <Route path="SubPages/Departments" element={<Departments />} />
           <Route path="SubPages/Analytics" element={<Analytics />} />
           <Route path="SubPages/Settings" element={<Settings />} />
