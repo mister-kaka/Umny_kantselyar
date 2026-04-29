@@ -50,7 +50,7 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({
         {selected}
         <span className="arrow">{isOpen ? '▲' : '▼'}</span>
       </button>
-      <CSSTransition      /*   нужно скачать пару библиотек  npm install react-transition-group и  npm install --save-dev @types/react-transition-group    */
+      <CSSTransition     
         in={isOpen}
         timeout={200}
         classNames="dropdown-animation"
@@ -148,7 +148,7 @@ export const DateFilterDropdown: React.FC<DateFilterDropdownProps> = ({
         {getCurrentLabel()}
         <span className="arrow">{isOpen ? '▲' : '▼'}</span>
       </button>
-      <CSSTransition       /*   нужно скачать пару библиотек  npm install react-transition-group и  npm install --save-dev @types/react-transition-group    */
+      <CSSTransition       
         in={isOpen}
         timeout={200}
         classNames="dropdown-animation"

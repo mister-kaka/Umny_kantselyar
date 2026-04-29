@@ -28,7 +28,7 @@ const DashboardContent = () => {
           <Route path="verification" element={<Verification />} />
           <Route path="routing" element={<Routing />} />
           <Route path="documents" element={<DocumentsListPage />} />
-          <Route path="documents/:id" element={<DocumentCardPage />} /> {/* Карточка теперь тут */}
+          <Route path="documents/:id" element={<DocumentCardPage />} /> 
           <Route path="departments" element={<Departments />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
