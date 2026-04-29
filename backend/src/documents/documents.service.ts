@@ -115,7 +115,7 @@ export class DocumentsService {
                 action: 'получение списка документов',
                 status: 'success',
                 statusCode: 200,
-                message: 'Найдено документов: ${total}',
+                message: `Найдено документов: ${total}`,
             });
 
             return {
@@ -160,6 +160,8 @@ export class DocumentsService {
                     'files',
                     'ocrResult',
                     'classifications',
+                    'classifications.documentType',     
+                    'classifications.documentCategory',
                     'documentRoutes',
                     'documentRoutes.department',
                 ],
@@ -169,11 +171,11 @@ export class DocumentsService {
                 await this.writeLog({
                     timestamp, 
                     type: 'GET', 
-                    url: '/documents/${id}',
+                    url: `/documents/${id}`,
                     action: 'получение карточки документа', 
                     status: 'error',
                     statusCode: 404, 
-                    message: 'Документ с id ${id} не найден',
+                    message: `Документ с id ${id} не найден`,
                 });
                 throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
             }
@@ -212,8 +214,8 @@ export class DocumentsService {
                 } : null,
                 classification: document.classifications?.[0] ? {
                     id: document.classifications[0].id,
-                    typeId: document.classifications[0].typeId,
-                    categoryId: document.classifications[0].categoryId,
+                    type: document.classifications[0].documentType?.name || null,
+                    category: document.classifications[0].documentCategory?.name || null,
                     typeConfidence: document.classifications[0].typeConfidence,
                     categoryConfidence: document.classifications[0].categoryConfidence,
                     isVerified: document.classifications[0].isVerified,
@@ -228,7 +230,7 @@ export class DocumentsService {
             await this.writeLog({
                 timestamp, 
                 type: 'GET', 
-                url: '/documents/${id}',
+                url: `/documents/${id}`,
                 action: 'получение карточки документа', 
                 status: 'success',
                 statusCode: 200, 
@@ -243,7 +245,7 @@ export class DocumentsService {
             await this.writeLog({
                 timestamp, 
                 type: 'GET', 
-                url: '/documents/${id}',
+                url: `/documents/${id}`,
                 action: 'получение карточки документа', 
                 status: 'error',
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
