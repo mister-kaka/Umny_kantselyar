@@ -18,8 +18,8 @@ export class OcrResultDto {
 
 export class DocumentClassificationDto {
     id!: number;
-    typeId!: number | null;
-    categoryId!: number | null;
+    type!: string | null;
+    category!: string | null;
     typeConfidence!: number | null;
     categoryConfidence!: number | null;
     isVerified!: boolean;

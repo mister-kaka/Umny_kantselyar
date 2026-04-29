@@ -35,8 +35,6 @@ export interface GroupedDepartment {
   statuses: DepartmentStatus[];
 }
 
-
-
 export interface DocumentListItem {
   id: number;
   registrationNumber: string;
@@ -60,7 +58,10 @@ export interface DocumentCard {
   currentStatus: string;
   department: string;
   files: DocumentFile[];
-  ocrText: OcrResult[];
+  createdBy: string;          
+  createdAt: string;          
+  confidenceScore: number | null; 
+  ocrResult: OcrResult | null; 
   classification: DocumentClassification;
   routes: DocumentRoute[];
 }
@@ -69,6 +70,7 @@ export interface DocumentFile {
   id: number;
   fileName: string;
   fileType: string;
+  filePath: string;
   fileSize: number;
   uploadedAt: string;
 }
@@ -82,17 +84,19 @@ export interface OcrResult {
 }
 
 export interface DocumentClassification {
-  type: string;
-  category: string;
+  id: number;
+  type: string | null;
+  category: string | null;
   typeConfidence: number;
   categoryConfidence: number;
   isVerified: boolean;
+  createdAt: string;
 }
 
 export interface DocumentRoute {
-  department: string;
-  status: string;
-  reason?: string;
+  departmentName: string; 
+  routeStatus: string;   
+  routeReason: string | null; 
   routedAt: string;
 }
 
