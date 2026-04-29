@@ -11,7 +11,6 @@ const DocumentCardPage: React.FC = () => {
   
   return (
     <div className="document-page">
-      {/* Шапка */}
       <div className="doc-header">
         <div>
           <h1>Проверка документа</h1>
