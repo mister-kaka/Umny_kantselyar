@@ -115,7 +115,7 @@ export class DocumentsService {
                 action: 'получение списка документов',
                 status: 'success',
                 statusCode: 200,
-                message: `Найдено документов: ${total}`,
+                message: 'Найдено документов: ${total}',
             });
 
             return {
@@ -169,11 +169,11 @@ export class DocumentsService {
                 await this.writeLog({
                     timestamp, 
                     type: 'GET', 
-                    url: `/documents/${id}`,
+                    url: '/documents/${id}',
                     action: 'получение карточки документа', 
                     status: 'error',
                     statusCode: 404, 
-                    message: `Документ с id ${id} не найден`,
+                    message: 'Документ с id ${id} не найден',
                 });
                 throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
             }
@@ -228,11 +228,11 @@ export class DocumentsService {
             await this.writeLog({
                 timestamp, 
                 type: 'GET', 
-                url: `/documents/${id}`,
+                url: '/documents/${id}',
                 action: 'получение карточки документа', 
                 status: 'success',
                 statusCode: 200, 
-                message: `Документ получен`,
+                message: 'Документ получен',
             });
 
             return result;
@@ -243,7 +243,7 @@ export class DocumentsService {
             await this.writeLog({
                 timestamp, 
                 type: 'GET', 
-                url: `/documents/${id}`,
+                url: '/documents/${id}',
                 action: 'получение карточки документа', 
                 status: 'error',
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
