@@ -9,15 +9,15 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const menuItems = [
-    {path: "/dashboard/SubPages/MainMenu", label: "Главная", icon: "/DashboardPage_Images/MainMenu.jpg", alt: "🏠"},
-    {path: "/dashboard/SubPages/IncomingD", label: "Входящие документы", icon: "/DashboardPage_Images/Incoming.jpg", alt: "📥"},
-    {path: "/dashboard/SubPages/Verification", label: "Очередь проверки", icon: "/DashboardPage_Images/Queue.jpg", alt: "🚶🚶🚶🚶🚶🚶🚶"},
-    {path: "/dashboard/SubPages/Routing", label: "Маршрутизация", icon: "/DashboardPage_Images/Routing.jpg", alt: "☑️"},
-    {path: "/documents", label: "Архив документов", icon: "/DashboardPage_Images/Documents.jpg", alt: "📄"},
-    {path: "/dashboard/SubPages/Departments", label: "Подразделения", icon: "/DashboardPage_Images/Departments.jpg", alt: "📍"},
-    {path: "/dashboard/SubPages/Analytics", label: "Аналитика", icon: "/DashboardPage_Images/Analytics.jpg", alt: "🏢"},
-    {path: "/dashboard/SubPages/Settings", label: "Настройки", icon: "/DashboardPage_Images/Settings.jpg", alt: "📊"},
-    {path: "/dashboard/SubPages/Notifications", label: "Уведомления", icon: "/DashboardPage_Images/Notifications.jpg", alt: "🔔"},
+    {path: "/dashboard/main", label: "Главная", icon: "/DashboardPage_Images/MainMenu.jpg", alt: "🏠"},
+    {path: "/dashboard/incoming", label: "Входящие документы", icon: "/DashboardPage_Images/Incoming.jpg", alt: "📥"},
+    {path: "/dashboard/verification", label: "Очередь проверки", icon: "/DashboardPage_Images/Queue.jpg", alt: "🔍"},
+    {path: "/dashboard/routing", label: "Маршрутизация", icon: "/DashboardPage_Images/Routing.jpg", alt: "☑️"},
+    {path: "/dashboard/documents", label: "Архив документов", icon: "/DashboardPage_Images/DocumentType.png", alt: "📄"},
+    {path: "/dashboard/departments", label: "Подразделения", icon: "/DashboardPage_Images/Departments.jpg", alt: "📍"},
+    {path: "/dashboard/analytics", label: "Аналитика", icon: "/DashboardPage_Images/Analytics.jpg", alt: "🏢"},
+    {path: "/dashboard/settings", label: "Настройки", icon: "/DashboardPage_Images/Settings.jpg", alt: "⚙️"},
+    {path: "/dashboard/notifications", label: "Уведомления", icon: "/DashboardPage_Images/Notifications.jpg", alt: "🔔"},
   ];
 
   const handleLogout = () => {
@@ -35,14 +35,10 @@ const Sidebar = () => {
             className="Casual-icon" alt={collapsed ? ">" : "<"} />
         </button>
         
-        {!collapsed ? (
+        {!collapsed && (
           <div className="Umny-cantselyar-text">
             <h3>Умный Канцеляр</h3>
             <h6 className="AOD-text">Автоматизация обработки документов</h6>
-          </div>
-        ) : (
-          <div className="Umny-cantselyar-text">
-            {/* <h3>Ум. <br/>К.</h3> */}
           </div>
         )}
         
