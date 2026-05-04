@@ -138,7 +138,9 @@ export class DocumentsService {
                 senderName: document.senderName,
                 receivedDate: document.receivedDate,
                 currentStatus: document.currentStatus,
-                confidenceScore: document.confidenceScore,
+                confidenceScore: document.confidenceScore 
+                    ? Number(document.confidenceScore) 
+                    : null,
                 documentType: document.documentType?.name || null,
                 category: document.category?.name || null,
                 createdBy: document.creator?.fullName || 'Неизвестно',
@@ -156,15 +158,21 @@ export class DocumentsService {
                     rawText: document.ocrResult.rawText,
                     normalizedText: document.ocrResult.normalizedText,
                     language: document.ocrResult.language,
-                    ocrConfidence: document.ocrResult.ocrConfidence,
+                    ocrConfidence: document.ocrResult.ocrConfidence 
+                        ? Number(document.ocrResult.ocrConfidence) 
+                        : null,
                     processedAt: document.ocrResult.processedAt,
                 } : null,
                 classification: document.classifications?.[0] ? {
                     id: document.classifications[0].id,
                     type: document.classifications[0].documentType?.name || null,
                     category: document.classifications[0].documentCategory?.name || null,
-                    typeConfidence: document.classifications[0].typeConfidence,
-                    categoryConfidence: document.classifications[0].categoryConfidence,
+                    typeConfidence: document.classifications[0].typeConfidence 
+                        ? Number(document.classifications[0].typeConfidence) 
+                        : null,
+                    categoryConfidence: document.classifications[0].categoryConfidence 
+                        ? Number(document.classifications[0].categoryConfidence) 
+                        : null,
                     isVerified: document.classifications[0].isVerified,
                     createdAt: document.classifications[0].createdAt,
                 } : null,
