@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { LoggerModule } from './logger/logger.module';
 
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
@@ -25,12 +26,14 @@ import { DocumentCategoriesModule } from './document-categories/document-categor
 
 @Module({
   imports: [
-    ConfigModule.forRoot({  //Загрузка переменных из .env
+    LoggerModule,
+
+    ConfigModule.forRoot({  
       isGlobal: true,
       envFilePath: '.env',
     }),
 
-    TypeOrmModule.forRootAsync({  //Подключение TypeORM к PostgreSQL
+    TypeOrmModule.forRootAsync({ 
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
@@ -59,15 +62,10 @@ import { DocumentCategoriesModule } from './document-categories/document-categor
     }),
 
     AuthModule,
-
     DashboardModule,
-
     DocumentsModule,
-
     DepartmentsModule,
-
     DocumentTypesModule,
-
     DocumentCategoriesModule,
   ],
   controllers: [AppController],

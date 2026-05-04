@@ -5,24 +5,13 @@ import { Document } from '../entities/document.entity';
 import { DocumentRoute } from '../entities/document-route.entity';
 import { Department } from '../entities/department.entity';
 import { DashboardResponseDto } from './dto/dashboard.dto';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-
-interface LogEntry {
-  timestamp: string;
-  type: string;
-  url: string;
-  action: string;
-  status: string;
-  statusCode?: number;
-  message?: string;
-}
+import { AppLoggerService } from '../logger/app-logger.service';
 
 interface DepartmentRouteRaw {
-  departmentId: string;  
+  departmentId: string;
   departmentName: string;
   routeStatus: string;
-  count: string;         
+  count: string;
 }
 
 @Injectable()
@@ -45,42 +34,14 @@ export class DashboardService {
         private documentRepository: Repository<Document>,
         @InjectRepository(DocumentRoute)
         private documentRouteRepository: Repository<DocumentRoute>,
-        @InjectRepository(Department)    
+        @InjectRepository(Department)
         private departmentRepository: Repository<Department>,
+        private readonly logger: AppLoggerService,
     ) {}
 
-    private getMoscowTime(): string {
-        return new Date().toLocaleString('ru-RU', {
-            timeZone: 'Europe/Moscow',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        });
-    }
-
-   private async writeLog(logEntry: LogEntry): Promise<void> {
-        const logFilePath = path.join(__dirname, '../../logs.json');
-        let logs: LogEntry[] = [];
-        
-        try {
-            const fileContent = await fs.readFile(logFilePath, 'utf8');
-            logs = JSON.parse(fileContent);
-        } catch {
-            logs = [];
-        }
-        
-        logs.push(logEntry);
-        await fs.writeFile(logFilePath, JSON.stringify(logs, null, 2));
-    }
-
     async getDashboardData(): Promise<DashboardResponseDto> {
-        const timestamp = this.getMoscowTime();
         try {
-             const [
+            const [
                 totalDocuments,
                 inProgress,
                 pendingCheck,
@@ -88,14 +49,14 @@ export class DashboardService {
                 departmentRouteStatusesRaw
             ] = await Promise.all([
                 this.getTotalDocuments(),
-                this.getInProgressCount(),          
-                this.getPendingCheckCount(),        
-                this.getRecentDocuments(),         
-                this.getDepartmentRouteStatuses() 
+                this.getInProgressCount(),
+                this.getPendingCheckCount(),
+                this.getRecentDocuments(),
+                this.getDepartmentRouteStatuses()
             ]);
 
-        await this.writeLog({
-                timestamp,
+            await this.logger.log({
+                module: 'Dashboard',
                 type: 'GET',
                 url: '/dashboard/data',
                 action: 'получение данных на дашборд',
@@ -104,33 +65,33 @@ export class DashboardService {
                 message: 'Данные успешно получены',
             });
 
-        const recentDocuments = recentDocumentsRaw.map(doc => ({
-            id: doc.id,
-            title: doc.title,
-            status: doc.currentStatus,
-            date: doc.receivedDate,
-        }));
+            const recentDocuments = recentDocumentsRaw.map(doc => ({
+                id: doc.id,
+                title: doc.title,
+                status: doc.currentStatus,
+                date: doc.receivedDate,
+            }));
 
-        const departmentRouteStatuses = departmentRouteStatusesRaw.map(item => ({
-            departmentId: Number(item.departmentId),
-            departmentName: item.departmentName,
-            routeStatus: item.routeStatus,
-            count: Number(item.count),
-        }));
+            const departmentRouteStatuses = departmentRouteStatusesRaw.map(item => ({
+                departmentId: Number(item.departmentId),
+                departmentName: item.departmentName,
+                routeStatus: item.routeStatus,
+                count: Number(item.count),
+            }));
 
-        return {
-            totalDocuments,
-            inProgress,
-            pendingCheck,
-            recentDocuments,
-            departmentRouteStatuses, 
-        };
+            return {
+                totalDocuments,
+                inProgress,
+                pendingCheck,
+                recentDocuments,
+                departmentRouteStatuses,
+            };
 
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера при получении данных';
-            
-            await this.writeLog({
-                timestamp,
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.logger.log({
+                module: 'Dashboard',
                 type: 'GET',
                 url: '/dashboard/data',
                 action: 'получение данных на дашборд',
@@ -147,23 +108,23 @@ export class DashboardService {
         }
     }
 
-    private async getTotalDocuments(): Promise<number> {  // общее количество документов
+    private async getTotalDocuments(): Promise<number> {
         return this.documentRepository.count();
-    }  
+    }
 
-    private async getInProgressCount(): Promise<number> {   // количество документов в обработке
+    private async getInProgressCount(): Promise<number> {
         return this.documentRepository.count({
             where: { currentStatus: 'in_review' },
         });
     }
 
-    private async getPendingCheckCount(): Promise<number> { // rоличество документов, требующих проверки   
+    private async getPendingCheckCount(): Promise<number> {
         return this.documentRepository.count({
             where: { currentStatus: 'pending' },
         });
     }
 
-   private async getRecentDocuments(): Promise<Pick<Document, 'id' | 'title' | 'currentStatus' | 'receivedDate'>[]> {  // последние 5 документов
+    private async getRecentDocuments(): Promise<Pick<Document, 'id' | 'title' | 'currentStatus' | 'receivedDate'>[]> {
         return this.documentRepository.find({
             order: { receivedDate: 'DESC' },
             take: 5,
@@ -171,7 +132,7 @@ export class DashboardService {
         }) as Promise<Pick<Document, 'id' | 'title' | 'currentStatus' | 'receivedDate'>[]>;
     }
 
-    private async getDepartmentRouteStatuses(): Promise<DepartmentRouteRaw[]> {  // cтатусы маршрутов по отделам
+    private async getDepartmentRouteStatuses(): Promise<DepartmentRouteRaw[]> {
         return this.documentRouteRepository.query(this.departmentRoutesSQL);
     }
 }

@@ -3,71 +3,28 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DocumentType } from '../entities/document-type.entity';
 import { DocumentTypeDto } from './dto/document-type.dto';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-
-interface LogEntry {
-  timestamp: string;
-  type: string;
-  url: string;
-  action: string;
-  status: string;
-  statusCode?: number;
-  message?: string;
-}
+import { AppLoggerService } from '../logger/app-logger.service';
 
 @Injectable()
 export class DocumentTypesService {
   constructor(
     @InjectRepository(DocumentType)
     private readonly documentTypeRepository: Repository<DocumentType>,
+    private readonly logger: AppLoggerService,
   ) {}
 
-
-  private getMoscowTime(): string {
-    return new Date().toLocaleString('ru-RU', {
-      timeZone: 'Europe/Moscow',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    });
-  }
-
-
-  private async writeLog(logEntry: LogEntry): Promise<void> {
-    const logFilePath = path.join(__dirname, '../../logs.json');
-    let logs: LogEntry[] = [];
-
-    try {
-      const fileContent = await fs.readFile(logFilePath, 'utf8');
-      logs = JSON.parse(fileContent);
-    } catch {
-      logs = [];
-    }
-
-    logs.push(logEntry);
-    await fs.writeFile(logFilePath, JSON.stringify(logs, null, 2));
-  }
-  
-
   async findAll(): Promise<DocumentTypeDto[]> {
-    const timestamp = this.getMoscowTime();
-
     try {
       const types = await this.documentTypeRepository.find();
 
-      await this.writeLog({
-        timestamp,
+      await this.logger.log({
+        module: 'DocumentTypes',
         type: 'GET',
         url: '/document-types',
         action: 'получение справочника типов документов',
         status: 'success',
         statusCode: 200,
-        message: 'Справочник типов документов успешно получен',
+        message: 'Справочник типов успешно получен',
       });
 
       return types.map(type => ({
@@ -78,11 +35,10 @@ export class DocumentTypesService {
       }));
 
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Ошибка сервера при получении справочника типов документов';
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
 
-      await this.writeLog({
-        timestamp,
+      await this.logger.log({
+        module: 'DocumentTypes',
         type: 'GET',
         url: '/document-types',
         action: 'получение справочника типов документов',
@@ -91,10 +47,9 @@ export class DocumentTypesService {
         message: errorMessage,
       });
 
-      console.error('Ошибка при получении справочника типов документов:', error);
-
+      console.error('Ошибка при получении справочника типов:', error);
       throw new HttpException(
-        'Ошибка сервера при получении справочника типов документов',
+        'Ошибка сервера при получении справочника типов',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
