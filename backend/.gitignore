@@ -12,3 +12,5 @@ logs.json
 Thumbs.db
 
 /http.tests/
+
+/logs/
