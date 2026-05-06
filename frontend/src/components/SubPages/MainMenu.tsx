@@ -5,7 +5,7 @@ import Table from "../Table";
 import "../../styles/Dashboard.css";
 import { getDashboard } from "../../services/api";
 import { DashboardData, GroupedDepartment } from "../../types";
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 export const statusMap: Record<string, string> = {
     'in_progress': 'В работе',
@@ -118,10 +118,14 @@ const MainMenu = () => {
                 <Card>
                     <Table
                         title={<h3>Последние документы</h3>}
-                        rightTitle={<h4><NavLink
-                            key="/documents"
-                            to="/documents"
-                            className="bluesrc">Все документы →</NavLink></h4>}>
+                        rightTitle={<h4>
+                           <NavLink
+                                key="/dashboard/documents"
+                                to="/dashboard/documents"
+                                className="bluesrc" >
+                                Все документы →
+                            </NavLink>
+                        </h4>}>
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -133,7 +137,11 @@ const MainMenu = () => {
                         <tbody>
                             {data?.recentDocuments.map((doc) => (
                                 <tr key={doc.id}>
-                                    <td><a href="#">{doc.id}</a></td>
+                                    <td>
+                                        <NavLink to={`/dashboard/documents/${doc.id}`} className="doc-link">
+                                            {doc.id}
+                                        </NavLink>
+                                    </td>
                                     <td>{doc.title}</td>
                                     <td>{translateStatus(doc.status)}</td> 
                                     <td>{doc.date}</td>

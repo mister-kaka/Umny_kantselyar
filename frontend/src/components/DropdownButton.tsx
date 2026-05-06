@@ -55,7 +55,7 @@ interface DropdownButtonProps {
         {selected}
         <span className="arrow">{isOpen ? '▲' : '▼'}</span>
       </button>
-      <CSSTransition      /*   нужно скачать пару библиотек  npm install react-transition-group и  npm install --save-dev @types/react-transition-group    */
+      <CSSTransition     
         in={isOpen}
         timeout={200}
         classNames="dropdown-animation"
