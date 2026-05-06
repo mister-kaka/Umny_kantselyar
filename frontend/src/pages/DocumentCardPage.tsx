@@ -1,46 +1,138 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom'; 
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
 import { getDocumentById } from '../services/api';
-import { DocumentCard } from '../types';
+import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute } from '../types/';
+import Card from '../components/Card';
+import Table from '../components/Table';
 
 const DocumentCardPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); 
-  const [activeTab, setActiveTab] = useState<"overview" | "ocr" | "entities" | "history" >("overview");
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"overview" | "ocr" | "entities" | "history">("overview");
   
+  const [data, setData] = useState<DocumentCardType | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      setError("ID документа не указан");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    getDocumentById(Number(id))
+      .then((response) => {
+        setData(response);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Ошибка загрузки:", err);
+        if (err.response?.status === 404) {
+          setError("Документ не найден");
+        } else {
+          setError("Ошибка загрузки документа");
+        }
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) {
+    return <div className="loading">Загрузка документа...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
+  if (!data) {
+    return <div className="error">Документ не найден</div>;
+  }
+
+  const getConfidenceClass = (percent: number): string => {
+    if (percent >= 90) return "confidence-high";
+    if (percent >= 70) return "confidence-medium";
+    return "confidence-low";
+  };
+
+  const routeColumns = [
+    { key: "departmentName", title: "Отдел" },
+    { key: "routeStatus", title: "Статус" },
+    { key: "routeReason", title: "Причина" },
+    { key: "routedAt", title: "Дата" },
+  ];
+
   return (
     <div className="document-page">
+      {/* Шапка с кнопкой назад */}
+      
+      <button 
+          className="back-to-list-btn"
+          onClick={() => navigate('/dashboard/documents')}
+        >
+          Все документы →
+        </button>
+        
       <div className="doc-header">
         <div>
           <h1>Проверка документа</h1>
-          <div className="doc-number">ВХ-2026-001234</div>
+          <div className="doc-number">{data.registrationNumber}</div>
         </div>
-        <div className="confidence-badge">Уверенность: 94%</div>
+      
+        <div className="confidence-badge">
+          Уверенность: 
+          <span className={`confidence-chip ${getConfidenceClass(data.classification?.typeConfidence || 0)}`}>
+            {data.classification?.typeConfidence || 0}%
+          </span>
+        </div>
       </div>
 
       <div className="two-columns">
-        <div className="document-preview">
-          <h2>ДОГОВОР ПОСТАВКИ № 2026/ТТ-145</h2>
-          <p className="doc-date">От 20 марта 2026 года</p>
-          <p>Настоящий договор заключен между:</p>
-
-          <div className="party">
-            <strong>Заказчик:</strong>
-            <p>АО "Московский Метрополитен"<br />Адрес: г. Москва, ул. Каланчевская, д. 13<br />ИНН: 7702005605</p>
-          </div>
-
-          <div className="party">
-            <strong>Поставщик:</strong>
-            <p>ООО "Транспортные Технологии"<br />Адрес: г. Москва, Варшавское шоссе, д. 47<br />ИНН: 7725123456</p>
-          </div>
-
-          <p><strong>Предмет договора:</strong> Поставка запасных частей для вагонов метро модели 81-765/766/767 "Москва" в количестве согласно спецификации.</p>
-          <p><strong>Сумма договора:</strong> 12 450 000 (Двенадцать миллионов четыреста пятьдесят тысяч) рублей 00 копеек, включая НДС 20%.</p>
-          <p><strong>Срок поставки:</strong> до 30 июня 2026 года.</p>
+        {/* ========== ЛЕВАЯ КОЛОНКА ========== */}
+        <div className="left-column">
+          <Card>
+            <h2>{data.title}</h2>
+            <p className="doc-date">Дата: {data.receivedDate}</p>
+            <p>Настоящий документ:</p>
+            <div className="party">
+              <strong>Отправитель:</strong>
+              <p>{data.senderName}</p>
+            </div>
+            {(data as any).customer && (
+              <div className="party">
+                <strong>Заказчик:</strong>
+                <p>
+                  {(data as any).customer.name}<br />
+                  {(data as any).customer.address && `Адрес: ${(data as any).customer.address}`}<br />
+                  {(data as any).customer.inn && `ИНН: ${(data as any).customer.inn}`}
+                </p>
+              </div>
+            )}
+            {(data as any).supplier && (
+              <div className="party">
+                <strong>Поставщик:</strong>
+                <p>
+                  {(data as any).supplier.name}<br />
+                  {(data as any).supplier.address && `Адрес: ${(data as any).supplier.address}`}<br />
+                  {(data as any).supplier.inn && `ИНН: ${(data as any).supplier.inn}`}
+                </p>
+              </div>
+            )}
+            {(data as any).subject && <p><strong>Предмет договора:</strong> {(data as any).subject}</p>}
+            {(data as any).amount && <p><strong>Сумма договора:</strong> {(data as any).amount}</p>}
+            {(data as any).deliveryDate && <p><strong>Срок поставки:</strong> {(data as any).deliveryDate}</p>}
+            <p><strong>Тип документа:</strong> {data.documentType}</p>
+            <p><strong>Категория:</strong> {data.category}</p>
+          </Card>
         </div>
 
-        <div className="right-panel">
+        {/* ========== ПРАВАЯ КОЛОНКА ========== */}
+        <div className="right-column">
           <div className="tabs">
             <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Обзор</button>
             <button className={`tab ${activeTab === "ocr" ? "active" : ""}`} onClick={() => setActiveTab("ocr")}>Текст OCR</button>
@@ -49,41 +141,72 @@ const DocumentCardPage: React.FC = () => {
           </div>
 
           <div className="tab-content">
+            {/* Вкладка 1: Обзор */}
             {activeTab === "overview" && (
               <>
-                <div className="info-block">
+                <Card>
                   <h3>Общая информация</h3>
-                  <div className="info-row"><span>Регистрационный номер:</span><strong>ВХ-2026-001234</strong></div>
-                  <div className="info-row"><span>Тема документа:</span><strong>Договор поставки товаров №45/23</strong></div>
-                  <div className="info-row"><span>Отправитель:</span><strong>ООО "Ромашка", Иванов И.И.</strong></div>
-                  <div className="info-row"><span>Дата поступления:</span><strong>23.04.2026</strong></div>
-                  <div className="info-row"><span>Текущий статус:</span><strong>На согласовании</strong></div>
-                  <div className="info-row"><span>Тип документа:</span><strong>Договор</strong></div>
-                  <div className="info-row"><span>Категория:</span><strong>Коммерческий</strong></div>
-                  <div className="info-row"><span>Кто создал запись:</span><strong>Петрова Анна Сергеевна</strong></div>
-                  <div className="info-row"><span>Текущий отдел:</span><strong>Юридический отдел</strong></div>
-                </div>
+                  <div className="info-grid">
+                    <div className="info-item"><span className="info-label">Регистрационный номер</span><span className="info-value">{data.registrationNumber}</span></div>
+                    <div className="info-item"><span className="info-label">Тема документа</span><span className="info-value">{data.title}</span></div>
+                    <div className="info-item"><span className="info-label">Отправитель</span><span className="info-value">{data.senderName}</span></div>
+                    <div className="info-item"><span className="info-label">Дата поступления</span><span className="info-value">{data.receivedDate}</span></div>
+                    <div className="info-item"><span className="info-label">Текущий статус</span><span className="status-badge">{data.currentStatus}</span></div>
+                    <div className="info-item"><span className="info-label">Тип документа</span><span className="info-value">{data.documentType}</span></div>
+                    <div className="info-item"><span className="info-label">Категория</span><span className="info-value">{data.category}</span></div>
+                    <div className="info-item"><span className="info-label">Кто создал запись</span><span className="info-value">{data.createdBy}</span></div>
+                  </div>
+                </Card>
 
-                <div className="info-block">
+                <Card>
+                  <h3>Текущий отдел</h3>
+                  <div className="current-department">
+                    <span className="dept-icon">🏢</span>
+                    <span className="dept-name">{data.department}</span>
+                  </div>
+                </Card>
+
+                <Card>
                   <h3>Связанные файлы</h3>
-                  <div className="file-row"><span>📄</span> dogovor_45.pdf <span className="file-size">2.3 МБ</span></div>
-                  <div className="file-row"><span>📊</span> specifikaciya.xlsx <span className="file-size">1.1 МБ</span></div>
-                  <div className="file-row"><span>🖊️</span> podpis.pdf <span className="file-size">0.8 МБ</span></div>
-                </div>
+                  {data.files && data.files.length > 0 ? (
+                    <div className="files-list">
+                      {data.files.map((file: DocumentFile) => (
+                        <div key={file.id} className="file-row">
+                          <span className="file-icon">📄</span>
+                          <span className="file-name">{file.fileName}</span>
+                          <span className="file-size">{file.fileSize} КБ</span>
+                          <button className="file-download">⬇️</button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-message">Нет файлов</div>
+                  )}
+                </Card>
 
-                <div className="info-block">
+                <Card>
                   <h3>Классификация</h3>
-                  <div className="classif-row">
-                    <span>Тип документа:</span>
-                    <span className="classif-value">Договор</span>
-                    <span className="confidence-chip confidence-high">94%</span>
+                  <div className="classif-list">
+                    <div className="classif-item">
+                      <span className="classif-label">Тип документа</span>
+                      <div className="classif-right">
+                        <span className="classif-value">{data.classification?.type || "—"}</span>
+                        <span className={`confidence-chip ${getConfidenceClass(data.classification?.typeConfidence || 0)}`}>
+                          {data.classification?.typeConfidence || 0}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="classif-item">
+                      <span className="classif-label">Категория</span>
+                      <div className="classif-right">
+                        <span className="classif-value">{data.classification?.category || "—"}</span>
+                        <span className={`confidence-chip ${getConfidenceClass(data.classification?.categoryConfidence || 0)}`}>
+                          {data.classification?.categoryConfidence || 0}%
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="classif-row">
-                    <span>Категория:</span>
-                    <span className="classif-value">Коммерческий</span>
-                    <span className="confidence-chip confidence-medium">91%</span>
-                  </div>
-                </div>
+                </Card>
 
                 <div className="action-buttons">
                   <button className="btn-primary">Подтвердить классификацию</button>
@@ -92,61 +215,57 @@ const DocumentCardPage: React.FC = () => {
               </>
             )}
 
-           
+            {/* Вкладка 2: Текст OCR */}
             {activeTab === "ocr" && (
-              <>
-                <div className="ocr-block">
-                  <h3>Raw text</h3>
-                  <pre> ДОГОВОР ПОСТАВКИ № 2026/ТТ-145
-                        От 20 марта 2026 года
-
-                        Настоящий договор заключен между:
-                        Заказчик: АО "Московский Метрополитен"
-
-                        Адрес: г. Москва, ул. Каланчевская, д. 13
-                        ИНН: 7702005605
-
-                        Поставщик: ООО "Транспортные Технологии"
-                        Адрес: г. Москва, Варшавское шоссе, д. 47
-                        ИНН: 7725123456
-
-                        Предмет договора: Поставка запасных частей для вагонов метро модели 81-765/766/767 "Москва" в количестве согласно спецификации.
-
-                        Сумма договора: 12 450 000 (Двенадцать миллионов четыреста пятьдесят тысяч) рублей 00 копеек, включая НДС 20%.
-
-                        Срок поставки: до 30 июня 2026 года.</pre>
-                </div>
-                <div className="ocr-block">
-                  <h3>Normalized text</h3>
-                  <p>Договор поставки №2026/ТТ-145 от 20.03.2026 между АО "Московский Метрополитен" и ООО "Транспортные Технологии". Предмет: поставка запасных частей для вагонов метро. Сумма: 12 450 000 руб. Срок: 30.06.2026.</p>
-                </div>
-              </>
+              <Card>
+                <h3>Raw text</h3>
+                <pre className="ocr-content">{data.ocrResult?.rawText || "Текст не распознан"}</pre>
+                <h3 className="mt-4">Normalized text</h3>
+                <p className="ocr-content">{data.ocrResult?.normalizedText || "Текст не распознан"}</p>
+              </Card>
             )}
 
+            {/* Вкладка 3: Сущности */}
             {activeTab === "entities" && (
-              <div className="entities-list">
-                <div className="entity-row"><span className="entity-label">Организация</span><span className="entity-value">ООО "Транспортные Технологии"</span><span className="entity-count">3x</span></div>
-                <div className="entity-row"><span className="entity-label">Организация</span><span className="entity-value">АО "Московский Метрополитен"</span><span className="entity-count">2x</span></div>
-                <div className="entity-row"><span className="entity-label">Дата</span><span className="entity-value">20.03.2026</span><span className="entity-count">1x</span></div>
-                <div className="entity-row"><span className="entity-label">Дата</span><span className="entity-value">30.06.2026</span><span className="entity-count">1x</span></div>
-                <div className="entity-row"><span className="entity-label">Деньги</span><span className="entity-value">12 450 000 руб.</span><span className="entity-count">1x</span></div>
-                <div className="entity-row"><span className="entity-label">ИНН</span><span className="entity-value">7702005605</span><span className="entity-count">1x</span></div>
-                <div className="entity-row"><span className="entity-label">ИНН</span><span className="entity-value">7725123456</span><span className="entity-count">1x</span></div>
-              </div>
+              <Card>
+                <h3>Извлечённые сущности</h3>
+                <div className="empty-message">Сущности будут отображаться здесь</div>
+              </Card>
             )}
 
-            {activeTab === "history" && (
-              <table className="history-table">
-                <thead>
-                  <tr><th>Отдел</th><th>Статус</th><th>Причина</th><th>Дата</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>Канцелярия</td><td><span className="status-badge green">Завершено</span></td><td>Регистрация входящего документа</td><td>23.04.2026 09:15</td></tr>
-                  <tr><td>Юридический отдел</td><td><span className="status-badge orange">На рассмотрении</span></td><td>Проверка договора на соответствие законодательству</td><td>23.04.2026 11:30</td></tr>
-                  <tr><td>Отдел закупок</td><td><span className="status-badge blue">Ожидает</span></td><td>Согласование бюджета и условий поставки</td><td>24.04.2026</td></tr>
-                </tbody>
-              </table>
-            )}
+{/* Вкладка 4: История маршрутов */}
+{activeTab === "history" && (
+  <Card>
+    <Table title="История маршрутов">
+      <div className="table-wrapper">
+        <table className="history-table">
+          <thead>
+            <tr>
+              <th>Отдел</th>
+              <th>Статус</th>
+              <th>Причина</th>
+              <th>Дата</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.routes.map((route, idx) => (
+              <tr key={idx}>
+                <td>{route.departmentName}</td>
+                <td>
+                  <span className={`status-badge ${route.routeStatus === "Завершено" ? "green" : route.routeStatus === "На рассмотрении" ? "orange" : "blue"}`}>
+                    {route.routeStatus}
+                  </span>
+                </td>
+                <td>{route.routeReason || "—"}</td>
+                <td>{route.routedAt}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Table>
+  </Card>
+)}
           </div>
         </div>
       </div>
