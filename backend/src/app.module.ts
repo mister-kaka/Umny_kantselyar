@@ -56,7 +56,7 @@ import { DocumentCategoriesModule } from './document-categories/document-categor
           DocumentClassification,
         ],
         synchronize: false, 
-        logging: true,   
+        logging: ['error'],  
       }),
       inject: [ConfigService],
     }),
