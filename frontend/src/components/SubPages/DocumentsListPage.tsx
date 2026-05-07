@@ -9,7 +9,6 @@ import { getDocuments, getDocumentTypes, getDocumentCategories } from "../../ser
 import { useNavigate } from 'react-router-dom';
 import { translateStatus, statusMap, getStatusColor } from "./MainMenu";
 import DropdownButton from "../DropdownButton";
-// import { DateFilterDropdown } from "../DropdownButton";
 import Pagination from "../Pagination"; 
 
 const DocumentsListPage = () => {
