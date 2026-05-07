@@ -15,7 +15,7 @@ const DocumentsListPage = () => {
   const navigate = useNavigate();
 
   const [data, setData] = useState<DocumentsListResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filtersError, setFiltersError] = useState('');
   const [page, setPage] = useState(1); 
@@ -30,17 +30,17 @@ const DocumentsListPage = () => {
   });
 
   const [selectedLabels, setSelectedLabels] = useState({
-  docType: 'Тип документа',
-  category: 'Категория',
-  status: 'Статус',
-});
+    docType: 'Тип документа',
+    category: 'Категория',
+    status: 'Статус',
+  });
 
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (filterId: string) => {
     setActiveFilter(prev => (prev === filterId ? null : filterId));
   };
 
-  const hasActiveFilters = (filters.typeId || filters.categoryId || filters.status);
+  const hasActiveFilters = !!(filters.typeId || filters.categoryId || filters.status);
 
   const handleRowClick = (id: number) => {
     navigate(`/dashboard/documents/${id}`);
@@ -50,41 +50,43 @@ const DocumentsListPage = () => {
     setPage(1);
   }, [filters]);
 
-  const fetchDocumentsfilters = async () => {
+  const fetchFilters = async () => {
     try {
-      const [types, categories] = await Promise.all([
+      const [typesRes, categoriesRes] = await Promise.all([
         getDocumentTypes(),
         getDocumentCategories()
       ]);
-      setTypes(types);
-      setCategories(categories);
+      setTypes(typesRes);
+      setCategories(categoriesRes);
       setFiltersError('');
     } catch (e) {
-      setFiltersError('Ошибка загрузки фильтров');
-      console.error(e);
-      console.error(filtersError)
+      const msg = 'Ошибка загрузки фильтров';
+      setFiltersError(msg);
+      console.error(msg, e);
     }
   };
+
   useEffect(() => {
-      fetchDocumentsfilters();
+    fetchFilters();
   }, []); 
 
   const fetchDocuments = async () => {
-      try {
-          setLoading(true);
-          const response = await getDocuments({ page, limit: 10, ...filters });
-          setData(response);
-          setError('');
-      } catch (e) {
-          setError('Ошибка загрузки документов');
-          console.error(e);
-          console.error(error);
-      } finally {
-          setLoading(false)
-      }
+    try {
+      setLoading(true);
+      setError('');
+      const response = await getDocuments({ page, limit: 10, ...filters });
+      setData(response);
+    } catch (e) {
+      const msg = 'Ошибка загрузки документов';
+      setError(msg);
+      console.error(msg, e);
+    } finally {
+      setLoading(false);
+    }
   };
+
   useEffect(() => {
-      fetchDocuments();
+    fetchDocuments();
   }, [page, filters]); 
 
   const findTypeId = (name: string) => types.find(t => t.name === name)?.id;
@@ -95,19 +97,22 @@ const DocumentsListPage = () => {
     Object.entries(statusMap).map(([eng, rus]) => [rus, eng])
   );
 
-  const typeOptions = types.length > 0 ?
-  types.map(c => c.name)
-  : (error ? ['Ошибка загрузки']
-  : filtersError ? ['Ошибка загрузки']
-  : []);
+  const hasFiltersError = filtersError !== '';
 
-  const categotyOptions = categories.length > 0 ?
-  categories.map(c => c.name)
-  : (error ? ['Ошибка загрузки']
-  : filtersError ? ['Ошибка загрузки']
-  : []);
+  const typeOptions = types.length > 0 
+    ? types.map(t => t.name)
+    : (hasFiltersError ? ['Ошибка загрузки'] : []);
 
-  const statusOptions = error ? ['Ошибка загрузки'] : filtersError? ['Ошибка загрузки'] : RUSStatuses ;
+  const categoryOptions = categories.length > 0 
+    ? categories.map(c => c.name)
+    : (hasFiltersError ? ['Ошибка загрузки'] : []);
+
+  const statusOptions = hasFiltersError ? ['Ошибка загрузки'] : RUSStatuses;
+
+  const handleRetry = () => {
+    fetchFilters();
+    fetchDocuments();
+  };
 
   return (
     <div>
@@ -124,9 +129,10 @@ const DocumentsListPage = () => {
           icon={<img src="/DashboardPage_Images/DocumentType.png" alt="📄" />}
           defaultLabel="Тип документа"
           isOpen={activeFilter === 'docType'}
-          onToggle={() => toggleFilter('docType')}/>
+          onToggle={() => toggleFilter('docType')}
+        />
         <DropdownButton
-          options={categotyOptions}
+          options={categoryOptions}
           selectedLabel={selectedLabels.category}
           onSelect={(name) => {
             if (name === 'Ошибка загрузки') return;
@@ -137,7 +143,8 @@ const DocumentsListPage = () => {
           icon={<img src="/DashboardPage_Images/Category.png" alt="🗂️" />}
           defaultLabel="Категория"
           isOpen={activeFilter === 'category'}
-          onToggle={() => toggleFilter('category')}/>
+          onToggle={() => toggleFilter('category')}
+        />
         <DropdownButton
           options={statusOptions}
           selectedLabel={selectedLabels.status}
@@ -150,7 +157,8 @@ const DocumentsListPage = () => {
           icon={<img src="/DashboardPage_Images/Status.png" alt="🟢🟡🔴" />}
           defaultLabel="Статус"
           isOpen={activeFilter === 'status'}
-          onToggle={() => toggleFilter('status')}/>
+          onToggle={() => toggleFilter('status')}
+        />
         <button
           className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
           disabled={!hasActiveFilters}
@@ -167,23 +175,25 @@ const DocumentsListPage = () => {
               category: 'Категория',
               status: 'Статус',
             });
-          }}>
+          }}
+        >
           Сбросить фильтры
         </button>
       </Card>
 
       <Card>
         <Table
-        title={<h4>Все документы ({data?.total ?? 0})</h4>}
-        rightTitle={data && (
-          <Pagination
-            page={page}
-            totalPages={data.totalPages}
-            onPageChange={(newPage) => setPage(newPage)}/>
-        )}>
+          title={<h4>Все документы ({data?.total ?? 0})</h4>}
+          rightTitle={data && (
+            <Pagination
+              page={page}
+              totalPages={data.totalPages}
+              onPageChange={(newPage) => setPage(newPage)}
+            />
+          )}
+        >
           <thead>
             <tr>
-              <th>ID</th>
               <th>Рег. номер</th>
               <th>Тема</th>
               <th>Отправитель</th>
@@ -196,11 +206,22 @@ const DocumentsListPage = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9}>Загрузка...</td></tr>
+              <tr><td colSpan={8}>Загрузка...</td></tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={8} style={{ textAlign: 'center', color: 'var(--color-status-rejected)', padding: '20px' }}>
+                  {error} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
+                </td>
+              </tr>
+            ) : filtersError && !types.length && !categories.length ? (
+              <tr>
+                <td colSpan={8} style={{ textAlign: 'center', color: 'var(--color-status-rejected)', padding: '20px' }}>
+                  {filtersError} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
+                </td>
+              </tr>
             ) : data?.items?.length ? (
               data.items.map((doc: DocumentListItem) => (
                 <tr key={doc.id} onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
-                  <td>{doc.id}</td>
                   <td>{doc.registrationNumber}</td>
                   <td>{doc.title}</td>
                   <td>{doc.senderName}</td>
@@ -215,10 +236,9 @@ const DocumentsListPage = () => {
                   <td>{doc.department}</td>
                 </tr>
               ))
-            ) : error ? (
-              <tr><td colSpan={9}> {error} <button className="apply-button" onClick={() =>
-              { fetchDocumentsfilters(); fetchDocuments(); }}>Повторить</button></td></tr>
-            ) : (<tr><td colSpan={9}>Нет документов</td></tr>)}
+            ) : (
+              <tr><td colSpan={8}>Нет документов</td></tr>
+            )}
           </tbody>
         </Table>
       </Card>
