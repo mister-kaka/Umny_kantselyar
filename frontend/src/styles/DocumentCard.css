@@ -81,6 +81,15 @@
   border: 1px solid var(--border-color);
 }
 
+.left-column-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary, #696969);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
 .left-column .card {
   box-shadow: none;
   margin: 0;
@@ -615,6 +624,22 @@
     font-size: 13px;
     padding: 6px 10px;
   }
+
+  .tab,
+  .file-download,
+  .back-to-list-btn {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(129, 216, 208, 0.2);
+  }
+
+  .tab:active {
+    opacity: 0.7;
+  }
+
+  .file-download:active,
+  .back-to-list-btn:active {
+    transform: scale(0.96);
+  }
 }
 
 /* Средние мобильные (650px и меньше) */
@@ -915,25 +940,6 @@
   .file-download {
     font-size: 10px;
     padding: 3px 6px;
-  }
-}
-
-/* Улучшение touch-целей для мобильных */
-@media (max-width: 768px) {
-  .tab,
-  .file-download,
-  .back-to-list-btn {
-    cursor: pointer;
-    -webkit-tap-highlight-color: rgba(129, 216, 208, 0.2);
-  }
-
-  .tab:active {
-    opacity: 0.7;
-  }
-
-  .file-download:active,
-  .back-to-list-btn:active {
-    transform: scale(0.96);
   }
 }
 

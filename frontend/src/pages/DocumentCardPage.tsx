@@ -88,9 +88,7 @@ const DocumentCardPage: React.FC = () => {
         {/* Левая колонка */}
         <div className="left-column-wrapper">
           <div className="left-column">
-            <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>
-              Основная информация
-            </h3>
+           <h3 className="left-column-title">Основная информация</h3>
             <Card>
               <div className="info-block">
                 <div className="info-row">
@@ -325,34 +323,32 @@ const DocumentCardPage: React.FC = () => {
             {/* Вкладка 4: История маршрутов */}
             {activeTab === "history" && (
               <Card>
-                <Table title="История маршрутов">
-                  <div className="table-wrapper">
-                    <table className="history-table">
-                      <thead>
-                        <tr>
-                          <th>Отдел</th>
-                          <th>Статус</th>
-                          <th>Причина</th>
-                          <th>Дата</th>
+                <div className="table-wrapper">
+                  <table className="history-table">
+                    <thead>
+                      <tr>
+                        <th>Отдел</th>
+                        <th>Статус</th>
+                        <th>Причина</th>
+                        <th>Дата</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.routes.map((route: DocumentRoute, idx: number) => (
+                        <tr key={idx}>
+                          <td>{route.departmentName}</td>
+                          <td>
+                            <span className={`status-badge ${getStatusColor(route.routeStatus)}`}>
+                              {translateStatus(route.routeStatus)}
+                            </span>
+                          </td>
+                          <td>{route.routeReason || "—"}</td>
+                          <td>{new Date(route.routedAt).toLocaleDateString('ru-RU')}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {data.routes.map((route: DocumentRoute, idx: number) => (
-                          <tr key={idx}>
-                            <td>{route.departmentName}</td>
-                            <td>
-                              <span className={`status-badge ${getStatusColor(route.routeStatus)}`}>
-                                {translateStatus(route.routeStatus)}
-                              </span>
-                            </td>
-                            <td>{route.routeReason || "—"}</td>
-                            <td>{new Date(route.routedAt).toLocaleDateString('ru-RU')}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Table>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </Card>
             )}
 
