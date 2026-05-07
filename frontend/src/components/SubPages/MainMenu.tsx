@@ -121,8 +121,8 @@ const MainMenu = () => {
                     <Table
                         title={<h3>Последние документы</h3>}
                         rightTitle={<h4><NavLink
-                            key="/documents"
-                            to="/documents"
+                            key="/dashboard/documents"
+                            to="/dashboard/documents"
                             className="bluesrc">Все документы →</NavLink></h4>}>
                         <thead>
                             <tr>
