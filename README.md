@@ -119,7 +119,7 @@
   - /dto/document-card.dto.ts - DTO карточки
   - /dto/document-list.dto.ts - DTO списка
   - /dto/get-documents.dto.ts - DTO query-параметров
-- ###### Папка Departments (/departments) **(Этап 2)**
+- ##### Папка Departments (/departments) **(Этап 2)**
   - departments.controller.ts - эндпоинт /departments
   - departments.service.ts - логика справочника отделов
   - departments.module.ts - регистрация модуля
@@ -155,7 +155,7 @@
 - README.md - инструкция по запуску части бекэнда 
 #### 5. Тесты (/test)
 - app.e2e-spec.ts - e2e тесты (пока заглушка)
-#### 6. Загрузки (/uploads)
+#### 6. Загрузки (/uploads) **(Этап 2)**
 - /documents/ - файлы документов (по папкам с id документа)
 
 ### Frontend (/frontend)
@@ -193,7 +193,7 @@
   - LoginPage.css - стили логина (с адаптивом)
   - Dashboard.css - стили дашборда (с адаптивом)
   - DocumentsListPage.css - стили списка документов (с адаптивом) **(Этап 2)**
-  - DocumentCard.css — стили карточки документа (с адаптивом) **(Этап 2)**
+  - DocumentCard.css - стили карточки документа (с адаптивом) **(Этап 2)**
 - ##### Контексты (/contexts)
   - SidebarContexts.tsx - состояние сворачивания sidebar
 #### 3. Публичные файлы (/public)
