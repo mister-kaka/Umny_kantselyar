@@ -47,6 +47,7 @@ export class DocumentsService {
 
             const [documents, total] = await query
                 .orderBy('doc.receivedDate', 'DESC')
+                .addOrderBy('doc.id', 'DESC')
                 .skip(skip)
                 .take(limit)
                 .getManyAndCount();
