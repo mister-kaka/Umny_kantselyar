@@ -6,6 +6,7 @@ import { getDocumentById } from '../services/api';
 import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute } from '../types/';
 import Card from '../components/Card';
 import Table from '../components/Table';
+import { translateStatus } from '../components/SubPages/MainMenu';
 
 const DocumentCardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -60,23 +61,14 @@ const DocumentCardPage: React.FC = () => {
     return "confidence-low";
   };
 
-  const routeColumns = [
-    { key: "departmentName", title: "Отдел" },
-    { key: "routeStatus", title: "Статус" },
-    { key: "routeReason", title: "Причина" },
-    { key: "routedAt", title: "Дата" },
-  ];
-
   return (
     <div className="document-page">
-      {/* Шапка с кнопкой назад */}
-      
+
       <button 
-          className="back-to-list-btn"
-          onClick={() => navigate('/dashboard/documents')}
-        >
-          Все документы →
-        </button>
+        className="back-to-list-btn"
+        onClick={() => navigate('/dashboard/documents')} >
+        Все документы →
+      </button>
         
       <div className="doc-header">
         <div>
@@ -84,54 +76,44 @@ const DocumentCardPage: React.FC = () => {
           <div className="doc-number">{data.registrationNumber}</div>
         </div>
       
-        <div className="confidence-badge">
-          Уверенность: 
-          <span className={`confidence-chip ${getConfidenceClass(data.classification?.typeConfidence || 0)}`}>
-            {data.classification?.typeConfidence || 0}%
-          </span>
+        <div className={`confidence-badge ${getConfidenceClass(data.classification?.typeConfidence || 0)}`}>
+          Уверенность: {data.classification?.typeConfidence || 0}%
         </div>
       </div>
 
       <div className="two-columns">
-        {/* ========== ЛЕВАЯ КОЛОНКА ========== */}
+
         <div className="left-column">
+          <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>
+            Основная информация
+          </h3>
           <Card>
-            <h2>{data.title}</h2>
-            <p className="doc-date">Дата: {data.receivedDate}</p>
-            <p>Настоящий документ:</p>
-            <div className="party">
-              <strong>Отправитель:</strong>
-              <p>{data.senderName}</p>
+            <div className="info-block">
+              <div className="info-row">
+                <span>Название</span>
+                <strong>{data.title}</strong>
+              </div>
+              <div className="info-row">
+                <span>Дата</span>
+                <strong>{new Date(data.receivedDate).toLocaleDateString('ru-RU')}</strong>
+              </div>
+              <div className="info-row">
+                <span>Отправитель</span>
+                <strong>{data.senderName}</strong>
+              </div>
+              <div className="info-row">
+                <span>Тип документа</span>
+                <strong>{data.documentType ?? '—'}</strong>
+              </div>
+              <div className="info-row">
+                <span>Категория</span>
+                <strong>{data.category ?? '—'}</strong>
+              </div>
             </div>
-            {(data as any).customer && (
-              <div className="party">
-                <strong>Заказчик:</strong>
-                <p>
-                  {(data as any).customer.name}<br />
-                  {(data as any).customer.address && `Адрес: ${(data as any).customer.address}`}<br />
-                  {(data as any).customer.inn && `ИНН: ${(data as any).customer.inn}`}
-                </p>
-              </div>
-            )}
-            {(data as any).supplier && (
-              <div className="party">
-                <strong>Поставщик:</strong>
-                <p>
-                  {(data as any).supplier.name}<br />
-                  {(data as any).supplier.address && `Адрес: ${(data as any).supplier.address}`}<br />
-                  {(data as any).supplier.inn && `ИНН: ${(data as any).supplier.inn}`}
-                </p>
-              </div>
-            )}
-            {(data as any).subject && <p><strong>Предмет договора:</strong> {(data as any).subject}</p>}
-            {(data as any).amount && <p><strong>Сумма договора:</strong> {(data as any).amount}</p>}
-            {(data as any).deliveryDate && <p><strong>Срок поставки:</strong> {(data as any).deliveryDate}</p>}
-            <p><strong>Тип документа:</strong> {data.documentType}</p>
-            <p><strong>Категория:</strong> {data.category}</p>
           </Card>
         </div>
 
-        {/* ========== ПРАВАЯ КОЛОНКА ========== */}
+        {/* Правая колонка */}
         <div className="right-column">
           <div className="tabs">
             <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Обзор</button>
@@ -141,28 +123,54 @@ const DocumentCardPage: React.FC = () => {
           </div>
 
           <div className="tab-content">
+
             {/* Вкладка 1: Обзор */}
             {activeTab === "overview" && (
               <>
                 <Card>
                   <h3>Общая информация</h3>
-                  <div className="info-grid">
-                    <div className="info-item"><span className="info-label">Регистрационный номер</span><span className="info-value">{data.registrationNumber}</span></div>
-                    <div className="info-item"><span className="info-label">Тема документа</span><span className="info-value">{data.title}</span></div>
-                    <div className="info-item"><span className="info-label">Отправитель</span><span className="info-value">{data.senderName}</span></div>
-                    <div className="info-item"><span className="info-label">Дата поступления</span><span className="info-value">{data.receivedDate}</span></div>
-                    <div className="info-item"><span className="info-label">Текущий статус</span><span className="status-badge">{data.currentStatus}</span></div>
-                    <div className="info-item"><span className="info-label">Тип документа</span><span className="info-value">{data.documentType}</span></div>
-                    <div className="info-item"><span className="info-label">Категория</span><span className="info-value">{data.category}</span></div>
-                    <div className="info-item"><span className="info-label">Кто создал запись</span><span className="info-value">{data.createdBy}</span></div>
+                  <div className="info-block">
+                    <div className="info-row">
+                      <span>Рег. номер</span>
+                      <strong>{data.registrationNumber}</strong>
+                    </div>
+                    <div className="info-row">
+                      <span>Тема</span>
+                      <strong>{data.title}</strong>
+                    </div>
+                    <div className="info-row">
+                      <span>Отправитель</span>
+                      <strong>{data.senderName}</strong>
+                    </div>
+                    <div className="info-row">
+                      <span>Дата поступления</span>
+                      <strong>{new Date(data.receivedDate).toLocaleDateString('ru-RU')}</strong>
+                    </div>
+                    <div className="info-row">
+                      <span>Статус</span>
+                      <strong>{translateStatus(data.currentStatus)}</strong>
+                    </div>
+                    <div className="info-row">
+                      <span>Тип документа</span>
+                      <strong>{data.documentType ?? '—'}</strong>
+                    </div>
+                    <div className="info-row">
+                      <span>Категория</span>
+                      <strong>{data.category ?? '—'}</strong>
+                    </div>
+                    <div className="info-row">
+                      <span>Кто создал</span>
+                      <strong>{data.createdBy}</strong>
+                    </div>
                   </div>
                 </Card>
 
                 <Card>
-                  <h3>Текущий отдел</h3>
-                  <div className="current-department">
-                    <span className="dept-icon">🏢</span>
-                    <span className="dept-name">{data.department}</span>
+                  <div className="info-block">
+                    <div className="info-row">
+                      <span>Текущий отдел</span>
+                      <strong>{data.routes?.[0]?.departmentName ?? 'Не назначен'}</strong>
+                    </div>
                   </div>
                 </Card>
 
@@ -172,10 +180,18 @@ const DocumentCardPage: React.FC = () => {
                     <div className="files-list">
                       {data.files.map((file: DocumentFile) => (
                         <div key={file.id} className="file-row">
-                          <span className="file-icon">📄</span>
+                          <span className="file-icon" />
                           <span className="file-name">{file.fileName}</span>
-                          <span className="file-size">{file.fileSize} КБ</span>
-                          <button className="file-download">⬇️</button>
+                          <span className="file-size">{(file.fileSize / 1024).toFixed(0)} КБ</span>
+                          <a 
+                            href={`http://localhost:3000${file.filePath}`}
+                            download={file.fileName}
+                            className="file-download"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Скачать
+                          </a>
                         </div>
                       ))}
                     </div>
@@ -207,22 +223,29 @@ const DocumentCardPage: React.FC = () => {
                     </div>
                   </div>
                 </Card>
-
-                <div className="action-buttons">
-                  <button className="btn-primary">Подтвердить классификацию</button>
-                  <button className="btn-secondary">Редактировать поля</button>
-                </div>
               </>
             )}
 
             {/* Вкладка 2: Текст OCR */}
             {activeTab === "ocr" && (
-              <Card>
-                <h3>Raw text</h3>
-                <pre className="ocr-content">{data.ocrResult?.rawText || "Текст не распознан"}</pre>
-                <h3 className="mt-4">Normalized text</h3>
-                <p className="ocr-content">{data.ocrResult?.normalizedText || "Текст не распознан"}</p>
-              </Card>
+              <div>
+                <Card>
+                  <div className="ocr-block">
+                    <h3>Исходный текст</h3>
+                    <pre>{data.ocrResult?.rawText || 'Текст не распознан'}</pre>
+                  </div>
+                  <div className="ocr-block">
+                    <h3>Нормализованный текст</h3>
+                    <p>{data.ocrResult?.normalizedText || 'Текст не распознан'}</p>
+                  </div>
+                  {data.ocrResult && (
+                    <div className="info-row">
+                      <span>Уверенность распознавания</span>
+                      <strong>{data.ocrResult.ocrConfidence}%</strong>
+                    </div>
+                  )}
+                </Card>
+              </div>
             )}
 
             {/* Вкладка 3: Сущности */}
@@ -233,39 +256,44 @@ const DocumentCardPage: React.FC = () => {
               </Card>
             )}
 
-{/* Вкладка 4: История маршрутов */}
-{activeTab === "history" && (
-  <Card>
-    <Table title="История маршрутов">
-      <div className="table-wrapper">
-        <table className="history-table">
-          <thead>
-            <tr>
-              <th>Отдел</th>
-              <th>Статус</th>
-              <th>Причина</th>
-              <th>Дата</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.routes.map((route, idx) => (
-              <tr key={idx}>
-                <td>{route.departmentName}</td>
-                <td>
-                  <span className={`status-badge ${route.routeStatus === "Завершено" ? "green" : route.routeStatus === "На рассмотрении" ? "orange" : "blue"}`}>
-                    {route.routeStatus}
-                  </span>
-                </td>
-                <td>{route.routeReason || "—"}</td>
-                <td>{route.routedAt}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Table>
-  </Card>
-)}
+            {/* Вкладка 4: История маршрутов */}
+            {activeTab === "history" && (
+              <Card>
+                <Table title="История маршрутов">
+                  <div className="table-wrapper">
+                    <table className="history-table">
+                      <thead>
+                        <tr>
+                          <th>Отдел</th>
+                          <th>Статус</th>
+                          <th>Причина</th>
+                          <th>Дата</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.routes.map((route: DocumentRoute, idx: number) => (
+                          <tr key={idx}>
+                            <td>{route.departmentName}</td>
+                            <td>
+                              <span className={`status-badge ${
+                                route.routeStatus === "completed" ? "green" 
+                                : route.routeStatus === "pending" ? "orange" 
+                                : "blue"
+                              }`}>
+                                {translateStatus(route.routeStatus)}
+                              </span>
+                            </td>
+                            <td>{route.routeReason || "—"}</td>
+                            <td>{new Date(route.routedAt).toLocaleDateString('ru-RU')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Table>
+              </Card>
+            )}
+
           </div>
         </div>
       </div>

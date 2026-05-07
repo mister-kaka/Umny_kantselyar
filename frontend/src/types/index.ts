@@ -53,16 +53,15 @@ export interface DocumentCard {
   title: string;
   senderName: string;
   receivedDate: string;
-  documentType: string;
-  category: string;
+  documentType: string | null;   
+  category: string | null;       
   currentStatus: string;
-  department: string;
   files: DocumentFile[];
-  createdBy: string;          
-  createdAt: string;          
-  confidenceScore: number | null; 
-  ocrResult: OcrResult | null; 
-  classification: DocumentClassification;
+  createdBy: string;
+  createdAt: string;
+  confidenceScore: number | null;
+  ocrResult: OcrResult | null;
+  classification: DocumentClassification | null; 
   routes: DocumentRoute[];
 }
 
