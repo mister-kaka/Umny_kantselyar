@@ -9,7 +9,6 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onSearch }) => {
-  // ДОБАВЛЕНО: достаем toggleSidebar для мобильной кнопки
   const { collapsed, toggleSidebar } = useSidebar();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -22,9 +21,13 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
       
-      {/* ДОБАВЛЕНО: мобильная кнопка (показывается только на экранах < 720px) */}
+      {/* Кнопка-бургер для мобильных */}
       <button className="mobile-header-arrow" onClick={toggleSidebar}>
-        <img src="/DashboardPage_Images/Arrow.svg" alt="←" />
+        <span className="burger-icon">
+          <span />
+          <span />
+          <span />
+        </span>
       </button>
 
       <div className="Search">
@@ -37,15 +40,17 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
           className="Search-input"
         />
       </div>
-      <button className="button-primary">
+
+      <button className="button-primary header-action-btn">
         <img src="/DashboardPage_Images/Upload.png" className="Casual-icon" alt="📩" />
       </button>
-      <button className="button-secondary-with-border">
+      <button className="button-secondary-with-border header-action-btn">
         <img src="/DashboardPage_Images/Scanner.png" className="Casual-icon" alt="☐" />
       </button>
-      <button className="button-secondary">
+      <button className="button-secondary header-action-btn">
         <img src="/DashboardPage_Images/Notifications.jpg" className="Casual-icon" alt="🔔" />
       </button>
+
       <div className="profile-block">
         <h5></h5>
         <h6 className="text-secondary"></h6>
