@@ -47,6 +47,7 @@ export class DocumentsService {
 
             const [documents, total] = await query
                 .orderBy('doc.receivedDate', 'DESC')
+                .addOrderBy('doc.id', 'DESC')
                 .skip(skip)
                 .take(limit)
                 .getManyAndCount();
@@ -111,6 +112,7 @@ export class DocumentsService {
                     'classifications.documentCategory',
                     'documentRoutes',
                     'documentRoutes.department',
+                    'sources'
                 ],
             });
 
@@ -182,6 +184,13 @@ export class DocumentsService {
                     routeReason: r.routeReason,
                     routedAt: r.routedAt,
                 })) || [],
+
+                source: document.sources?.[0] ? {
+                    sourceType: document.sources[0].sourceType,
+                    organizationName: document.sources[0].organizationName,
+                    senderName: document.sources[0].senderName,
+                    contactInfo: document.sources[0].contactInfo,
+                } : null,
             };
 
             await this.logger.log({

@@ -7,7 +7,7 @@ import "../../styles/DocumentsListPage.css";
 import { DocumentsListResponse, DocumentListItem, DocumentType, DocumentCategory } from "../../types";
 import { getDocuments, getDocumentTypes, getDocumentCategories } from "../../services/api";
 import { useNavigate } from 'react-router-dom';
-import { translateStatus, statusMap } from "./MainMenu";
+import { translateStatus, statusMap, getStatusColor } from "./MainMenu";
 import DropdownButton from "../DropdownButton";
 // import { DateFilterDropdown } from "../DropdownButton";
 import Pagination from "../Pagination"; 
@@ -110,42 +110,9 @@ const DocumentsListPage = () => {
 
   const statusOptions = error ? ['Ошибка загрузки'] : filtersError? ['Ошибка загрузки'] : RUSStatuses ;
 
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'in_progress':
-        return 'status-assigned'; 
-      case 'pending':
-        return 'status-clarify'; 
-      case 'completed':
-        return 'status-loaded'; 
-      case 'approved':
-        return 'status-loaded';
-      case 'in_review':
-        return 'status-data-refinement';
-      case 'sent':
-        return 'status-assigned';
-      case 'rejected':
-        return 'status-rejected';
-      default:
-        return ''; 
-    }
-  };
-
   return (
     <div>
       <Card className="filtersButtsWrapper">
-        {/* <DateFilterDropdown
-          onFilterChange={(range) => console.log('Фильтр по дате:', range)}
-          icon={<img src="/DashboardPage_Images/Date.png" alt="📅" />}
-          isOpen={activeFilter === 'date'}
-          onToggle={() => toggleFilter('date')}/> */}
-        {/* <DropdownButton
-          options={['Вариант 1', 'Вариант 2', 'Вариант 3']}
-          onSelect={(option) => console.log('Источник:', option)}
-          icon={<img src="/DashboardPage_Images/Source.png" alt="⛲" />}
-          defaultLabel="Источник"
-          isOpen={activeFilter === 'source'}
-          onToggle={() => toggleFilter('source')}/> */}
         <DropdownButton
           options={typeOptions}
           selectedLabel={selectedLabels.docType}
@@ -172,13 +139,6 @@ const DocumentsListPage = () => {
           defaultLabel="Категория"
           isOpen={activeFilter === 'category'}
           onToggle={() => toggleFilter('category')}/>
-        {/* <DropdownButton
-          options={['100%', '99% - 90%', '89% - 80%', '79% - 0%']}
-          onSelect={(option) => console.log('Уверенность:', option)}
-          icon={<img src="/DashboardPage_Images/Confidence.png" alt="💯" />}
-          defaultLabel="Уверенность"
-          isOpen={activeFilter === 'confidence'}
-          onToggle={() => toggleFilter('confidence')}/> */}
         <DropdownButton
           options={statusOptions}
           selectedLabel={selectedLabels.status}

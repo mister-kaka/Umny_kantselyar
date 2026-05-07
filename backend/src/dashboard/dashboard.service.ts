@@ -126,7 +126,7 @@ export class DashboardService {
 
     private async getRecentDocuments(): Promise<Pick<Document, 'id' | 'title' | 'currentStatus' | 'receivedDate'>[]> {
         return this.documentRepository.find({
-            order: { receivedDate: 'DESC' },
+            order: { receivedDate: 'DESC', id: 'DESC' },
             take: 5,
             select: ['id', 'title', 'currentStatus', 'receivedDate'],
         }) as Promise<Pick<Document, 'id' | 'title' | 'currentStatus' | 'receivedDate'>[]>;

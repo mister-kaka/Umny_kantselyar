@@ -196,3 +196,404 @@
   background-color: transparent;
   color: var(--color-accent-hover);
 }
+
+/* Адаптив */
+
+/* Планшеты и небольшие ноутбуки (1024px и меньше) */
+@media (max-width: 1024px) {
+  .filtersButtsWrapper {
+    gap: 4px;
+  }
+
+  .dropdown-button {
+    padding: 6px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
+
+  .DropButt-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .removeFiltersButt {
+    padding: 0px 10px;
+    font-size: 13px;
+  }
+
+  .data-table th:nth-child(6),
+  .data-table td:nth-child(6) {
+    display: none;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+}
+
+/* Планшеты вертикально (768px и меньше) */
+@media (max-width: 768px) {
+  .filtersButtsWrapper {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .dropdown-button {
+    padding: 6px 10px;
+    font-size: 12px;
+    height: 38px;
+    gap: 4px;
+  }
+
+  .removeFiltersButt {
+    height: 38px;
+    font-size: 12px;
+    padding: 0px 10px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 600px;
+    font-size: 12px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0 8px;
+    height: 40px;
+    white-space: nowrap;
+  }
+
+  .paginationWrapper {
+    gap: 0.5rem;
+    font-size: 13px;
+  }
+
+  .apply-button {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .table-title {
+    font-size: 16px;
+  }
+
+  .table-right-title {
+    font-size: 12px;
+  }
+
+   .dropdown-button,
+  .removeFiltersButt,
+  .apply-button,
+  tbody tr {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(129, 216, 208, 0.2);
+  }
+
+  .dropdown-button:active,
+  .removeFiltersButt:active {
+    opacity: 0.7;
+  }
+
+  .apply-button:active {
+    transform: scale(0.96);
+  }
+
+  tbody tr:active {
+    background-color: rgba(129, 216, 208, 0.08);
+  }
+
+  .dropdown-menu li {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Средние мобильные (650px и меньше) */
+@media (max-width: 650px) {
+  .filtersButtsWrapper {
+    gap: 4px;
+    padding: 8px;
+  }
+
+  .dropdown-button {
+    padding: 4px 8px;
+    font-size: 11px;
+    height: 34px;
+  }
+
+  .DropButt-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .removeFiltersButt {
+    height: 34px;
+    font-size: 11px;
+    padding: 0px 8px;
+  }
+
+  .data-table {
+    min-width: 540px;
+    font-size: 11px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0 6px;
+    height: 36px;
+  }
+
+  .apply-button {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .paginationWrapper span {
+    font-size: 11px;
+  }
+
+  .dropdown-button .DropButt-icon {
+    display: none;
+  }
+}
+
+/* Мобильные устройства (480px и меньше) */
+@media (max-width: 480px) {
+  .filtersButtsWrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .dropdown {
+    width: 100%;
+  }
+
+  .dropdown-button {
+    width: 100%;
+    justify-content: space-between;
+    height: 40px;
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .removeFiltersButt {
+    width: 100%;
+    justify-content: center;
+    height: 40px;
+    font-size: 12px;
+    order: 10;
+    margin-top: 4px;
+    border: 1px dashed var(--color-accent);
+  }
+
+  .dropdown-menu {
+    left: 0;
+    right: 0;
+    min-width: auto;
+    width: 100%;
+  }
+
+  .data-table th:nth-child(8),
+  .data-table td:nth-child(8) {
+    display: none;
+  }
+
+  .table-wrapper {
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+
+  .data-table {
+    min-width: 420px;
+    font-size: 11px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0 4px;
+    height: 36px;
+  }
+
+  .status-badge {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
+
+  .paginationWrapper {
+    gap: 0.25rem;
+  }
+
+  .apply-button {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+
+  .paginationWrapper span {
+    font-size: 10px;
+  }
+
+  .table-title {
+    font-size: 15px;
+  }
+
+  .table-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .table-right-title {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* Маленькие мобильные (375px и меньше) */
+@media (max-width: 375px) {
+  .dropdown-button {
+    height: 36px;
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .removeFiltersButt {
+    height: 36px;
+    font-size: 11px;
+  }
+
+  .data-table th:nth-child(5),
+  .data-table td:nth-child(5),
+  .data-table th:nth-child(6),
+  .data-table td:nth-child(6) {
+    display: none;
+  }
+
+  .data-table {
+    min-width: 340px;
+    font-size: 10px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0 3px;
+    height: 32px;
+  }
+
+  .status-badge {
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+
+  .apply-button {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+
+  .paginationWrapper span {
+    font-size: 9px;
+  }
+}
+
+/* Самые маленькие (320px) */
+@media (max-width: 320px) {
+  .dropdown-button {
+    height: 32px;
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .removeFiltersButt {
+    height: 32px;
+    font-size: 10px;
+  }
+
+  .data-table {
+    min-width: 300px;
+    font-size: 9px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0 2px;
+    height: 28px;
+  }
+
+  .status-badge {
+    padding: 1px 4px;
+    font-size: 8px;
+  }
+
+  .apply-button {
+    padding: 2px 4px;
+    font-size: 8px;
+  }
+
+  .paginationWrapper span {
+    font-size: 8px;
+  }
+}
+
+/* Альбомная ориентация на мобильных */
+@media (max-width: 768px) and (orientation: landscape) {
+  .filtersButtsWrapper {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .dropdown {
+    width: auto;
+  }
+
+  .dropdown-button {
+    width: auto;
+  }
+
+  .removeFiltersButt {
+    width: auto;
+  }
+
+  .data-table th:nth-child(6),
+  .data-table td:nth-child(6),
+  .data-table th:nth-child(8),
+  .data-table td:nth-child(8) {
+    display: table-cell;
+  }
+
+  .data-table {
+    min-width: 700px;
+  }
+}
+
+/* Большие экраны (1400px+) */
+@media (min-width: 1400px) {
+  .data-table {
+    font-size: 14px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0 var(--spacing-element);
+    height: 52px;
+  }
+
+  .dropdown-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* Retina-экраны */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .data-table td,
+  .dropdown-button,
+  .apply-button {
+    font-weight: 400;
+  }
+}

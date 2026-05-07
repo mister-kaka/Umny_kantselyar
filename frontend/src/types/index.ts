@@ -47,23 +47,30 @@ export interface DocumentListItem {
   department: string;
 }
 
+export interface DocumentSource {
+    sourceType: string;
+    organizationName: string | null;
+    senderName: string | null;
+    contactInfo: string | null;
+}
+
 export interface DocumentCard {
   id: number;
   registrationNumber: string;
   title: string;
   senderName: string;
   receivedDate: string;
-  documentType: string;
-  category: string;
+  documentType: string | null;   
+  category: string | null;       
   currentStatus: string;
-  department: string;
   files: DocumentFile[];
-  createdBy: string;          
-  createdAt: string;          
-  confidenceScore: number | null; 
-  ocrResult: OcrResult | null; 
-  classification: DocumentClassification;
+  createdBy: string;
+  createdAt: string;
+  confidenceScore: number | null;
+  ocrResult: OcrResult | null;
+  classification: DocumentClassification | null; 
   routes: DocumentRoute[];
+  source: DocumentSource | null;  
 }
 
 export interface DocumentFile {
