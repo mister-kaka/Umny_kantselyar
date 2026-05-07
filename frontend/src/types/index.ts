@@ -4,6 +4,7 @@ export interface LoginResponse {
 
 export interface RecentDocument {
   id: number;
+  registrationNumber: string;
   title: string;
   status: string;
   date: string;
