@@ -47,6 +47,13 @@ export interface DocumentListItem {
   department: string;
 }
 
+export interface DocumentSource {
+    sourceType: string;
+    organizationName: string | null;
+    senderName: string | null;
+    contactInfo: string | null;
+}
+
 export interface DocumentCard {
   id: number;
   registrationNumber: string;
@@ -63,6 +70,7 @@ export interface DocumentCard {
   ocrResult: OcrResult | null;
   classification: DocumentClassification | null; 
   routes: DocumentRoute[];
+  source: DocumentSource | null;  
 }
 
 export interface DocumentFile {
