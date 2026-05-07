@@ -43,7 +43,7 @@ const DocumentsListPage = () => {
   const hasActiveFilters = (filters.typeId || filters.categoryId || filters.status);
 
   const handleRowClick = (id: number) => {
-    navigate(`/documents/${id}`);
+    navigate(`/dashboard/documents/${id}`);
   };
   
   useEffect(() => {
