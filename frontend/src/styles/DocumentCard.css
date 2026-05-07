@@ -392,34 +392,27 @@
   white-space: nowrap;
 }
 
-.status-badge.green,
-.status-badge.status-loaded,
-.status-badge.status-completed,
-.status-badge.approved {
+.status-badge.status-loaded {
   background-color: rgba(126, 226, 159, 0.15);
   color: var(--color-status-loaded);
 }
 
-.status-badge.orange,
-.status-badge.status-low-confidence,
-.status-badge.status-pending,
-.status-badge.in_review,
-.status-badge.pending {
-  background-color: rgba(250, 178, 95, 0.15);
-  color: var(--color-status-low-confidence);
+.status-badge.status-data-refinement {
+  background-color: rgba(246, 198, 129, 0.15);
+  color: var(--color-status-data-refinement);
 }
 
-.status-badge.blue,
-.status-badge.status-assigned,
-.status-badge.status-clarify,
-.status-badge.in_progress,
-.status-badge.sent {
-  background-color: rgba(129, 216, 208, 0.15);
-  color: var(--color-accent);
+.status-badge.status-clarify {
+  background-color: rgba(187, 223, 251, 0.15);
+  color: var(--color-status-clarify);
 }
 
-.status-badge.status-rejected,
-.status-badge.rejected {
+.status-badge.status-assigned {
+  background-color: rgba(126, 173, 226, 0.15);
+  color: var(--color-status-assigned);
+}
+
+.status-badge.status-rejected {
   background-color: rgba(232, 115, 115, 0.15);
   color: var(--color-status-rejected);
 }

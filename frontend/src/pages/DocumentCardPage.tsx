@@ -6,7 +6,7 @@ import { getDocumentById } from '../services/api';
 import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute } from '../types/';
 import Card from '../components/Card';
 import Table from '../components/Table';
-import { translateStatus } from '../components/SubPages/MainMenu';
+import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu';
 
 const DocumentCardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -59,24 +59,6 @@ const DocumentCardPage: React.FC = () => {
     if (percent >= 90) return "confidence-high";
     if (percent >= 70) return "confidence-medium";
     return "confidence-low";
-  };
-
-  const getStatusClass = (status: string): string => {
-    switch (status) {
-      case 'completed':
-      case 'approved':
-        return 'green';
-      case 'in_review':
-      case 'pending':
-        return 'orange';
-      case 'in_progress':
-      case 'sent':
-        return 'blue';
-      case 'rejected':
-        return 'rejected';
-      default:
-        return 'blue';
-    }
   };
 
   const overallConfidence = (data.confidenceScore || 0) * 100;
@@ -155,7 +137,7 @@ const DocumentCardPage: React.FC = () => {
                   <div className="legend-item">
                     <span className="legend-dot" />
                     <span className="legend-text">
-                      <strong>Уверенность распознавания:</strong> качество извлечения текста из файла
+                      <strong>Распознавание:</strong> качество извлечения текста из файла
                     </span>
                   </div>
                 </div>
@@ -199,7 +181,7 @@ const DocumentCardPage: React.FC = () => {
                     </div>
                     <div className="info-row">
                       <span>Статус</span>
-                      <span className={`status-badge ${getStatusClass(data.currentStatus)}`}>
+                      <span className={`status-badge ${getStatusColor(data.currentStatus)}`}>
                         {translateStatus(data.currentStatus)}
                       </span>
                     </div>
@@ -359,11 +341,7 @@ const DocumentCardPage: React.FC = () => {
                           <tr key={idx}>
                             <td>{route.departmentName}</td>
                             <td>
-                              <span className={`status-badge ${
-                                route.routeStatus === "completed" ? "green" 
-                                : route.routeStatus === "pending" ? "orange" 
-                                : "blue"
-                              }`}>
+                              <span className={`status-badge ${getStatusColor(route.routeStatus)}`}>
                                 {translateStatus(route.routeStatus)}
                               </span>
                             </td>

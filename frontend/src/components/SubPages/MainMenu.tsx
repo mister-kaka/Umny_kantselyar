@@ -5,7 +5,7 @@ import Table from "../Table";
 import "../../styles/Dashboard.css";
 import { getDashboard } from "../../services/api";
 import { DashboardData, GroupedDepartment } from "../../types";
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 export const statusMap: Record<string, string> = {
     'in_progress': 'В работе',
@@ -19,6 +19,25 @@ export const statusMap: Record<string, string> = {
 
 export const translateStatus = (status: string): string => {
     return statusMap[status] || status;
+};
+
+export const getStatusColor = (status: string): string => {
+    switch (status) {
+        case 'completed':
+        case 'approved':
+            return 'status-loaded';
+        case 'in_review':
+            return 'status-data-refinement';
+        case 'pending':
+            return 'status-clarify';
+        case 'in_progress':
+        case 'sent':
+            return 'status-assigned';
+        case 'rejected':
+            return 'status-rejected';
+        default:
+            return 'status-assigned';
+    }
 };
 
 export const groupByDepartment = (data: DashboardData | null): GroupedDepartment[] => {
@@ -48,6 +67,7 @@ const MainMenu = () => {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const now = new Date();
@@ -77,6 +97,12 @@ const MainMenu = () => {
     }, []); 
 
     const groupedDepartments = groupByDepartment(data);
+
+    /* Форматирование даты в ДД.ММ.ГГГГ */
+    const formatDate = (dateString: string): string => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU');
+    };
 
     if (loading) return <p>Загрузка...</p>;
     if (error) return (
@@ -129,22 +155,26 @@ const MainMenu = () => {
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Название</th>
+                                <th>Тема</th>
                                 <th>Статус</th>
                                 <th>Дата</th>
                             </tr>
                         </thead>
                         <tbody>
                             {data?.recentDocuments.map((doc) => (
-                                <tr key={doc.id}>
-                                    <td>
-                                        <NavLink to={`/dashboard/documents/${doc.id}`} className="doc-link">
-                                            {doc.id}
-                                        </NavLink>
-                                    </td>
+                                <tr 
+                                    key={doc.id} 
+                                    onClick={() => navigate(`/dashboard/documents/${doc.id}`)}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    <td>{doc.id}</td>
                                     <td>{doc.title}</td>
-                                    <td>{translateStatus(doc.status)}</td> 
-                                    <td>{doc.date}</td>
+                                    <td>
+                                        <span className={`status-badge ${getStatusColor(doc.status)}`}>
+                                            {translateStatus(doc.status)}
+                                        </span>
+                                    </td>
+                                    <td>{formatDate(String(doc.date))}</td>
                                 </tr>
                             ))}
                         </tbody>
