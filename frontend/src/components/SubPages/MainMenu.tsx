@@ -93,13 +93,13 @@ const MainMenu = () => {
             setLoading(false);
         }
     };
+    
     useEffect(() => {
         fetchDashboard();
     }, []); 
 
     const groupedDepartments = groupByDepartment(data);
 
-    /* Форматирование даты в ДД.ММ.ГГГГ */
     const formatDate = (dateString: string): string => {
         const date = new Date(dateString);
         return date.toLocaleDateString('ru-RU');
@@ -152,7 +152,7 @@ const MainMenu = () => {
                             className="bluesrc">Все документы →</NavLink></h4>}>
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Рег. номер</th>
                                 <th>Тема</th>
                                 <th>Статус</th>
                                 <th>Дата</th>
@@ -165,7 +165,7 @@ const MainMenu = () => {
                                     onClick={() => navigate(`/dashboard/documents/${doc.id}`)}
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    <td>{doc.id}</td>
+                                    <td>{doc.registrationNumber}</td>
                                     <td>{doc.title}</td>
                                     <td>
                                         <span className={`status-badge ${getStatusColor(doc.status)}`}>
