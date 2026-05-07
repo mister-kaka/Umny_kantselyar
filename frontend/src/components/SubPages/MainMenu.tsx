@@ -7,16 +7,17 @@ import { getDashboard } from "../../services/api";
 import { DashboardData, GroupedDepartment } from "../../types";
 import { NavLink } from 'react-router-dom';
 
+export const statusMap: Record<string, string> = {
+    'in_progress': 'В работе',
+    'pending': 'На проверке',
+    'completed': 'Завершено',
+    'approved': 'Одобрено',
+    'in_review': 'На рассмотрении',
+    'sent': 'Отправлено',
+    'rejected': 'Отклонено'
+};
+
 export const translateStatus = (status: string): string => {
-    const statusMap: Record<string, string> = {
-        'in_progress': 'в работе',
-        'pending': 'на проверке',
-        'completed': 'завершено',
-        'approved': 'одобрено',
-        'in_review': 'на рассмотрении',
-        'sent': 'отправлено',
-        'rejected': 'отклонено'
-    };
     return statusMap[status] || status;
 };
 
