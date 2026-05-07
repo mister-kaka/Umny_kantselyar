@@ -61,8 +61,9 @@ const DocumentsListPage = () => {
       setCategories(categories);
       setFiltersError('');
     } catch (e) {
-      console.error(e)
       setFiltersError('Ошибка загрузки фильтров');
+      console.error(e);
+      console.error(filtersError)
     }
   };
   useEffect(() => {
@@ -77,6 +78,8 @@ const DocumentsListPage = () => {
           setError('');
       } catch (e) {
           setError('Ошибка загрузки документов');
+          console.error(e);
+          console.error(error);
       } finally {
           setLoading(false)
       }
