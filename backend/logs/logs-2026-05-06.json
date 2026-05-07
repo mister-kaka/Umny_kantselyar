@@ -1,0 +1,84 @@
+[
+  {
+    "timestamp": "06.05.2026, 12:30:58",
+    "module": "Auth",
+    "type": "POST",
+    "url": "/auth/login",
+    "action": "попытка входа",
+    "email": "alina@umny-kan.ru",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Успешный вход"
+  },
+  {
+    "timestamp": "06.05.2026, 12:30:59",
+    "module": "Dashboard",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "06.05.2026, 12:30:59",
+    "module": "Dashboard",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "06.05.2026, 14:40:58",
+    "module": "Auth",
+    "type": "POST",
+    "url": "/auth/login",
+    "action": "попытка входа",
+    "email": "alina@umny-kan.ru",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Успешный вход"
+  },
+  {
+    "timestamp": "06.05.2026, 14:40:58",
+    "module": "Dashboard",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "06.05.2026, 14:40:58",
+    "module": "Dashboard",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "06.05.2026, 14:42:07",
+    "module": "Dashboard",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "06.05.2026, 14:42:07",
+    "module": "Dashboard",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  }
+]
