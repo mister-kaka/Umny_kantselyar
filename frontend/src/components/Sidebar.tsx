@@ -27,45 +27,54 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <div>
-        <button className={`button-hide ${collapsed ? 'collapsed' : ''}`} onClick={toggleSidebar}>
-          <img src={collapsed ? "/DashboardPage_Images/Rigth_Arrow.png" 
-            : "/DashboardPage_Images/Left_Arrow.png"}
-            className="Casual-icon" alt={collapsed ? ">" : "<"} />
-        </button>
-        
-        {!collapsed && (
-          <div className="Umny-cantselyar-text">
-            <h3>Умный Канцеляр</h3>
-            <h6 className="AOD-text">Автоматизация обработки документов</h6>
+    <>
+      {/* ДОБАВЛЕНО: Затемнение фона на мобилках */}
+      <div 
+        className={`mobile-overlay ${!collapsed ? 'active' : ''}`} 
+        onClick={toggleSidebar}
+      />
+
+      <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+        <div>
+          {/* ИЗМЕНЕНО: Добавлен класс desktop-arrow-btn */}
+          <button className={`button-hide desktop-arrow-btn ${collapsed ? 'collapsed' : ''}`} onClick={toggleSidebar}>
+            <img src={collapsed ? "/DashboardPage_Images/Rigth_Arrow.png" 
+              : "/DashboardPage_Images/Left_Arrow.png"}
+              className="Casual-icon" alt={collapsed ? ">" : "<"} />
+          </button>
+          
+          {!collapsed && (
+            <div className="Umny-cantselyar-text">
+              <h3>Умный Канцеляр</h3>
+              <h6 className="AOD-text">Автоматизация обработки документов</h6>
+            </div>
+          )}
+          
+          <div className={`items-margin-top ${collapsed ? "collapsed" : ""}`}>
+            {menuItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({isActive}) => `sidebar-item ${isActive ? "active" : ""}`}
+              >
+                <img src={item.icon} className="Casual-icon" alt={item.alt} />
+                <span className="item-label">{item.label}</span>
+              </NavLink>
+            ))}
           </div>
-        )}
+        </div>
         
-        <div className={`items-margin-top ${collapsed ? "collapsed" : ""}`}>
-          {menuItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({isActive}) => `sidebar-item ${isActive ? "active" : ""}`}
-            >
-              <img src={item.icon} className="Casual-icon" alt={item.alt} />
-              <span className="item-label">{item.label}</span>
-            </NavLink>
-          ))}
+        <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
+          <button onClick={handleLogout} className="sidebar-item">
+            <img src="/DashboardPage_Images/Log_out.jpg" className="Casual-icon" alt="🚪⬅️" />
+            <span className="item-label">Выход из системы</span>
+          </button>
+          <h6 className={`version-text ${collapsed ? "collapsed" : ""}`}>
+            Версия 1.0.2<br />© 2026 Умный Канцеляр
+          </h6>
         </div>
       </div>
-      
-      <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
-        <button onClick={handleLogout} className="sidebar-item">
-          <img src="/DashboardPage_Images/Log_out.jpg" className="Casual-icon" alt="🚪⬅️" />
-          <span className="item-label">Выход из системы</span>
-        </button>
-        <h6 className={`version-text ${collapsed ? "collapsed" : ""}`}>
-          Версия 1.0.2<br />© 2026 Умный Канцеляр
-        </h6>
-      </div>
-    </div>
+    </>
   );
 };
 
