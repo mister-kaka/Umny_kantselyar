@@ -64,24 +64,84 @@
   gap: 32px;
 }
 
+.left-column-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: fit-content;
+}
+
+/* Левая колонка */
 .left-column {
-  background: linear-gradient(135deg, var(--color-bg-surface) 0%, rgba(205, 239, 236, 0.3) 100%);
+  background-color: var(--color-bg-surface, #ffffff);
   border-radius: var(--radius-card);
   padding: 32px 28px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   height: fit-content;
   border: 1px solid var(--border-color);
 }
 
 .left-column .card {
   box-shadow: none;
-  margin: 0 0 16px 0;
+  margin: 0;
   padding: 0;
   background: transparent;
 }
 
-.left-column .card:last-child {
-  margin-bottom: 0;
+.about-percentages-card {
+  background-color: var(--color-bg-surface, #ffffff);
+  border-radius: var(--radius-card);
+  padding: 32px 28px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-color);
+}
+
+.about-percentages-card .card {
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.about-percentages h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary, #696969);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 16px 0;
+}
+
+.percentage-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+  background-color: var(--color-accent, #81D8D0);
+}
+
+.legend-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary, #4b4b4b);
+}
+
+.legend-text strong {
+  color: var(--text-primary, #000000);
+  font-weight: 600;
 }
 
 /* Вкладки */
@@ -128,15 +188,15 @@
 .info-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   padding: 10px 0;
   border-bottom: 1px solid var(--border-color, #e5e5e5);
   font-size: 13px;
 }
 
-.info-row span {
+.info-row span:first-child {
   color: var(--text-tertiary, #696969);
-  width: 140px;
+  width: 160px;
   flex-shrink: 0;
 }
 
@@ -147,6 +207,11 @@
   flex: 1;
 }
 
+.info-row .status-badge {
+  margin-left: auto;
+}
+
+/* OCR */
 .ocr-block {
   margin-bottom: 24px;
 }
@@ -320,24 +385,43 @@
 /* Бейджи статусов */
 .status-badge {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-.status-badge.green {
+.status-badge.green,
+.status-badge.status-loaded,
+.status-badge.status-completed,
+.status-badge.approved {
   background-color: rgba(126, 226, 159, 0.15);
   color: var(--color-status-loaded);
 }
 
-.status-badge.orange {
+.status-badge.orange,
+.status-badge.status-low-confidence,
+.status-badge.status-pending,
+.status-badge.in_review,
+.status-badge.pending {
   background-color: rgba(250, 178, 95, 0.15);
   color: var(--color-status-low-confidence);
 }
 
-.status-badge.blue {
+.status-badge.blue,
+.status-badge.status-assigned,
+.status-badge.status-clarify,
+.status-badge.in_progress,
+.status-badge.sent {
   background-color: rgba(129, 216, 208, 0.15);
   color: var(--color-accent);
+}
+
+.status-badge.status-rejected,
+.status-badge.rejected {
+  background-color: rgba(232, 115, 115, 0.15);
+  color: var(--color-status-rejected);
 }
 
 /* Пустое состояние */

@@ -61,6 +61,26 @@ const DocumentCardPage: React.FC = () => {
     return "confidence-low";
   };
 
+  const getStatusClass = (status: string): string => {
+    switch (status) {
+      case 'completed':
+      case 'approved':
+        return 'green';
+      case 'in_review':
+      case 'pending':
+        return 'orange';
+      case 'in_progress':
+      case 'sent':
+        return 'blue';
+      case 'rejected':
+        return 'rejected';
+      default:
+        return 'blue';
+    }
+  };
+
+  const overallConfidence = (data.confidenceScore || 0) * 100;
+
   return (
     <div className="document-page">
 
@@ -76,41 +96,72 @@ const DocumentCardPage: React.FC = () => {
           <div className="doc-number">{data.registrationNumber}</div>
         </div>
       
-        <div className={`confidence-badge ${getConfidenceClass(data.classification?.typeConfidence || 0)}`}>
-          Уверенность: {data.classification?.typeConfidence || 0}%
+        <div className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}>
+          Уверенность: {overallConfidence.toFixed(0)}%
         </div>
       </div>
 
       <div className="two-columns">
 
-        <div className="left-column">
-          <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>
-            Основная информация
-          </h3>
-          <Card>
-            <div className="info-block">
-              <div className="info-row">
-                <span>Название</span>
-                <strong>{data.title}</strong>
+        {/* Левая колонка */}
+        <div className="left-column-wrapper">
+          <div className="left-column">
+            <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>
+              Основная информация
+            </h3>
+            <Card>
+              <div className="info-block">
+                <div className="info-row">
+                  <span>Название</span>
+                  <strong>{data.title}</strong>
+                </div>
+                <div className="info-row">
+                  <span>Дата</span>
+                  <strong>{new Date(data.receivedDate).toLocaleDateString('ru-RU')}</strong>
+                </div>
+                <div className="info-row">
+                  <span>Отправитель</span>
+                  <strong>{data.senderName}</strong>
+                </div>
+                <div className="info-row">
+                  <span>Тип документа</span>
+                  <strong>{data.documentType ?? '—'}</strong>
+                </div>
+                <div className="info-row">
+                  <span>Категория</span>
+                  <strong>{data.category ?? '—'}</strong>
+                </div>
               </div>
-              <div className="info-row">
-                <span>Дата</span>
-                <strong>{new Date(data.receivedDate).toLocaleDateString('ru-RU')}</strong>
+            </Card>
+          </div>
+
+          <div className="about-percentages-card">
+            <Card>
+              <div className="about-percentages">
+                <h3>О процентах</h3>
+                <div className="percentage-legend">
+                  <div className="legend-item">
+                    <span className="legend-dot" />
+                    <span className="legend-text">
+                      <strong>Уверенность:</strong> общая оценка системой достоверности документа
+                    </span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-dot" />
+                    <span className="legend-text">
+                      <strong>Классификация:</strong> точность определения типа и категории
+                    </span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-dot" />
+                    <span className="legend-text">
+                      <strong>Уверенность распознавания:</strong> качество извлечения текста из файла
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="info-row">
-                <span>Отправитель</span>
-                <strong>{data.senderName}</strong>
-              </div>
-              <div className="info-row">
-                <span>Тип документа</span>
-                <strong>{data.documentType ?? '—'}</strong>
-              </div>
-              <div className="info-row">
-                <span>Категория</span>
-                <strong>{data.category ?? '—'}</strong>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
 
         {/* Правая колонка */}
@@ -148,7 +199,9 @@ const DocumentCardPage: React.FC = () => {
                     </div>
                     <div className="info-row">
                       <span>Статус</span>
-                      <strong>{translateStatus(data.currentStatus)}</strong>
+                      <span className={`status-badge ${getStatusClass(data.currentStatus)}`}>
+                        {translateStatus(data.currentStatus)}
+                      </span>
                     </div>
                     <div className="info-row">
                       <span>Тип документа</span>
@@ -159,20 +212,49 @@ const DocumentCardPage: React.FC = () => {
                       <strong>{data.category ?? '—'}</strong>
                     </div>
                     <div className="info-row">
-                      <span>Кто создал</span>
+                      <span>Внёс в систему</span>
                       <strong>{data.createdBy}</strong>
                     </div>
-                  </div>
-                </Card>
-
-                <Card>
-                  <div className="info-block">
                     <div className="info-row">
                       <span>Текущий отдел</span>
                       <strong>{data.routes?.[0]?.departmentName ?? 'Не назначен'}</strong>
                     </div>
                   </div>
                 </Card>
+
+                {data.source && (
+                  <Card>
+                    <h3>Источник документа</h3>
+                    <div className="info-block">
+                      <div className="info-row">
+                        <span>Тип источника</span>
+                        <strong>
+                          {data.source.sourceType === 'organization' ? 'Организация' :
+                           data.source.sourceType === 'individual' ? 'Физ. лицо' :
+                           data.source.sourceType}
+                        </strong>
+                      </div>
+                      {data.source.organizationName && (
+                        <div className="info-row">
+                          <span>Организация</span>
+                          <strong>{data.source.organizationName}</strong>
+                        </div>
+                      )}
+                      {data.source.senderName && (
+                        <div className="info-row">
+                          <span>Отправитель</span>
+                          <strong>{data.source.senderName}</strong>
+                        </div>
+                      )}
+                      {data.source.contactInfo && (
+                        <div className="info-row">
+                          <span>Контакты</span>
+                          <strong>{data.source.contactInfo}</strong>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
 
                 <Card>
                   <h3>Связанные файлы</h3>
@@ -241,14 +323,16 @@ const DocumentCardPage: React.FC = () => {
                   {data.ocrResult && (
                     <div className="info-row">
                       <span>Уверенность распознавания</span>
-                      <strong>{data.ocrResult.ocrConfidence}%</strong>
+                      <span className={`confidence-chip ${getConfidenceClass(data.ocrResult.ocrConfidence)}`}>
+                        {data.ocrResult.ocrConfidence}%
+                      </span>
                     </div>
                   )}
                 </Card>
               </div>
             )}
 
-            {/* Вкладка 3: Сущности */}
+            {/* Вкладка 3: Сущности (заглушка) */}
             {activeTab === "entities" && (
               <Card>
                 <h3>Извлечённые сущности</h3>
