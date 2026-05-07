@@ -33,6 +33,13 @@ export class DocumentRouteDto {
     routedAt!: Date;
 }
 
+export class DocumentSourceDto {
+    sourceType!: string;
+    organizationName!: string | null;
+    senderName!: string | null;
+    contactInfo!: string | null;
+}
+
 export class DocumentCardDto {
     id!: number;
     registrationNumber!: string;
@@ -52,4 +59,6 @@ export class DocumentCardDto {
     ocrResult!: OcrResultDto | null;
     classification!: DocumentClassificationDto | null;
     routes!: DocumentRouteDto[];
+
+     source!: DocumentSourceDto | null;
 }
