@@ -5,7 +5,13 @@
   --Filter-Hover: #f5f5f5;
 }
 
-/*      кнопка со списком       */
+/*      кнопки со списком       */
+.filtersButtsWrapper{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .dropdown {
   position: relative;
   display: inline-block;
@@ -116,7 +122,7 @@
 }
 
 /*    отдельные стили для кнопки даты    */
-.date-filter-dropdown {
+/* .date-filter-dropdown {
   position: relative;
   display: inline-block;
 }
@@ -135,6 +141,14 @@
   border-radius: var(--radius-button);
   border: 1px solid var(--border-color);
   background: var(--color-bg-page);
+} */
+
+/*      пагинация      */
+
+.paginationWrapper{
+    display: flex;
+    align-content: top;
+    gap: 1rem;
 }
 
 .apply-button {
@@ -144,4 +158,39 @@
   border-radius: var(--radius-button);
   padding: 6px 12px;
   cursor: pointer;
+}
+
+.apply-button:hover {
+  background-color: var(--color-accent-hover);
+  transition: all 0.2s ease;
+}
+
+.apply-button:disabled{
+  background-color: transparent;
+  color: var(--color-accent-hover);
+}
+
+/*    кнопка сброса фильтров   */
+
+.removeFiltersButt {
+  display: flex;
+  background: var(--color-accent);
+  color: white;
+  align-items: center;
+  border: none;
+  border-radius: var(--radius-button);
+  padding: 0px 12px;
+  height: var(--sidebarButtAndHeaderButt-height);
+  cursor: pointer;
+  margin: 5px;
+}
+
+.removeFiltersButt:hover {
+  background-color: var(--color-accent-hover);
+  transition: all 0.2s ease;
+}
+
+.removeFiltersButt:disabled{
+  background-color: transparent;
+  color: var(--color-accent-hover);
 }
