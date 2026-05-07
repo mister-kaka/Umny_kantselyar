@@ -17,6 +17,8 @@ const DocumentsListPage = () => {
 
   const [data, setData] = useState<DocumentsListResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [filtersError, setFiltersError] = useState('');
   const [page, setPage] = useState(1); 
 
   const [types, setTypes] = useState<DocumentType[]>([]);
@@ -42,25 +44,46 @@ const DocumentsListPage = () => {
   const hasActiveFilters = (filters.typeId || filters.categoryId || filters.status);
 
   const handleRowClick = (id: number) => {
-  navigate(`/dashboard/documents/${id}`); 
+    navigate(`/documents/${id}`);
   };
   
-  useEffect(() => {
-    getDocumentTypes().then(setTypes).catch(console.error);
-    getDocumentCategories().then(setCategories).catch(console.error);
-  }, []);
-
   useEffect(() => {
     setPage(1);
   }, [filters]);
 
+  const fetchDocumentsfilters = async () => {
+    try {
+      const [types, categories] = await Promise.all([
+        getDocumentTypes(),
+        getDocumentCategories()
+      ]);
+      setTypes(types);
+      setCategories(categories);
+      setFiltersError('');
+    } catch (e) {
+      console.error(e)
+      setFiltersError('Ошибка загрузки фильтров');
+    }
+  };
   useEffect(() => {
-    setLoading(true);
-    getDocuments({ page, limit: 10, ...filters })
-      .then(res => setData(res))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [page, filters]);
+      fetchDocumentsfilters();
+  }, []); 
+
+  const fetchDocuments = async () => {
+      try {
+          setLoading(true);
+          const response = await getDocuments({ page, limit: 10, ...filters });
+          setData(response);
+          setError('');
+      } catch (e) {
+          setError('Ошибка загрузки документов');
+      } finally {
+          setLoading(false)
+      }
+  };
+  useEffect(() => {
+      fetchDocuments();
+  }, [page, filters]); 
 
   const findTypeId = (name: string) => types.find(t => t.name === name)?.id;
   const findCategoryId = (name: string) => categories.find(c => c.name === name)?.id;
@@ -70,7 +93,19 @@ const DocumentsListPage = () => {
     Object.entries(statusMap).map(([eng, rus]) => [rus, eng])
   );
 
-  const statusOptions = RUSStatuses;
+  const typeOptions = types.length > 0 ?
+  types.map(c => c.name)
+  : (error ? ['Ошибка загрузки']
+  : filtersError ? ['Ошибка загрузки']
+  : []);
+
+  const categotyOptions = categories.length > 0 ?
+  categories.map(c => c.name)
+  : (error ? ['Ошибка загрузки']
+  : filtersError ? ['Ошибка загрузки']
+  : []);
+
+  const statusOptions = error ? ['Ошибка загрузки'] : filtersError? ['Ошибка загрузки'] : RUSStatuses ;
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -109,9 +144,10 @@ const DocumentsListPage = () => {
           isOpen={activeFilter === 'source'}
           onToggle={() => toggleFilter('source')}/> */}
         <DropdownButton
-          options={types.map(t => t.name)}
+          options={typeOptions}
           selectedLabel={selectedLabels.docType}
           onSelect={(name) => {
+            if (name === 'Ошибка загрузки') return;
             const id = findTypeId(name);
             setFilters(prev => ({ ...prev, typeId: id }));
             setSelectedLabels(prev => ({ ...prev, docType: name }));
@@ -121,9 +157,10 @@ const DocumentsListPage = () => {
           isOpen={activeFilter === 'docType'}
           onToggle={() => toggleFilter('docType')}/>
         <DropdownButton
-          options={categories.map(c => c.name)}
+          options={categotyOptions}
           selectedLabel={selectedLabels.category}
           onSelect={(name) => {
+            if (name === 'Ошибка загрузки') return;
             const id = findCategoryId(name);
             setFilters(prev => ({ ...prev, categoryId: id }));
             setSelectedLabels(prev => ({ ...prev, category: name }));
@@ -143,6 +180,7 @@ const DocumentsListPage = () => {
           options={statusOptions}
           selectedLabel={selectedLabels.status}
           onSelect={(RUSStatus) => {
+            if (RUSStatus === 'Ошибка загрузки') return;
             const ENGStatus = reverseStatusMap[RUSStatus] || RUSStatus;
             setFilters(prev => ({ ...prev, status: ENGStatus }));
             setSelectedLabels(prev => ({ ...prev, status: RUSStatus }));
@@ -184,6 +222,7 @@ const DocumentsListPage = () => {
           <thead>
             <tr>
               <th>ID</th>
+              <th>Рег. номер</th>
               <th>Тема</th>
               <th>Отправитель</th>
               <th>Дата</th>
@@ -195,11 +234,12 @@ const DocumentsListPage = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8}>Загрузка...</td></tr>
+              <tr><td colSpan={9}>Загрузка...</td></tr>
             ) : data?.items?.length ? (
               data.items.map((doc: DocumentListItem) => (
                 <tr key={doc.id} onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
                   <td>{doc.id}</td>
+                  <td>{doc.registrationNumber}</td>
                   <td>{doc.title}</td>
                   <td>{doc.senderName}</td>
                   <td>{new Date(doc.receivedDate).toLocaleDateString()}</td>
@@ -213,9 +253,10 @@ const DocumentsListPage = () => {
                   <td>{doc.department}</td>
                 </tr>
               ))
-            ) : (
-              <tr><td colSpan={8}>Нет документов</td></tr>
-            )}
+            ) : error ? (
+              <tr><td colSpan={9}> {error} <button className="apply-button" onClick={() =>
+              { fetchDocumentsfilters(); fetchDocuments(); }}>Повторить</button></td></tr>
+            ) : (<tr><td colSpan={9}>Нет документов</td></tr>)}
           </tbody>
         </Table>
       </Card>
