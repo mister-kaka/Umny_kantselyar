@@ -73,7 +73,7 @@ const DocumentCardPage: React.FC = () => {
         
       <div className="doc-header">
         <div>
-          <h1>Проверка документа</h1>
+          <h1>Карточка документа</h1>
           <div className="doc-number">{data.registrationNumber}</div>
         </div>
       
