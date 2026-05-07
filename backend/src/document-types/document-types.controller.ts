@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { DocumentTypesService } from './document-types.service';
 import { DocumentTypeDto } from '../document-types/dto/document-type.dto';   

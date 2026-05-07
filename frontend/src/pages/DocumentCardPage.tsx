@@ -5,7 +5,6 @@ import "../styles/DocumentCard.css";
 import { getDocumentById } from '../services/api';
 import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute } from '../types/';
 import Card from '../components/Card';
-import Table from '../components/Table';
 import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu';
 
 const DocumentCardPage: React.FC = () => {
