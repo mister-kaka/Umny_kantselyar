@@ -73,7 +73,7 @@ const DocumentCardPage: React.FC = () => {
         
       <div className="doc-header">
         <div>
-          <h1>Проверка документа</h1>
+          <h1>Карточка документа</h1>
           <div className="doc-number">{data.registrationNumber}</div>
         </div>
       
@@ -245,7 +245,7 @@ const DocumentCardPage: React.FC = () => {
                           <span className="file-name">{file.fileName}</span>
                           <span className="file-size">{(file.fileSize / 1024).toFixed(0)} КБ</span>
                           <a 
-                            href={`http://localhost:3000${file.filePath}`}
+                            href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${file.filePath}`}
                             download={file.fileName}
                             className="file-download"
                             target="_blank"
