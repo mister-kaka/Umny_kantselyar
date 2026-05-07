@@ -3,7 +3,9 @@ dist/
 .env
 
 *.log
-logs.json
+/logs/
+backend/logs/
+logs/
 
 .vscode/
 .idea/
@@ -12,5 +14,3 @@ logs.json
 Thumbs.db
 
 /http.tests/
-
-/logs/
