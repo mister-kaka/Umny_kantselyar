@@ -2,7 +2,7 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department } from '../types';
+import { Department, AiSettings } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -109,4 +109,31 @@ export const getDepartments = async (): Promise<Department[]> => {
     console.error('Ошибка получения списка подразделений', error);
     throw error;
   }
+};
+
+
+export const getAiSettings = async (): Promise<AiSettings> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        id: 1,
+        provider_code: "openai",
+        model_name: "gpt-4",
+        api_key: "********",
+        base_url: "https://api.openai.com/v1",
+        is_active: true,
+      });
+    }, 300);
+  });
+};
+
+
+export const updateAiSettings = async (data: AiSettings): Promise<AiSettings> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        ...data,
+      });
+    }, 300);
+  });
 };
