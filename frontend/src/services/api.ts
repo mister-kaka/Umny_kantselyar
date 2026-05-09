@@ -2,7 +2,7 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings } from '../types';
+import { Department, AiSettings, AiProvider, SearchResult } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -136,4 +136,44 @@ export const updateAiSettings = async (data: AiSettings): Promise<AiSettings> =>
       });
     }, 300);
   });
+};
+
+
+export const getAiProviders = async (): Promise<AiProvider[]> => {
+  return [
+    {
+      provider_code: "openai",
+      provider_name: "OpenAI",
+      models: [
+        { model_code: "gpt-3", model_name: "GPT-3" },
+        { model_code: "gpt-4", model_name: "GPT-4" }
+      ]
+    },
+    {
+      provider_code: "anthropic",
+      provider_name: "Anthropic",
+      models: [
+        { model_code: "claude-1", model_name: "Claude-1" },
+        { model_code: "claude-2", model_name: "Claude-2" }
+      ]
+    }
+  ];
+};
+
+export const searchDocuments = async (query: string): Promise<SearchResult> => {
+  return {
+    items: [
+      {
+        id: 1,
+        registrationNumber: "DOC-001",
+        title: `Результат поиска по "${query}"`,
+        senderName: "Иванов И.И.",
+        receivedDate: "2026-05-10",
+        documentType: "Договор",
+        category: "Счет",
+        currentStatus: "В работе",
+        department: "Отдел продаж"
+      }
+    ]
+  };
 };
