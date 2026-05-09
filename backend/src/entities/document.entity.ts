@@ -7,6 +7,7 @@ import { DocumentFile } from './document-file.entity';
 import { DocumentClassification } from './document-classification.entity';
 import { DocumentSource } from './document-source.entity';
 import { OcrResult } from './ocr-result.entity';
+import { DocumentAiResult } from './document-ai-result.entity';
 
 @Entity('documents')
 export class Document {
@@ -69,5 +70,8 @@ export class Document {
 
     @OneToOne(() => OcrResult, (ocr) => ocr.document)
     ocrResult!: OcrResult | null;
+
+    @OneToMany(() => DocumentAiResult, (aiResult) => aiResult.document)
+    aiResults!: DocumentAiResult[];
 
 }

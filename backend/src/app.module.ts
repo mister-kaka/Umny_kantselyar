@@ -16,6 +16,8 @@ import { DocumentSource } from './entities/document-source.entity';
 import { DocumentFile } from './entities/document-file.entity';
 import { OcrResult } from './entities/ocr-result.entity';
 import { DocumentClassification } from './entities/document-classification.entity';
+import { AiSetting } from './entities/ai-setting.entity';
+import { DocumentAiResult } from './entities/document-ai-result.entity';
 
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
@@ -54,6 +56,8 @@ import { DocumentCategoriesModule } from './document-categories/document-categor
           DocumentFile,         
           OcrResult,             
           DocumentClassification,
+          AiSetting,
+          DocumentAiResult,
         ],
         synchronize: false, 
         logging: ['error'],  
