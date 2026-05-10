@@ -26,6 +26,8 @@ import { DepartmentsModule } from './departments/departments.module';
 import { DocumentTypesModule } from './document-types/document-types.module';
 import { DocumentCategoriesModule } from './document-categories/document-categories.module';
 
+import { SettingsModule } from './settings/settings.module';
+
 @Module({
   imports: [
     LoggerModule,
@@ -71,6 +73,8 @@ import { DocumentCategoriesModule } from './document-categories/document-categor
     DepartmentsModule,
     DocumentTypesModule,
     DocumentCategoriesModule,
+
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
