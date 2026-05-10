@@ -2,7 +2,7 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings, AiProvider, SearchResult } from '../types';
+import { Department, AiSettings, AiProvider, SearchResult, DocumentAiResult } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -176,4 +176,43 @@ export const searchDocuments = async (query: string): Promise<SearchResult> => {
       }
     ]
   };
+};
+
+export const analyzeDocument = async (id: number): Promise<DocumentAiResult> => {
+  console.log(`Вызов analyzeDocument для документа ${id}`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        id,
+        document_type_suggested: "Договор",
+        category_suggested: "Финансы",
+        summary_text: "Резюме документа: тестовый текст",
+        department_suggested: "Бухгалтерия",
+        confidence_score: 85,
+        provider_code: "ai-provider-1",
+        model_name: "gpt-test-model",
+        created_at: new Date().toISOString(),
+      });
+    }, 500); 
+  });
+};
+
+
+export const getDocumentAiResult = async (id: number): Promise<DocumentAiResult | null> => {
+  console.log(`Вызов getDocumentAiResult для документа ${id}`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        id,
+        document_type_suggested: "Договор",
+        category_suggested: "Финансы",
+        summary_text: "Резюме документа: тестовый текст",
+        department_suggested: "Бухгалтерия",
+        confidence_score: 85,
+        provider_code: "ai-provider-1",
+        model_name: "gpt-test-model",
+        created_at: new Date().toISOString(),
+      });
+    }, 500);
+  });
 };
