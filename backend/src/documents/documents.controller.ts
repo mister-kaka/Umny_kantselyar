@@ -2,7 +2,7 @@ import { Controller, Get, Post, Param, Query, UseGuards, ParseIntPipe } from '@n
 import { AuthGuard } from '@nestjs/passport';
 import { DocumentsService } from './documents.service';
 import { GetDocumentsDto } from './dto/get-documents.dto';
-import { DocumentsListResponseDto } from './dto/document-list.dto';
+import { DocumentsListResponseDto, DocumentListItemDto  } from './dto/document-list.dto';
 import { DocumentCardDto } from './dto/document-card.dto';
 
 @Controller('documents')
@@ -13,6 +13,12 @@ export class DocumentsController {
     @Get()
     async getDocuments(@Query() filters: GetDocumentsDto): Promise<DocumentsListResponseDto> {
         return this.documentsService.findAll(filters);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get('search')
+    async searchDocuments(@Query('q') q: string): Promise<DocumentListItemDto[]> {
+        return this.documentsService.search(q);
     }
 
     @UseGuards(AuthGuard('jwt'))
