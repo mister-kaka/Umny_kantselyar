@@ -81,12 +81,12 @@ export class SettingsService {
       if (settings) {
         settings.providerCode = dto.providerCode;
         settings.modelName = dto.modelName;
-        settings.apiKey = dto.apiKey;
+        settings.apiKey = encrypt(dto.apiKey);
         if (dto.baseUrl !== undefined) {
           settings.baseUrl = dto.baseUrl;
         }
         if (dto.isActive !== undefined) {
-          settings.apiKey = encrypt(dto.apiKey);
+          settings.isActive = dto.isActive;
         }
       } else {
         settings = this.aiSettingRepository.create({
