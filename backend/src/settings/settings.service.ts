@@ -6,6 +6,7 @@ import { AiSettingsResponseDto } from './dto/ai-settings-response.dto';
 import { UpdateAiSettingsDto } from './dto/update-ai-settings.dto';
 import { AiProviderDto } from './dto/ai-provider.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
+import { encrypt, maskApiKey } from '../ai/ai-key.util';
 
 @Injectable()
 export class SettingsService {
@@ -14,12 +15,6 @@ export class SettingsService {
     private readonly aiSettingRepository: Repository<AiSetting>,
     private readonly logger: AppLoggerService,
   ) {}
-
-
-  private maskApiKey(apiKey: string): string {
-    if (!apiKey || apiKey.length <= 4) return '***';
-    return '***' + apiKey.slice(-4);
-  }
 
 //    GET /settings/ai    <--    возвращает активную запись из ai_settings
   async getAiSettings(): Promise<AiSettingsResponseDto> {
@@ -36,7 +31,7 @@ export class SettingsService {
         id: settings.id,
         providerCode: settings.providerCode,
         modelName: settings.modelName,
-        apiKey: this.maskApiKey(settings.apiKey),
+        apiKey: maskApiKey(settings.apiKey),
         baseUrl: settings.baseUrl,
         isActive: settings.isActive,
         updatedAt: settings.updatedAt,
@@ -91,15 +86,16 @@ export class SettingsService {
           settings.baseUrl = dto.baseUrl;
         }
         if (dto.isActive !== undefined) {
-          settings.isActive = dto.isActive;
+          settings.apiKey = encrypt(dto.apiKey);
         }
       } else {
         settings = this.aiSettingRepository.create({
           providerCode: dto.providerCode,
           modelName: dto.modelName,
-          apiKey: dto.apiKey,
+          apiKey: encrypt(dto.apiKey),
           baseUrl: dto.baseUrl ?? null,
           isActive: dto.isActive ?? true,
+          
         });
       }
 
@@ -109,7 +105,7 @@ export class SettingsService {
         id: saved.id,
         providerCode: saved.providerCode,
         modelName: saved.modelName,
-        apiKey: this.maskApiKey(saved.apiKey),
+        apiKey: maskApiKey(saved.apiKey),
         baseUrl: saved.baseUrl,
         isActive: saved.isActive,
         updatedAt: saved.updatedAt,
