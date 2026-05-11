@@ -1,0 +1,85 @@
+[
+  {
+    "timestamp": "29.04.2026, 16:14:21",
+    "type": "POST",
+    "url": "/auth/login",
+    "action": "попытка входа",
+    "email": "alexandra@umny-kan.ru",
+    "password": "***",
+    "status": "success",
+    "errorCode": 200,
+    "errorMessage": "Успешный вход"
+  },
+  {
+    "timestamp": "29.04.2026, 16:14:21",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "29.04.2026, 16:14:21",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "29.04.2026, 16:14:30",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "29.04.2026, 16:14:30",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "29.04.2026, 16:14:51",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "29.04.2026, 16:14:51",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "29.04.2026, 16:14:56",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  },
+  {
+    "timestamp": "29.04.2026, 16:14:56",
+    "type": "GET",
+    "url": "/dashboard/data",
+    "action": "получение данных на дашборд",
+    "status": "success",
+    "statusCode": 200,
+    "message": "Данные успешно получены"
+  }
+]
