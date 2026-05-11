@@ -112,7 +112,8 @@ export class DocumentsService {
                     'classifications.documentCategory',
                     'documentRoutes',
                     'documentRoutes.department',
-                    'sources'
+                    'sources',
+                    'aiResults'
                 ],
             });
 
@@ -130,6 +131,10 @@ export class DocumentsService {
             }
 
             document.classifications?.sort((a, b) =>
+                b.createdAt.getTime() - a.createdAt.getTime()
+            );
+
+            document.aiResults?.sort((a, b) =>
                 b.createdAt.getTime() - a.createdAt.getTime()
             );
 
@@ -190,6 +195,21 @@ export class DocumentsService {
                     organizationName: document.sources[0].organizationName,
                     senderName: document.sources[0].senderName,
                     contactInfo: document.sources[0].contactInfo,
+                } : null,
+
+                aiResult: document.aiResults?.[0] ? {
+                    id: document.aiResults[0].id,
+                    documentId: document.aiResults[0].documentId,
+                    documentTypeSuggested: document.aiResults[0].documentTypeSuggested,
+                    categorySuggested: document.aiResults[0].categorySuggested,
+                    summaryText: document.aiResults[0].summaryText,
+                    departmentSuggested: document.aiResults[0].departmentSuggested,
+                    confidenceScore: document.aiResults[0].confidenceScore
+                        ? Number(document.aiResults[0].confidenceScore)
+                        : null,
+                    providerCode: document.aiResults[0].providerCode,
+                    modelName: document.aiResults[0].modelName,
+                    createdAt: document.aiResults[0].createdAt,
                 } : null,
             };
 

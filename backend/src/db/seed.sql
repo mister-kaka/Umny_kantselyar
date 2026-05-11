@@ -297,4 +297,4 @@ INSERT INTO document_classifications (document_id, type_id, category_id, type_co
 
 -- api_key пока заглушка
 INSERT INTO ai_settings (provider_code, model_name, api_key, base_url, is_active) VALUES
-('deepseek', 'deepseek-4-flash', 'placeholder_api', 'https://api.deepseek.com', TRUE);
+('deepseek', 'deepseek-4-flash', '2d9bd01814f77aba9f9204742e86a114:8419243e514b0e10ff6ef114118efe2a', 'https://api.deepseek.com', TRUE);

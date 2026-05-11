@@ -25,7 +25,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { DocumentTypesModule } from './document-types/document-types.module';
 import { DocumentCategoriesModule } from './document-categories/document-categories.module';
-
+import { AiModule } from './ai/ai.module';
 import { SettingsModule } from './settings/settings.module';
 
 @Module({
@@ -73,8 +73,8 @@ import { SettingsModule } from './settings/settings.module';
     DepartmentsModule,
     DocumentTypesModule,
     DocumentCategoriesModule,
-
     SettingsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

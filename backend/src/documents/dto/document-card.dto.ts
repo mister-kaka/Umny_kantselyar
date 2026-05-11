@@ -1,3 +1,5 @@
+import { AiResultResponseDto } from '../../ai/dto/ai-result.dto';
+
 export class DocumentFileDto {
     id!: number;
     fileName!: string;
@@ -61,4 +63,6 @@ export class DocumentCardDto {
     routes!: DocumentRouteDto[];
 
      source!: DocumentSourceDto | null;
+
+     aiResult!: AiResultResponseDto | null;
 }
