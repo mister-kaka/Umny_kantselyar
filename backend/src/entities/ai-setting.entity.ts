@@ -17,7 +17,7 @@ export class AiSetting {
     @Column({ name: 'base_url', type: 'varchar', length: 500, nullable: true })
     baseUrl!: string | null;
 
-    @Column({ name: 'is_active', default: false })
+    @Column({ name: 'is_active', default: true })
     isActive!: boolean;
 
     @UpdateDateColumn({ name: 'updated_at' })

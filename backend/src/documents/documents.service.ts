@@ -112,7 +112,8 @@ export class DocumentsService {
                     'classifications.documentCategory',
                     'documentRoutes',
                     'documentRoutes.department',
-                    'sources'
+                    'sources',
+                    'aiResults'
                 ],
             });
 
@@ -130,6 +131,10 @@ export class DocumentsService {
             }
 
             document.classifications?.sort((a, b) =>
+                b.createdAt.getTime() - a.createdAt.getTime()
+            );
+
+            document.aiResults?.sort((a, b) =>
                 b.createdAt.getTime() - a.createdAt.getTime()
             );
 
@@ -191,6 +196,21 @@ export class DocumentsService {
                     senderName: document.sources[0].senderName,
                     contactInfo: document.sources[0].contactInfo,
                 } : null,
+
+                aiResult: document.aiResults?.[0] ? {
+                    id: document.aiResults[0].id,
+                    documentId: document.aiResults[0].documentId,
+                    documentTypeSuggested: document.aiResults[0].documentTypeSuggested,
+                    categorySuggested: document.aiResults[0].categorySuggested,
+                    summaryText: document.aiResults[0].summaryText,
+                    departmentSuggested: document.aiResults[0].departmentSuggested,
+                    confidenceScore: document.aiResults[0].confidenceScore
+                        ? Number(document.aiResults[0].confidenceScore)
+                        : null,
+                    providerCode: document.aiResults[0].providerCode,
+                    modelName: document.aiResults[0].modelName,
+                    createdAt: document.aiResults[0].createdAt,
+                } : null,
             };
 
             await this.logger.log({
@@ -224,4 +244,80 @@ export class DocumentsService {
             );
         }
     }
+
+
+
+//  GET /documents/search?q=...     <--    поиск по registration_number, title, sender_name (ILIKE)
+  async search(q: string): Promise<DocumentListItemDto[]> {
+    try {
+      if (!q || q.trim().length === 0) {
+        throw new HttpException(
+          'Параметр поиска "q" обязателен',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const query = this.documentRepository
+        .createQueryBuilder('doc')
+        .leftJoinAndSelect('doc.documentType', 'documentType')
+        .leftJoinAndSelect('doc.category', 'category')
+        .leftJoinAndSelect(
+          'doc.documentRoutes',
+          'route',
+          'route.id = (SELECT dr.id FROM document_routes dr WHERE dr.document_id = doc.id ORDER BY dr.routed_at DESC LIMIT 1)'
+        )
+        .leftJoinAndSelect('route.department', 'department')
+        .where('doc.registrationNumber ILIKE :q', { q: `%${q.trim()}%` })
+        .orWhere('doc.title ILIKE :q', { q: `%${q.trim()}%` })
+        .orWhere('doc.senderName ILIKE :q', { q: `%${q.trim()}%` })
+        .orderBy('doc.receivedDate', 'DESC')
+        .take(10);
+
+      const documents = await query.getMany();
+
+      const items: DocumentListItemDto[] = documents.map(doc => ({
+        id: doc.id,
+        registrationNumber: doc.registrationNumber,
+        title: doc.title,
+        senderName: doc.senderName,
+        receivedDate: doc.receivedDate,
+        documentType: doc.documentType?.name ?? 'Не указан',
+        category: doc.category?.name ?? null,
+        currentStatus: doc.currentStatus,
+        department: doc.documentRoutes?.[0]?.department?.name ?? null,
+      }));
+
+      await this.logger.log({
+        module: 'Documents',
+        type: 'GET',
+        url: `/documents/search?q=${encodeURIComponent(q)}`,
+        action: 'поиск документов',
+        status: 'success',
+        statusCode: 200,
+        message: `Найдено документов: ${items.length}`,
+      });
+
+      return items;
+
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+      await this.logger.log({
+        module: 'Documents',
+        type: 'GET',
+        url: '/documents/search',
+        action: 'поиск документов',
+        status: 'error',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: errorMessage,
+      });
+
+      throw new HttpException(
+        'Ошибка сервера при поиске документов',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
