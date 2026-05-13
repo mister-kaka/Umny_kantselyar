@@ -113,113 +113,37 @@ export const getDepartments = async (): Promise<Department[]> => {
 
 
 export const getAiSettings = async (): Promise<AiSettings> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: 1,
-        providerCode: "openai",
-        modelName: "gpt-4",
-        apiKey: "********",
-        baseUrl: "https://api.openai.com/v1",
-        isActive: true,
-        updatedAt: new Date().toISOString()
-      });
-    }, 300);
-  });
+  const res = await api.get<AiSettings>('/settings/ai');
+  return res.data;
 };
 
 
 export const updateAiSettings = async (data:  UpdateAiSettings): Promise<AiSettings> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: 1,
-        providerCode: data.providerCode,
-        modelName: data.modelName,
-        apiKey: data.apiKey,
-        baseUrl: data.baseUrl ?? null,
-        isActive: true,
-        updatedAt: new Date().toISOString()
-      });
-    }, 300);
-  });
+  const res = await api.put<AiSettings>('/settings/ai', data);
+  return res.data;
 };
 
 
 export const getAiProviders = async (): Promise<AiProvider[]> => {
-  return [
-    {
-      providerCode: "openai",
-      providerName: "OpenAI",
-      models: [
-        { modelCode: "gpt-3", modelName: "GPT-3" },
-        { modelCode: "gpt-4", modelName: "GPT-4" }
-      ]
-    },
-    {
-      providerCode: "anthropic",
-      providerName: "Anthropic",
-      models: [
-        { modelCode: "claude-1", modelName: "Claude-1" },
-        { modelCode: "claude-2", modelName: "Claude-2" }
-      ]
-    }
-  ];
+  const res = await api.get<AiProvider[]>('/settings/ai/providers');
+  return res.data;
 };
 
 export const searchDocuments = async (query: string): Promise<DocumentListItem[]> => {
-  return [
-      {
-        id: 1,
-        registrationNumber: "DOC-001",
-        title: `Результат поиска по "${query}"`,
-        senderName: "Иванов И.И.",
-        receivedDate: "2026-05-10",
-        documentType: "Договор",
-        category: "Счет",
-        currentStatus: "В работе",
-        department: "Отдел продаж"
-      }
-    ]
+  const res = await api.get<DocumentListItem[]>('/documents/search', {
+    params: { q: query }
+  });
+
+  return res.data;
 };
 
 export const analyzeDocument = async (id: number): Promise<DocumentAiResult> => {
-  console.log(`Вызов analyzeDocument для документа ${id}`);
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id,
-        documentId: id,
-        documentTypeSuggested: "Договор",
-        categorySuggested: "Финансы",
-        summaryText: "Резюме документа: тестовый текст",
-        departmentSuggested: "Бухгалтерия",
-        confidenceScore: 85,
-        providerCode: "ai-provider-1",
-        modelName: "gpt-test-model",
-        createdAt: new Date().toISOString(),
-      });
-    }, 500); 
-  });
+   const res = await api.post<DocumentAiResult>(`/documents/${id}/analyze-ai`);
+   return res.data;
 };
 
 
 export const getDocumentAiResult = async (id: number): Promise<DocumentAiResult | null> => {
-  console.log(`Вызов getDocumentAiResult для документа ${id}`);
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id,
-        documentId: id,
-        documentTypeSuggested: "Договор",
-        categorySuggested: "Финансы",
-        summaryText: "Резюме документа: тестовый текст",
-        departmentSuggested: "Бухгалтерия",
-        confidenceScore: 85,
-        providerCode: "ai-provider-1",
-        modelName: "gpt-test-model",
-        createdAt: new Date().toISOString(),
-      });
-    }, 500);
-  });
+  const res = await api.get<DocumentAiResult | null>(`/documents/${id}/ai-result`);
+  return res.data;
 };
