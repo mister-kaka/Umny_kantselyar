@@ -988,3 +988,117 @@
     font-weight: 400;
   }
 }
+
+/* Контейнер кнопки AI-анализа */
+.ai-analysis-control {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.ai-analysis-control .btn-primary {
+  min-width: 200px;
+  background-color: var(--color-accent, #81D8D0);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-button, 8px);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-analysis-control .btn-primary:hover:not(:disabled) {
+  background-color: var(--color-accent-hover, #6bccc3);
+  transform: translateY(-1px);
+}
+
+.ai-analysis-control .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Предупреждение (когда нет OCR-текста) */
+.ai-warning {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-tertiary, #696969);
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.02);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+/* Блок ошибки AI-анализа */
+.ai-error {
+  background-color: rgba(232, 115, 115, 0.08);
+  border-left: 3px solid var(--color-status-rejected, #E87373);
+  padding: 16px 20px;
+  border-radius: var(--radius-card, 12px);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ai-error p {
+  margin: 0;
+  color: var(--color-status-rejected, #E87373);
+  font-size: 13px;
+}
+
+.ai-error .btn-secondary {
+  flex: 0 0 auto;
+  padding: 6px 16px;
+  background-color: transparent;
+  border: 1px solid var(--color-status-rejected, #E87373);
+  color: var(--color-status-rejected, #E87373);
+  border-radius: var(--radius-button, 8px);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-error .btn-secondary:hover {
+  background-color: rgba(232, 115, 115, 0.1);
+}
+
+/* Блок результата AI-анализа */
+.ai-result {
+  background-color: var(--color-bg-surface, #ffffff);
+  border-radius: var(--radius-card, 12px);
+  padding: 20px 24px;
+  margin-top: 20px;
+  border: 1px solid var(--border-color, #e5e5e5);
+}
+
+.ai-result-row {
+  display: flex;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-color, #e5e5e5);
+}
+
+.ai-result-row:last-child {
+  border-bottom: none;
+}
+
+.ai-label {
+  width: 220px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary, #696969);
+  flex-shrink: 0;
+}
+
+.ai-value {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #000000);
+  word-break: break-word;
+  line-height: 1.4;
+}
