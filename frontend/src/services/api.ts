@@ -2,7 +2,7 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings, AiProvider, SearchResult, DocumentAiResult } from '../types';
+import { Department, AiSettings, AiProvider,  UpdateAiSettings, DocumentAiResult, DocumentListItem  } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -117,22 +117,29 @@ export const getAiSettings = async (): Promise<AiSettings> => {
     setTimeout(() => {
       resolve({
         id: 1,
-        provider_code: "openai",
-        model_name: "gpt-4",
-        api_key: "********",
-        base_url: "https://api.openai.com/v1",
-        is_active: true,
+        providerCode: "openai",
+        modelName: "gpt-4",
+        apiKey: "********",
+        baseUrl: "https://api.openai.com/v1",
+        isActive: true,
+        updatedAt: new Date().toISOString()
       });
     }, 300);
   });
 };
 
 
-export const updateAiSettings = async (data: AiSettings): Promise<AiSettings> => {
+export const updateAiSettings = async (data:  UpdateAiSettings): Promise<AiSettings> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        ...data,
+        id: 1,
+        providerCode: data.providerCode,
+        modelName: data.modelName,
+        apiKey: data.apiKey,
+        baseUrl: data.baseUrl ?? null,
+        isActive: true,
+        updatedAt: new Date().toISOString()
       });
     }, 300);
   });
@@ -142,27 +149,26 @@ export const updateAiSettings = async (data: AiSettings): Promise<AiSettings> =>
 export const getAiProviders = async (): Promise<AiProvider[]> => {
   return [
     {
-      provider_code: "openai",
-      provider_name: "OpenAI",
+      providerCode: "openai",
+      providerName: "OpenAI",
       models: [
-        { model_code: "gpt-3", model_name: "GPT-3" },
-        { model_code: "gpt-4", model_name: "GPT-4" }
+        { modelCode: "gpt-3", modelName: "GPT-3" },
+        { modelCode: "gpt-4", modelName: "GPT-4" }
       ]
     },
     {
-      provider_code: "anthropic",
-      provider_name: "Anthropic",
+      providerCode: "anthropic",
+      providerName: "Anthropic",
       models: [
-        { model_code: "claude-1", model_name: "Claude-1" },
-        { model_code: "claude-2", model_name: "Claude-2" }
+        { modelCode: "claude-1", modelName: "Claude-1" },
+        { modelCode: "claude-2", modelName: "Claude-2" }
       ]
     }
   ];
 };
 
-export const searchDocuments = async (query: string): Promise<SearchResult> => {
-  return {
-    items: [
+export const searchDocuments = async (query: string): Promise<DocumentListItem[]> => {
+  return [
       {
         id: 1,
         registrationNumber: "DOC-001",
@@ -175,7 +181,6 @@ export const searchDocuments = async (query: string): Promise<SearchResult> => {
         department: "Отдел продаж"
       }
     ]
-  };
 };
 
 export const analyzeDocument = async (id: number): Promise<DocumentAiResult> => {
@@ -184,14 +189,15 @@ export const analyzeDocument = async (id: number): Promise<DocumentAiResult> => 
     setTimeout(() => {
       resolve({
         id,
-        document_type_suggested: "Договор",
-        category_suggested: "Финансы",
-        summary_text: "Резюме документа: тестовый текст",
-        department_suggested: "Бухгалтерия",
-        confidence_score: 85,
-        provider_code: "ai-provider-1",
-        model_name: "gpt-test-model",
-        created_at: new Date().toISOString(),
+        documentId: id,
+        documentTypeSuggested: "Договор",
+        categorySuggested: "Финансы",
+        summaryText: "Резюме документа: тестовый текст",
+        departmentSuggested: "Бухгалтерия",
+        confidenceScore: 85,
+        providerCode: "ai-provider-1",
+        modelName: "gpt-test-model",
+        createdAt: new Date().toISOString(),
       });
     }, 500); 
   });
@@ -204,14 +210,15 @@ export const getDocumentAiResult = async (id: number): Promise<DocumentAiResult 
     setTimeout(() => {
       resolve({
         id,
-        document_type_suggested: "Договор",
-        category_suggested: "Финансы",
-        summary_text: "Резюме документа: тестовый текст",
-        department_suggested: "Бухгалтерия",
-        confidence_score: 85,
-        provider_code: "ai-provider-1",
-        model_name: "gpt-test-model",
-        created_at: new Date().toISOString(),
+        documentId: id,
+        documentTypeSuggested: "Договор",
+        categorySuggested: "Финансы",
+        summaryText: "Резюме документа: тестовый текст",
+        departmentSuggested: "Бухгалтерия",
+        confidenceScore: 85,
+        providerCode: "ai-provider-1",
+        modelName: "gpt-test-model",
+        createdAt: new Date().toISOString(),
       });
     }, 500);
   });
