@@ -276,6 +276,8 @@ ${documentText.substring(0, MAX_TEXT_LENGTH)}`;
         } catch (error) {
             if (error instanceof HttpException) throw error;
 
+            console.error('OpenRouter error:', error);
+
             await this.logger.log({
                 module: 'AI',
                 type: 'POST',
