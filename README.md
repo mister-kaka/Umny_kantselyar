@@ -10,7 +10,6 @@
 - **Бэкенд**: NestJS, TypeScript, TypeORM, PostgreSQL, JWT, bcrypt, class-validator, HttpModule
 - **Фронтенд**: React, TypeScript, Vite, React Router, Axios 
 - **База данных**: PostgreSQL (запускается в Docker) 
-- **AI**: DeepSeek 4 Flash **(Этап 3)**
 - **Стили**: CSS, CSS-переменные, адаптивная вёрстка 
 
 ## Запуск проекта
