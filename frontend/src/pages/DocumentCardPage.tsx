@@ -3,22 +3,21 @@ import { useParams, useNavigate } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
 import { getDocumentById } from '../services/api';
-import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, AiAnalysisResult } from '../types/';
+import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute } from '../types/';
 import Card from '../components/Card';
 import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu';
-import { getDocumentAiResult, analyzeDocument } from '../services/api';
 
 const DocumentCardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"overview" | "ocr" | "entities" | "history" | "ai">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "ocr" | "history">("overview");
   
   const [data, setData] = useState<DocumentCardType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // ===== AI-анализ =====
-  const [aiResult, setAiResult] = useState<AiAnalysisResult | null>(null);
+  const [aiResult, setAiResult] = useState<any | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiAnalyzed, setAiAnalyzed] = useState(false);
@@ -50,7 +49,46 @@ const DocumentCardPage: React.FC = () => {
       });
   }, [id]);
 
-  // ===== Загрузка AI-результата =====
+  // ===== ВРЕМЕННЫЕ ЗАГЛУШКИ (потом заменить на API) =====
+  const getDocumentAiResult = async (docId: number): Promise<any> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          id: 1,
+          documentId: docId,
+          documentTypeSuggested: "Договор (заглушка)",
+          categorySuggested: "Финансовые документы (заглушка)",
+          summaryText: "Заглушка: краткая сводка документа",
+          departmentSuggested: "Юридический отдел (заглушка)",
+          confidenceScore: 85,
+          providerCode: "mock",
+          modelName: "mock-model",
+          createdAt: new Date().toISOString(),
+        });
+      }, 500);
+    });
+  };
+
+  const analyzeDocument = async (docId: number): Promise<any> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          id: 1,
+          documentId: docId,
+          documentTypeSuggested: "Договор (заглушка)",
+          categorySuggested: "Финансовые документы (заглушка)",
+          summaryText: "Заглушка: результат анализа документа",
+          departmentSuggested: "Юридический отдел (заглушка)",
+          confidenceScore: 85,
+          providerCode: "mock",
+          modelName: "mock-model",
+          createdAt: new Date().toISOString(),
+        });
+      }, 500);
+    });
+  };
+  // ===== КОНЕЦ ЗАГЛУШЕК =====
+
   const loadAiResult = async (docId: number) => {
     try {
       const result = await getDocumentAiResult(docId);
@@ -63,7 +101,6 @@ const DocumentCardPage: React.FC = () => {
     }
   };
 
-  // ===== Запуск AI-анализа =====
   const handleAiAnalysis = async () => {
     if (!id) return;
     
@@ -80,6 +117,12 @@ const DocumentCardPage: React.FC = () => {
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const handleAiReset = () => {
+    setAiResult(null);
+    setAiAnalyzed(false);
+    setAiError(null);
   };
 
   if (loading) {
@@ -187,10 +230,9 @@ const DocumentCardPage: React.FC = () => {
         <div className="right-column">
           <div className="tabs">
             <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Обзор</button>
-            <button className={`tab ${activeTab === "ocr" ? "active" : ""}`} onClick={() => setActiveTab("ocr")}>Текст OCR</button>
-            <button className={`tab ${activeTab === "entities" ? "active" : ""}`} onClick={() => setActiveTab("entities")}>Сущности</button>
-            <button className={`tab ${activeTab === "history" ? "active" : ""}`} onClick={() => setActiveTab("history")}>История</button>
             <button className={`tab ${activeTab === "ai" ? "active" : ""}`} onClick={() => setActiveTab("ai")}>AI-анализ</button>
+            <button className={`tab ${activeTab === "ocr" ? "active" : ""}`} onClick={() => setActiveTab("ocr")}>Текст OCR</button>
+            <button className={`tab ${activeTab === "history" ? "active" : ""}`} onClick={() => setActiveTab("history")}>История</button>
           </div>
 
           <div className="tab-content">
@@ -328,7 +370,78 @@ const DocumentCardPage: React.FC = () => {
               </>
             )}
 
-            {/* Вкладка 2: Текст OCR */}
+            {/* Вкладка 2: AI-анализ */}
+            {activeTab === "ai" && (
+              <Card>
+                <h3>AI-анализ документа</h3>
+                
+                <div className="ai-analysis-control">
+                  {!aiAnalyzed ? (
+                    <>
+                      <button 
+                        className="ai-btn"
+                        onClick={handleAiAnalysis}
+                        disabled={aiLoading || !data.ocrResult?.rawText}
+                      >
+                        {aiLoading ? 'Анализ выполняется...' : 
+                         !data.ocrResult?.rawText ? 'Требуется OCR-текст' :
+                         'Запустить AI-анализ'}
+                      </button>
+                      {!data.ocrResult?.rawText && (
+                        <p className="ai-warning">Для запуска AI-анализа необходимо сначала выполнить OCR-распознавание документа</p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="ai-analysis-control">
+                      <p className="ai-success">✓ Анализ выполнен</p>
+                      <button className="ai-btn-secondary" onClick={handleAiReset}>
+                        Повторить анализ
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                {aiError && (
+                  <div className="ai-error">
+                    <p>{aiError}</p>
+                    <button className="ai-btn-secondary" onClick={handleAiAnalysis}>Повторить</button>
+                  </div>
+                )}
+                
+                {aiResult && (
+                  <div className="ai-result">
+                    <div className="ai-result-row">
+                      <span className="ai-label">Предложенный тип документа:</span>
+                      <span className="ai-value">{aiResult.documentTypeSuggested || '—'}</span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Предложенная категория:</span>
+                      <span className="ai-value">{aiResult.categorySuggested || '—'}</span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Короткая сводка:</span>
+                      <span className="ai-value">{aiResult.summaryText || '—'}</span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Рекомендуемое подразделение:</span>
+                      <span className="ai-value">{aiResult.departmentSuggested || '—'}</span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Уверенность модели:</span>
+                      <span className={`confidence-chip ${getConfidenceClass(aiResult.confidenceScore || 0)}`}>
+                        {aiResult.confidenceScore || 0}%
+                      </span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Использованная модель:</span>
+                      <span className="ai-value">{aiResult.modelName || '—'}</span>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Вкладка 3: Текст OCR */}
             {activeTab === "ocr" && (
               <div>
                 <Card>
@@ -350,66 +463,6 @@ const DocumentCardPage: React.FC = () => {
                   )}
                 </Card>
               </div>
-            )}
-
-            {/*ВКЛАДКА 3: AI-анализ*/}
-            {activeTab === "ai" && (
-              <Card>
-                <h3>AI-анализ документа</h3>
-                
-                <div className="ai-analysis-control">
-                  <button 
-                    className="btn-primary"
-                    onClick={handleAiAnalysis}
-                    disabled={aiLoading || aiAnalyzed || !data.ocrResult?.rawText}
-                  >
-                    {aiLoading ? 'Анализ выполняется...' : 
-                     !data.ocrResult?.rawText ? 'Требуется OCR-текст' :
-                     aiAnalyzed ? 'Анализ выполнен' : 'Запустить AI-анализ'}
-                  </button>
-                  {!data.ocrResult?.rawText && (
-                    <p className="ai-warning">Для запуска AI-анализа необходимо сначала выполнить OCR-распознавание документа</p>
-                  )}
-                </div>
-                
-                {aiError && (
-                  <div className="ai-error">
-                    <p>{aiError}</p>
-                    <button className="btn-secondary" onClick={handleAiAnalysis}>Повторить</button>
-                  </div>
-                )}
-                
-                {aiResult && (
-                  <div className="ai-result">
-                    <div className="ai-result-row">
-                      <span className="ai-label">Предложенный тип документа:</span>
-                      <span className="ai-value">{aiResult.documentType || '—'}</span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Предложенная категория:</span>
-                      <span className="ai-value">{aiResult.category || '—'}</span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Короткая сводка:</span>
-                      <span className="ai-value">{aiResult.summary || '—'}</span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Рекомендуемое подразделение:</span>
-                      <span className="ai-value">{aiResult.recommendedDepartment || '—'}</span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Уверенность модели:</span>
-                      <span className={`confidence-chip ${getConfidenceClass(aiResult.confidence || 0)}`}>
-                        {aiResult.confidence || 0}%
-                      </span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Использованная модель:</span>
-                      <span className="ai-value">{aiResult.model || '—'}</span>
-                    </div>
-                  </div>
-                )}
-              </Card>
             )}
 
             {/* Вкладка 4: История маршрутов */}
@@ -441,66 +494,6 @@ const DocumentCardPage: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
-              </Card>
-            )}
-
-            {/* ===== ВКЛАДКА 5: AI-анализ ===== */}
-            {activeTab === "ai" && (
-              <Card>
-                <h3>AI-анализ документа</h3>
-                
-                <div className="ai-analysis-control">
-                  <button 
-                    className="btn-primary"
-                    onClick={handleAiAnalysis}
-                    disabled={aiLoading || aiAnalyzed || !data.ocrResult?.rawText}
-                  >
-                    {aiLoading ? 'Анализ выполняется...' : 
-                     !data.ocrResult?.rawText ? 'Требуется OCR-текст' :
-                     aiAnalyzed ? 'Анализ выполнен' : 'Запустить AI-анализ'}
-                  </button>
-                  {!data.ocrResult?.rawText && (
-                    <p className="ai-warning">Для запуска AI-анализа необходимо сначала выполнить OCR-распознавание документа</p>
-                  )}
-                </div>
-                
-                {aiError && (
-                  <div className="ai-error">
-                    <p>{aiError}</p>
-                    <button className="btn-secondary" onClick={handleAiAnalysis}>Повторить</button>
-                  </div>
-                )}
-                
-                {aiResult && (
-                  <div className="ai-result">
-                    <div className="ai-result-row">
-                      <span className="ai-label">Предложенный тип документа:</span>
-                      <span className="ai-value">{aiResult.documentType || '—'}</span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Предложенная категория:</span>
-                      <span className="ai-value">{aiResult.category || '—'}</span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Короткая сводка:</span>
-                      <span className="ai-value">{aiResult.summary || '—'}</span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Рекомендуемое подразделение:</span>
-                      <span className="ai-value">{aiResult.recommendedDepartment || '—'}</span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Уверенность модели:</span>
-                      <span className={`confidence-chip ${getConfidenceClass(aiResult.confidence || 0)}`}>
-                        {aiResult.confidence || 0}%
-                      </span>
-                    </div>
-                    <div className="ai-result-row">
-                      <span className="ai-label">Использованная модель:</span>
-                      <span className="ai-value">{aiResult.model || '—'}</span>
-                    </div>
-                  </div>
-                )}
               </Card>
             )}
 
