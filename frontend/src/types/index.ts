@@ -72,6 +72,7 @@ export interface DocumentCard {
   classification: DocumentClassification | null; 
   routes: DocumentRoute[];
   source: DocumentSource | null;  
+  aiResult: DocumentAiResult | null;
 }
 
 export interface DocumentFile {
@@ -143,4 +144,46 @@ export interface Department {
   name: string;
   code: string;
   isActive: boolean;
+}
+
+
+export interface AiSettings {
+  id: number;
+  providerCode: string;
+  modelName: string;
+  apiKey: string;
+  baseUrl: string | null;
+  isActive: boolean;
+  updatedAt: string;
+}
+
+export interface UpdateAiSettings {
+  providerCode: string;
+  modelName: string;
+  apiKey: string;
+  baseUrl?: string | null;
+}
+
+export interface AiProvider {
+  providerCode: string;
+  providerName: string;
+  models: AiModel[];
+}
+
+export interface AiModel {
+  modelCode: string;
+  modelName: string;
+}
+
+export interface DocumentAiResult {
+  id: number;
+  documentId: number;
+  documentTypeSuggested: string | null;
+  categorySuggested: string | null;
+  summaryText: string | null;
+  departmentSuggested: string | null;
+  confidenceScore: number | null;
+  providerCode: string;
+  modelName: string;
+  createdAt: string;
 }
