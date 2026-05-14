@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
-import { getDocumentById } from '../services/api';
-import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute } from '../types/';
+import { getDocumentById, getDocumentAiResult, analyzeDocument } from '../services/api';
+import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult } from '../types/';
 import Card from '../components/Card';
 import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu';
 
@@ -16,11 +16,10 @@ const DocumentCardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ===== AI-анализ =====
-  const [aiResult, setAiResult] = useState<any | null>(null);
+  // AI-анализ (с реальным типом)
+  const [aiResult, setAiResult] = useState<DocumentAiResult | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [aiAnalyzed, setAiAnalyzed] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -33,9 +32,12 @@ const DocumentCardPage: React.FC = () => {
     setError(null);
 
     getDocumentById(Number(id))
-      .then((response) => {
-        setData(response);
-        loadAiResult(Number(id));
+      .then(async (response) => {
+        if (response.aiResult) {
+          setAiResult(response.aiResult);
+        } else {
+          await loadAiResult(Number(id));
+        }
         setLoading(false);
       })
       .catch((err) => {
@@ -49,58 +51,20 @@ const DocumentCardPage: React.FC = () => {
       });
   }, [id]);
 
-  // ===== ВРЕМЕННЫЕ ЗАГЛУШКИ (потом заменить на API) =====
-  const getDocumentAiResult = async (docId: number): Promise<any> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: 1,
-          documentId: docId,
-          documentTypeSuggested: "Договор (заглушка)",
-          categorySuggested: "Финансовые документы (заглушка)",
-          summaryText: "Заглушка: краткая сводка документа",
-          departmentSuggested: "Юридический отдел (заглушка)",
-          confidenceScore: 85,
-          providerCode: "mock",
-          modelName: "mock-model",
-          createdAt: new Date().toISOString(),
-        });
-      }, 500);
-    });
-  };
-
-  const analyzeDocument = async (docId: number): Promise<any> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: 1,
-          documentId: docId,
-          documentTypeSuggested: "Договор (заглушка)",
-          categorySuggested: "Финансовые документы (заглушка)",
-          summaryText: "Заглушка: результат анализа документа",
-          departmentSuggested: "Юридический отдел (заглушка)",
-          confidenceScore: 85,
-          providerCode: "mock",
-          modelName: "mock-model",
-          createdAt: new Date().toISOString(),
-        });
-      }, 500);
-    });
-  };
-  // ===== КОНЕЦ ЗАГЛУШЕК =====
-
+  // Загрузка существующего AI-результата
   const loadAiResult = async (docId: number) => {
     try {
       const result = await getDocumentAiResult(docId);
       if (result) {
         setAiResult(result);
-        setAiAnalyzed(true);
       }
     } catch (err) {
       console.error('Ошибка загрузки AI-результата:', err);
+      // 404 — просто нет результата, не показываем ошибку
     }
   };
 
+  // Запуск AI-анализа
   const handleAiAnalysis = async () => {
     if (!id) return;
     
@@ -108,21 +72,21 @@ const DocumentCardPage: React.FC = () => {
     setAiError(null);
     
     try {
-      const result = await analyzeDocument(Number(id));
+      await analyzeDocument(Number(id));
+      const result = await getDocumentAiResult(Number(id));
       setAiResult(result);
-      setAiAnalyzed(true);
-    } catch (err) {
+      if (result) {
+        setData(prev => prev ? { ...prev, aiResult: result } : prev);
+      }
+    } catch (err: unknown) {
       console.error('Ошибка AI-анализа:', err);
-      setAiError('Не удалось выполнить анализ документа');
+      const errorMessage = err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data
+        ? String(err.response.data.message)
+        : 'Не удалось выполнить анализ документа';
+      setAiError(errorMessage);
     } finally {
       setAiLoading(false);
     }
-  };
-
-  const handleAiReset = () => {
-    setAiResult(null);
-    setAiAnalyzed(false);
-    setAiError(null);
   };
 
   if (loading) {
@@ -144,6 +108,11 @@ const DocumentCardPage: React.FC = () => {
   };
 
   const overallConfidence = (data.confidenceScore || 0) * 100;
+
+  // Проверяем, есть ли OCR-текст для AI-анализа
+  const hasOcrText = !!data.ocrResult?.rawText;
+  const isAiAvailable = hasOcrText;
+  const isAiDone = !!aiResult?.id;
 
   return (
     <div className="document-page">
@@ -376,35 +345,29 @@ const DocumentCardPage: React.FC = () => {
                 <h3>AI-анализ документа</h3>
                 
                 <div className="ai-analysis-control">
-                  {!aiAnalyzed ? (
-                    <>
-                      <button 
-                        className="ai-btn"
-                        onClick={handleAiAnalysis}
-                        disabled={aiLoading || !data.ocrResult?.rawText}
-                      >
-                        {aiLoading ? 'Анализ выполняется...' : 
-                         !data.ocrResult?.rawText ? 'Требуется OCR-текст' :
-                         'Запустить AI-анализ'}
-                      </button>
-                      {!data.ocrResult?.rawText && (
-                        <p className="ai-warning">Для запуска AI-анализа необходимо сначала выполнить OCR-распознавание документа</p>
-                      )}
-                    </>
-                  ) : (
-                    <div className="ai-analysis-control">
-                      <p className="ai-success">✓ Анализ выполнен</p>
-                      <button className="ai-btn-secondary" onClick={handleAiReset}>
-                        Повторить анализ
-                      </button>
+                  {!isAiAvailable ? (
+                    <div className="ai-warning">
+                      <p>Для запуска AI-анализа необходимо сначала выполнить OCR-распознавание документа</p>
                     </div>
+                  ) : isAiDone ? (
+                    <div className="ai-success-block">
+                      <p className="ai-success">✓ Анализ выполнен</p>
+                    </div>
+                  ) : (
+                    <button 
+                      className="btn-primary"
+                      onClick={handleAiAnalysis}
+                      disabled={aiLoading}
+                    >
+                      {aiLoading ? 'Анализ выполняется...' : 'Запустить AI-анализ'}
+                    </button>
                   )}
                 </div>
                 
                 {aiError && (
                   <div className="ai-error">
                     <p>{aiError}</p>
-                    <button className="ai-btn-secondary" onClick={handleAiAnalysis}>Повторить</button>
+                    <button className="btn-secondary" onClick={handleAiAnalysis}>Повторить</button>
                   </div>
                 )}
                 
@@ -434,7 +397,7 @@ const DocumentCardPage: React.FC = () => {
                     </div>
                     <div className="ai-result-row">
                       <span className="ai-label">Использованная модель:</span>
-                      <span className="ai-value">{aiResult.modelName || '—'}</span>
+                      <span className="ai-value">{aiResult.modelName || aiResult.providerCode || '—'}</span>
                     </div>
                   </div>
                 )}
