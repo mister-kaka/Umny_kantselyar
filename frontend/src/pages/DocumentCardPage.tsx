@@ -10,11 +10,17 @@ import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu
 const DocumentCardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"overview" | "ocr" | "entities" | "history">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "ocr" | "history">("overview");
   
   const [data, setData] = useState<DocumentCardType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // ===== AI-анализ =====
+  const [aiResult, setAiResult] = useState<any | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiAnalyzed, setAiAnalyzed] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -29,6 +35,7 @@ const DocumentCardPage: React.FC = () => {
     getDocumentById(Number(id))
       .then((response) => {
         setData(response);
+        loadAiResult(Number(id));
         setLoading(false);
       })
       .catch((err) => {
@@ -41,6 +48,82 @@ const DocumentCardPage: React.FC = () => {
         setLoading(false);
       });
   }, [id]);
+
+  // ===== ВРЕМЕННЫЕ ЗАГЛУШКИ (потом заменить на API) =====
+  const getDocumentAiResult = async (docId: number): Promise<any> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          id: 1,
+          documentId: docId,
+          documentTypeSuggested: "Договор (заглушка)",
+          categorySuggested: "Финансовые документы (заглушка)",
+          summaryText: "Заглушка: краткая сводка документа",
+          departmentSuggested: "Юридический отдел (заглушка)",
+          confidenceScore: 85,
+          providerCode: "mock",
+          modelName: "mock-model",
+          createdAt: new Date().toISOString(),
+        });
+      }, 500);
+    });
+  };
+
+  const analyzeDocument = async (docId: number): Promise<any> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          id: 1,
+          documentId: docId,
+          documentTypeSuggested: "Договор (заглушка)",
+          categorySuggested: "Финансовые документы (заглушка)",
+          summaryText: "Заглушка: результат анализа документа",
+          departmentSuggested: "Юридический отдел (заглушка)",
+          confidenceScore: 85,
+          providerCode: "mock",
+          modelName: "mock-model",
+          createdAt: new Date().toISOString(),
+        });
+      }, 500);
+    });
+  };
+  // ===== КОНЕЦ ЗАГЛУШЕК =====
+
+  const loadAiResult = async (docId: number) => {
+    try {
+      const result = await getDocumentAiResult(docId);
+      if (result) {
+        setAiResult(result);
+        setAiAnalyzed(true);
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки AI-результата:', err);
+    }
+  };
+
+  const handleAiAnalysis = async () => {
+    if (!id) return;
+    
+    setAiLoading(true);
+    setAiError(null);
+    
+    try {
+      const result = await analyzeDocument(Number(id));
+      setAiResult(result);
+      setAiAnalyzed(true);
+    } catch (err) {
+      console.error('Ошибка AI-анализа:', err);
+      setAiError('Не удалось выполнить анализ документа');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAiReset = () => {
+    setAiResult(null);
+    setAiAnalyzed(false);
+    setAiError(null);
+  };
 
   if (loading) {
     return <div className="loading">Загрузка документа...</div>;
@@ -147,8 +230,8 @@ const DocumentCardPage: React.FC = () => {
         <div className="right-column">
           <div className="tabs">
             <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Обзор</button>
+            <button className={`tab ${activeTab === "ai" ? "active" : ""}`} onClick={() => setActiveTab("ai")}>AI-анализ</button>
             <button className={`tab ${activeTab === "ocr" ? "active" : ""}`} onClick={() => setActiveTab("ocr")}>Текст OCR</button>
-            <button className={`tab ${activeTab === "entities" ? "active" : ""}`} onClick={() => setActiveTab("entities")}>Сущности</button>
             <button className={`tab ${activeTab === "history" ? "active" : ""}`} onClick={() => setActiveTab("history")}>История</button>
           </div>
 
@@ -287,7 +370,78 @@ const DocumentCardPage: React.FC = () => {
               </>
             )}
 
-            {/* Вкладка 2: Текст OCR */}
+            {/* Вкладка 2: AI-анализ */}
+            {activeTab === "ai" && (
+              <Card>
+                <h3>AI-анализ документа</h3>
+                
+                <div className="ai-analysis-control">
+                  {!aiAnalyzed ? (
+                    <>
+                      <button 
+                        className="ai-btn"
+                        onClick={handleAiAnalysis}
+                        disabled={aiLoading || !data.ocrResult?.rawText}
+                      >
+                        {aiLoading ? 'Анализ выполняется...' : 
+                         !data.ocrResult?.rawText ? 'Требуется OCR-текст' :
+                         'Запустить AI-анализ'}
+                      </button>
+                      {!data.ocrResult?.rawText && (
+                        <p className="ai-warning">Для запуска AI-анализа необходимо сначала выполнить OCR-распознавание документа</p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="ai-analysis-control">
+                      <p className="ai-success">✓ Анализ выполнен</p>
+                      <button className="ai-btn-secondary" onClick={handleAiReset}>
+                        Повторить анализ
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                {aiError && (
+                  <div className="ai-error">
+                    <p>{aiError}</p>
+                    <button className="ai-btn-secondary" onClick={handleAiAnalysis}>Повторить</button>
+                  </div>
+                )}
+                
+                {aiResult && (
+                  <div className="ai-result">
+                    <div className="ai-result-row">
+                      <span className="ai-label">Предложенный тип документа:</span>
+                      <span className="ai-value">{aiResult.documentTypeSuggested || '—'}</span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Предложенная категория:</span>
+                      <span className="ai-value">{aiResult.categorySuggested || '—'}</span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Короткая сводка:</span>
+                      <span className="ai-value">{aiResult.summaryText || '—'}</span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Рекомендуемое подразделение:</span>
+                      <span className="ai-value">{aiResult.departmentSuggested || '—'}</span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Уверенность модели:</span>
+                      <span className={`confidence-chip ${getConfidenceClass(aiResult.confidenceScore || 0)}`}>
+                        {aiResult.confidenceScore || 0}%
+                      </span>
+                    </div>
+                    <div className="ai-result-row">
+                      <span className="ai-label">Использованная модель:</span>
+                      <span className="ai-value">{aiResult.modelName || '—'}</span>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Вкладка 3: Текст OCR */}
             {activeTab === "ocr" && (
               <div>
                 <Card>
@@ -309,14 +463,6 @@ const DocumentCardPage: React.FC = () => {
                   )}
                 </Card>
               </div>
-            )}
-
-            {/* Вкладка 3: Сущности (заглушка) */}
-            {activeTab === "entities" && (
-              <Card>
-                <h3>Извлечённые сущности</h3>
-                <div className="empty-message">Сущности будут отображаться здесь</div>
-              </Card>
             )}
 
             {/* Вкладка 4: История маршрутов */}

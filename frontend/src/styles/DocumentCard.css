@@ -988,3 +988,123 @@
     font-weight: 400;
   }
 }
+
+/* ===== ВКЛАДКА AI-АНАЛИЗ ===== */
+
+/* Контейнер кнопки */
+.ai-analysis-control {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Кнопка запуска анализа */
+.ai-btn {
+  background-color: var(--color-accent, #81D8D0);
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-button, 8px);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.ai-btn:hover:not(:disabled) {
+  background-color: var(--color-accent-hover, #6bccc3);
+}
+
+.ai-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Кнопка повтора (прозрачная с обводкой) */
+.ai-btn-secondary {
+  background-color: transparent;
+  color: var(--color-accent, #81D8D0);
+  border: 1px solid var(--color-accent, #81D8D0);
+  padding: 8px 20px;
+  border-radius: var(--radius-button, 8px);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.ai-btn-secondary:hover {
+  background-color: rgba(129, 216, 208, 0.08);
+}
+
+/* Сообщение "Анализ выполнен" */
+.ai-success {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-status-loaded, #7EE29F);
+}
+
+/* Предупреждение (нет OCR-текста) */
+.ai-warning {
+  font-size: 12px;
+  color: var(--text-tertiary, #696969);
+  text-align: center;
+}
+
+/* Блок ошибки */
+.ai-error {
+  background-color: rgba(232, 115, 115, 0.06);
+  border-left: 3px solid var(--color-status-rejected, #E87373);
+  padding: 14px 18px;
+  border-radius: var(--radius-card, 12px);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ai-error p {
+  margin: 0;
+  color: var(--color-status-rejected, #E87373);
+  font-size: 13px;
+}
+
+/* Блок результата */
+.ai-result {
+  margin-top: 20px;
+}
+
+.ai-result-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color, #e5e5e5);
+  font-size: 13px;
+}
+
+.ai-label {
+  width: 145px;
+  flex-shrink: 0;
+  color: var(--text-tertiary, #696969);
+  font-weight: 400;
+  line-height: 1.8;
+}
+
+.ai-value {
+  flex: 1;
+  color: var(--text-primary, #000000);
+  font-weight: 500;
+  text-align: left;
+  line-height: 1.8;
+  word-break: break-word;
+}
+
+.ai-result-row .confidence-chip {
+  margin-left: 20px;
+}
