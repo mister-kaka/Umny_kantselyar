@@ -84,6 +84,22 @@ export class AiService {
                 );
             }
 
+            // Проверка 
+            if (process.env.AI_MOCK_MODE === 'true') {
+                const mockResult = this.aiResultRepository.create({
+                    documentId: documentId,
+                    documentTypeSuggested: 'Договор (мок)',
+                    categorySuggested: 'Финансовые документы (мок)',
+                    summaryText: `Мок-анализ документа: ${document.title}. Текст содержит ${textToAnalyze.length} символов.`,
+                    departmentSuggested: 'Юридический отдел (мок)',
+                    confidenceScore: 85,
+                    providerCode: 'mock',
+                    modelName: 'mock-model',
+                });
+                const saved = await this.aiResultRepository.save(mockResult);
+                return this.mapToDto(saved);
+            }
+
             const settings = await this.getActiveSettings();
 
             let apiKey: string;
@@ -259,6 +275,8 @@ ${documentText.substring(0, MAX_TEXT_LENGTH)}`;
 
         } catch (error) {
             if (error instanceof HttpException) throw error;
+
+            console.error('OpenRouter error:', error);
 
             await this.logger.log({
                 module: 'AI',

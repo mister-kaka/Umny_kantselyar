@@ -26,6 +26,7 @@ import { DepartmentsModule } from './departments/departments.module';
 import { DocumentTypesModule } from './document-types/document-types.module';
 import { DocumentCategoriesModule } from './document-categories/document-categories.module';
 import { AiModule } from './ai/ai.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { AiModule } from './ai/ai.module';
     DepartmentsModule,
     DocumentTypesModule,
     DocumentCategoriesModule,
+    SettingsModule,
     AiModule,
   ],
   controllers: [AppController],

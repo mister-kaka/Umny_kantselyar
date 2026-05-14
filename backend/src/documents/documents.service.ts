@@ -244,4 +244,80 @@ export class DocumentsService {
             );
         }
     }
+
+
+
+//  GET /documents/search?q=...     <--    поиск по registration_number, title, sender_name (ILIKE)
+  async search(q: string): Promise<DocumentListItemDto[]> {
+    try {
+      if (!q || q.trim().length === 0) {
+        throw new HttpException(
+          'Параметр поиска "q" обязателен',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const query = this.documentRepository
+        .createQueryBuilder('doc')
+        .leftJoinAndSelect('doc.documentType', 'documentType')
+        .leftJoinAndSelect('doc.category', 'category')
+        .leftJoinAndSelect(
+          'doc.documentRoutes',
+          'route',
+          'route.id = (SELECT dr.id FROM document_routes dr WHERE dr.document_id = doc.id ORDER BY dr.routed_at DESC LIMIT 1)'
+        )
+        .leftJoinAndSelect('route.department', 'department')
+        .where('doc.registrationNumber ILIKE :q', { q: `%${q.trim()}%` })
+        .orWhere('doc.title ILIKE :q', { q: `%${q.trim()}%` })
+        .orWhere('doc.senderName ILIKE :q', { q: `%${q.trim()}%` })
+        .orderBy('doc.receivedDate', 'DESC')
+        .take(10);
+
+      const documents = await query.getMany();
+
+      const items: DocumentListItemDto[] = documents.map(doc => ({
+        id: doc.id,
+        registrationNumber: doc.registrationNumber,
+        title: doc.title,
+        senderName: doc.senderName,
+        receivedDate: doc.receivedDate,
+        documentType: doc.documentType?.name ?? 'Не указан',
+        category: doc.category?.name ?? null,
+        currentStatus: doc.currentStatus,
+        department: doc.documentRoutes?.[0]?.department?.name ?? null,
+      }));
+
+      await this.logger.log({
+        module: 'Documents',
+        type: 'GET',
+        url: `/documents/search?q=${encodeURIComponent(q)}`,
+        action: 'поиск документов',
+        status: 'success',
+        statusCode: 200,
+        message: `Найдено документов: ${items.length}`,
+      });
+
+      return items;
+
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+      await this.logger.log({
+        module: 'Documents',
+        type: 'GET',
+        url: '/documents/search',
+        action: 'поиск документов',
+        status: 'error',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: errorMessage,
+      });
+
+      throw new HttpException(
+        'Ошибка сервера при поиске документов',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
