@@ -73,7 +73,7 @@
 ### 3. Документы
 - GET /documents - список документов (фильтры: typeId, categoryId, status, page, limit)
 - GET /documents/:id - карточка документа
-- GET /documents/search?q=... — поиск по документам **(Этап 3)**
+- GET /documents/search?q=... - поиск по документам **(Этап 3)**
 
 ### 4. Справочники
 - GET /document-types - типы документов
