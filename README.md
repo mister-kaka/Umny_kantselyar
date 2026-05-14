@@ -4,11 +4,13 @@
 
 1. На Этапе 1 реализован базовый сценарий: авторизация пользователя, получение данных дашборда с бэкенда и их отображение на фронтенде.
 2. На Этапе 2 реализован основной рабочий функционал: список документов с фильтрацией и пагинацией, карточка документа с полной информацией, расширенная база данных.
+3. На Этапе 3 добавлен AI-слой: анализ документов через DeepSeek, настройки провайдера, поиск.
 
 ## Технологический стек
-- **Бэкенд**: NestJS, TypeScript, TypeORM, PostgreSQL, JWT, bcrypt 
+- **Бэкенд**: NestJS, TypeScript, TypeORM, PostgreSQL, JWT, bcrypt, class-validator, HttpModule
 - **Фронтенд**: React, TypeScript, Vite, React Router, Axios 
 - **База данных**: PostgreSQL (запускается в Docker) 
+- **AI**: DeepSeek 4 Flash **(Этап 3)**
 - **Стили**: CSS, CSS-переменные, адаптивная вёрстка 
 
 ## Запуск проекта
@@ -71,11 +73,21 @@
 ### 3. Документы
 - GET /documents - список документов (фильтры: typeId, categoryId, status, page, limit)
 - GET /documents/:id - карточка документа
+- GET /documents/search?q=... — поиск по документам **(Этап 3)**
 
 ### 4. Справочники
 - GET /document-types - типы документов
 - GET /document-categories - категории документов
 - GET /departments - подразделения
+
+### 5. AI-анализ (Этап 3)
+- POST /documents/:id/analyze-ai - запустить AI-анализ документа
+- GET /documents/:id/ai-result - получить результат AI-анализа
+
+### 6. Настройки AI (Этап 3)
+- GET /settings/ai - получить текущие настройки AI
+- PUT /settings/ai - сохранить настройки AI
+- GET /settings/ai/providers - список доступных провайдеров и моделей
 
 Все эндпоинты кроме /auth/login защищены JWT.
 
@@ -112,28 +124,42 @@
   - dashboard.service.ts - логика дашборда
   - dashboard.module.ts - регистрация модуля
   - /dto/dashboard.dto.ts - типы ответа
-- ##### Папка Documents (/documents) **(Этап 2)**
-  - documents.controller.ts - эндпоинты /documents, /documents/:id
+- ##### Папка Documents (/documents) 
+  - documents.controller.ts - эндпоинты /documents, /documents/:id, /documents/search **(Этап 3 - добавление эндопоита поиска)**
   - documents.service.ts - логика списка и карточки документа
   - documents.module.ts - регистрация модуля
-  - /dto/document-card.dto.ts - DTO карточки
+  - /dto/document-card.dto.ts - DTO карточки **(Этап 3 - добавление aiResult)**
   - /dto/document-list.dto.ts - DTO списка
   - /dto/get-documents.dto.ts - DTO query-параметров
-- ##### Папка Departments (/departments) **(Этап 2)**
+- ##### Папка Departments (/departments) 
   - departments.controller.ts - эндпоинт /departments
   - departments.service.ts - логика справочника отделов
   - departments.module.ts - регистрация модуля
   - /dto/department.dto.ts - DTO ответа
-- ##### Папка Document Types (/document-types) **(Этап 2)**
+- ##### Папка Document Types (/document-types) 
   - document-types.controller.ts - эндпоинт /document-types
   - document-types.service.ts - логика справочника типов
   - document-types.module.ts  регистрация модуля
   - /dto/document-type.dto.ts - DTO ответа
-- ##### Папка Document Categories (/document-categories) **(Этап 2)**
+- ##### Папка Document Categories (/document-categories) 
   - document-categories.controller.ts - эндпоинт /document-categories
   - document-categories.service.ts - логика справочника категорий
   - document-categories.module.ts - регистрация модуля
   - /dto/document-category.dto.ts - DTO ответа
+- ##### Папка Settings (/settings) (Этап 3)
+  - settings.controller.ts - эндпоинты /settings/ai
+  - settings.service.ts - логика настроек AI, список провайдеров
+  - settings.module.ts - регистрация модуля
+  - /dto/update-ai-settings.dto.ts - DTO обновления настроек
+  - /dto/ai-settings-response.dto.ts - DTO ответа настроек
+  - /dto/ai-provider.dto.ts - DTO списка провайдеров
+- ##### Папка AI (/ai) (Этап 3)
+  - ai.controller.ts - эндпоинты analyze-ai, ai-result
+  - ai.service.ts - логика AI-анализа, промпт, запрос к DeepSeek
+  - ai.module.ts - регистрация модуля
+  - ai-key.util.ts - шифрование/дешифрование/маскировка API-ключа
+  - /dto/analyze-ai.dto.ts - DTO ответа анализа
+  - /dto/ai-result.dto.ts - DTO результата
 - ##### Сущности БД (/entities)
   - user.entity.ts - пользователи
   - role.entity.ts - роли
@@ -142,21 +168,29 @@
   - document-route.entity.ts - маршруты
   - document-type.entity.ts - типы документов
   - document-category.entity.ts - категории
-  - document-source.entity.ts - источники документов **(Этап 2)**
-  - document-file.entity.ts - файлы документов **(Этап 2)**
-  - ocr-result.entity.ts - результаты OCR **(Этап 2)**
-  - document-classification.entity.ts - классификации **(Этап 2)**
-- ##### Логгер (/logger) **(Этап 2)**
+  - document-source.entity.ts - источники документов 
+  - document-file.entity.ts - файлы документов 
+  - ocr-result.entity.ts - результаты OCR 
+  - document-classification.entity.ts - классификации 
+  - ai-setting.entity.ts - настройки AI-провайдера **(Этап 3)**
+  - document-ai-result.entity.ts - результаты AI-анализа **(Этап 3)**
+- ##### Логгер (/logger) 
   - app-logger.service.ts - сервис логирования
   - logger.module.ts - модуль логирования 
 - ##### База данных (/db)
-  - seed.sql - инициализация таблиц и тестовые данные **(обновлён для Этапа 2)**
-#### 4. Документация
-- README.md - инструкция по запуску части бекэнда 
-#### 5. Тесты (/test)
+  - seed.sql - инициализация таблиц и тестовые данные **(обновлён для Этапа 3)**
+#### 4. Тесты (/test)
 - app.e2e-spec.ts - e2e тесты (пока заглушка)
-#### 6. Загрузки (/uploads) **(Этап 2)**
+#### 5. Загрузки (/uploads) 
 - /documents/ - файлы документов (по папкам с id документа)
+  - /test-files/ - тестовые файлы для будущих этапов: **(Этап 3)**
+    - /test-pdf/ - тестовые PDF (6 файлов)
+    - /test-docx/ - тестовые DOCX (5 файлов)
+    - /test-scans/ - тестовые сканы хорошего качества (4 файла)
+    - /test-bad-quality/ - тестовые сканы плохого качества (3 файла)
+    - /test-xlsx/ - тестовые XLSX (2 файла)
+#### 6. Документация
+- README.md - инструкция по запуску части бекэнда 
 
 ### Frontend (/frontend)
 #### 1. Конфигурация
@@ -165,37 +199,37 @@
 - tsconfig.json - настройки TypeScript
 - vite.config.ts - настройки Vite
 - index.html - точка входа
-- .env - переменные окружения (URL бэкенда) **(Этап 2)**
+- .env - переменные окружения (URL бэкенда) 
 #### 2. Исходный код (/src)
 - index.tsx - точка входа React
 - App.tsx - корневой компонент 
 - declarations.d.ts - объявления типов
-- vite-env.d.ts - типы для Vite-переменных окружения **(Этап 2)**
+- vite-env.d.ts - типы для Vite-переменных окружения 
 - ##### Страницы (/pages)
   - LoginPage.tsx - страница входа (форма, API, запомнить меня)
   - DashboardPage.tsx - страница дашборда 
-  - DocumentCardPage.tsx - карточка документа с вкладками **(Этап 2)**
+  - DocumentCardPage.tsx - карточка документа с вкладками **(Этап 3 - добавлен AI-анализ)**
 - ##### Компоненты (/components)
   - Card.tsx - универсальная карточка
   - Table.tsx - универсальная таблица
   - Sidebar.tsx - боковое меню (сворачивание, навигация)
   - Header.tsx - верхняя панель (поиск, профиль)
   - ProtectedRoute.tsx - защита маршрутов
-  - DropdownButton.tsx выпадающий список для фильтров **(Этап 2)**
-  - Pagination.tsx - пагинация для списка **(Этап 2)**
+  - DropdownButton.tsx выпадающий список для фильтров 
+  - Pagination.tsx - пагинация для списка
   - Подстраницы дашборда (/SubPages)
     - MainMenu.tsx - главная страница (карточки, таблица, статусы) 
-    - DocumentsListPage.tsx - список документов с фильтрами и пагинацией **(Этап 2)**
+    - DocumentsListPage.tsx - список документов с фильтрами и пагинацией 
 - ##### API сервисы (/services)
-  - api.ts - axios, перехватчики, все API-функции  **(обновлён для Этапа 2)**
+  - api.ts - axios, перехватчики, все API-функции  **(обновлён для Этапа 3)**
 - ##### Типы (/types)
-  - index.ts - TypeScript интерфейсы  **(обновлён для Этапа 2)**
+  - index.ts - TypeScript интерфейсы  **(обновлён для Этапа 3)**
 - #### Стили (/styles)
   - global.css - глобальные переменные и стили
   - LoginPage.css - стили логина (с адаптивом)
   - Dashboard.css - стили дашборда (с адаптивом)
-  - DocumentsListPage.css - стили списка документов (с адаптивом) **(Этап 2)**
-  - DocumentCard.css - стили карточки документа (с адаптивом) **(Этап 2)**
+  - DocumentsListPage.css - стили списка документов (с адаптивом) 
+  - DocumentCard.css - стили карточки документа (с адаптивом) **(Этап 3 - стиль для вкладки AI-анализа)**
 - ##### Контексты (/contexts)
   - SidebarContexts.tsx - состояние сворачивания sidebar
 #### 3. Публичные файлы (/public)
@@ -211,7 +245,7 @@
   - Макеты страниц - логин (обычный и с ошибкой), дашборд, подразделения
   - UI-правила - компоненты, статусы, типографика, цветовая палитра
 #### 2. Документация
-- README.md - описание папки и ссылка на рабочий дизайн в Figma
+- README.md - описание папки и ссылка на рабочий дизайн в Figma, поддерживаемые форматы файлов **(Этап 3 - добавлены поддерживаемые форматы файлов)**
   
 ## Что сделано на Этапе 1
 ### 1. Бэкенд
@@ -288,12 +322,37 @@
   - Регистрационный номер вместо ID в таблице
   - Статусы с цветными бейджами
 
+## Что сделано на Этапе 3
+### 1. Бэкенд
+- AI-модуль: анализ документа через DeepSeek, промпт, парсинг ответа
+- Таблицы: ai_settings, document_ai_results
+- Шифрование API-ключа через AES-256-CBC
+- Мок-режим (AI_MOCK_MODE) для тестирования без ключа
+- Модуль Settings: CRUD настроек AI, список провайдеров
+- Поиск по документам 
+- aiResult в карточке документа
+- Логирование всех новых эндпоинтов
+
+### 2. Фронтенд
+- Вкладка «AI-анализ» в карточке документа: кнопка запуска, результат, повтора
+- Цветные чипы уверенности, сводка, предложенные тип/категория/отдел
+- Типы и API-функции для AI (6 функций)
+- Исследование форматов файлов (7 форматов: PDF, DOCX, XLSX, TIFF, JPG, PNG, CSV)
+- Архив из 20 тестовых файлов разных форматов и качества
+
+### 3. В процессе
+- Подключение апи к Вкладке «AI-анализ» (Алина)
+- Страница настроек AI на фронте (Егор)
+- Поиск (Егор)
+- Адаптив страницы настроек (Виолетта)
+- Адаптив блока AI-результата и поиска (Маша М.)
+
 ## Команда
-- Начинова Мария (Тимлид, Бэкенд-лид, БД, Эндпоинты /documents, Логирование)
-- Москалева Александра	(Фронтенд-лид, Эндопоинты справочников, Роутинг)
-- Нехланова Алина	Фронтенд (Логин, Карточка документа )
-- Ефанов Егор	Фронтенд (Дашборд, Список документов)
-- Мельникова Виолетта	Фронтенд (Адаптив логина и карточки документа)
-- Мотовилова Мария	(Адаптив списка документов и дашборда)
-- Мейсарош Карина	(API функции, типы, интеграция)
+- Начинова Мария (Тимлид, Бэкенд-лид, БД) - авторизация, дашборд, документы, AI-модуль, шифрование, логирование, тестирование
+- Москалева Александра (Бэкенд) — справочники, роутинг, настройки AI, поиск, архив файлов
+Нехланова Алина (Фронтенд) - логин, карточка документа, AI-анализ, исследование форматов
+Ефанов Егор (Фронтенд) - дашборд, список документов, настройки AI, поиск
+Мельникова Виолетта (Фронтенд) - адаптив логина, карточки, настроек AI
+- Мотовилова Мария (Фронтенд) - адаптив дашборда, списка документов, AI-результата, поиска
+- Мейсарош Карина (Связка фронт/бэк) - API-функции, типы, интеграция
 
