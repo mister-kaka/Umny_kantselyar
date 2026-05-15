@@ -3,10 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Document } from '../entities/document.entity';
 import { DocumentRoute } from '../entities/document-route.entity';
+import { DocumentFile } from '../entities/document-file.entity';
+import { OcrResult } from '../entities/ocr-result.entity';
 import { GetDocumentsDto } from './dto/get-documents.dto';
 import { DocumentsListResponseDto, DocumentListItemDto } from './dto/document-list.dto';
 import { DocumentCardDto } from './dto/document-card.dto';
+import { UploadDocumentResponseDto } from './dto/upload-document.dto';
+import { ExtractTextResponseDto } from './dto/extract-text-response.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
+
+const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif'];
 
 @Injectable()
 export class DocumentsService {
@@ -15,9 +21,14 @@ export class DocumentsService {
         private documentRepository: Repository<Document>,
         @InjectRepository(DocumentRoute)
         private documentRouteRepository: Repository<DocumentRoute>,
+        @InjectRepository(DocumentFile)
+        private documentFileRepository: Repository<DocumentFile>,
+        @InjectRepository(OcrResult)
+        private ocrResultRepository: Repository<OcrResult>,
         private readonly logger: AppLoggerService,
     ) {}
 
+    // GET /documents - список документов с фильтрацией и пагинацией
     async findAll(filters: GetDocumentsDto): Promise<DocumentsListResponseDto> {
         try {
             const page = filters.page ?? 1;
@@ -97,6 +108,7 @@ export class DocumentsService {
         }
     }
 
+    // GET /documents/:id - карточка документа
     async findOne(id: number): Promise<DocumentCardDto> {
         try {
             const document = await this.documentRepository.findOne({
@@ -245,79 +257,288 @@ export class DocumentsService {
         }
     }
 
+    // GET /documents/search?q=... - поиск по документам
+    async search(q: string): Promise<DocumentListItemDto[]> {
+        try {
+            if (!q || q.trim().length === 0) {
+                throw new HttpException('Параметр поиска "q" обязателен', HttpStatus.BAD_REQUEST);
+            }
 
+            const query = this.documentRepository
+                .createQueryBuilder('doc')
+                .leftJoinAndSelect('doc.documentType', 'documentType')
+                .leftJoinAndSelect('doc.category', 'category')
+                .leftJoinAndSelect(
+                    'doc.documentRoutes',
+                    'route',
+                    'route.id = (SELECT dr.id FROM document_routes dr WHERE dr.document_id = doc.id ORDER BY dr.routed_at DESC LIMIT 1)'
+                )
+                .leftJoinAndSelect('route.department', 'department')
+                .where('doc.registrationNumber ILIKE :q', { q: `%${q.trim()}%` })
+                .orWhere('doc.title ILIKE :q', { q: `%${q.trim()}%` })
+                .orWhere('doc.senderName ILIKE :q', { q: `%${q.trim()}%` })
+                .orderBy('doc.receivedDate', 'DESC')
+                .take(10);
 
-//  GET /documents/search?q=...     <--    поиск по registration_number, title, sender_name (ILIKE)
-  async search(q: string): Promise<DocumentListItemDto[]> {
-    try {
-      if (!q || q.trim().length === 0) {
-        throw new HttpException(
-          'Параметр поиска "q" обязателен',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+            const documents = await query.getMany();
 
-      const query = this.documentRepository
-        .createQueryBuilder('doc')
-        .leftJoinAndSelect('doc.documentType', 'documentType')
-        .leftJoinAndSelect('doc.category', 'category')
-        .leftJoinAndSelect(
-          'doc.documentRoutes',
-          'route',
-          'route.id = (SELECT dr.id FROM document_routes dr WHERE dr.document_id = doc.id ORDER BY dr.routed_at DESC LIMIT 1)'
-        )
-        .leftJoinAndSelect('route.department', 'department')
-        .where('doc.registrationNumber ILIKE :q', { q: `%${q.trim()}%` })
-        .orWhere('doc.title ILIKE :q', { q: `%${q.trim()}%` })
-        .orWhere('doc.senderName ILIKE :q', { q: `%${q.trim()}%` })
-        .orderBy('doc.receivedDate', 'DESC')
-        .take(10);
+            const items: DocumentListItemDto[] = documents.map(doc => ({
+                id: doc.id,
+                registrationNumber: doc.registrationNumber,
+                title: doc.title,
+                senderName: doc.senderName,
+                receivedDate: doc.receivedDate,
+                documentType: doc.documentType?.name ?? 'Не указан',
+                category: doc.category?.name ?? null,
+                currentStatus: doc.currentStatus,
+                department: doc.documentRoutes?.[0]?.department?.name ?? null,
+            }));
 
-      const documents = await query.getMany();
+            await this.logger.log({
+                module: 'Documents',
+                type: 'GET',
+                url: `/documents/search?q=${encodeURIComponent(q)}`,
+                action: 'поиск документов',
+                status: 'success',
+                statusCode: 200,
+                message: `Найдено документов: ${items.length}`,
+            });
 
-      const items: DocumentListItemDto[] = documents.map(doc => ({
-        id: doc.id,
-        registrationNumber: doc.registrationNumber,
-        title: doc.title,
-        senderName: doc.senderName,
-        receivedDate: doc.receivedDate,
-        documentType: doc.documentType?.name ?? 'Не указан',
-        category: doc.category?.name ?? null,
-        currentStatus: doc.currentStatus,
-        department: doc.documentRoutes?.[0]?.department?.name ?? null,
-      }));
+            return items;
 
-      await this.logger.log({
-        module: 'Documents',
-        type: 'GET',
-        url: `/documents/search?q=${encodeURIComponent(q)}`,
-        action: 'поиск документов',
-        status: 'success',
-        statusCode: 200,
-        message: `Найдено документов: ${items.length}`,
-      });
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
 
-      return items;
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
 
-    } catch (error) {
-      if (error instanceof HttpException) throw error;
+            await this.logger.log({
+                module: 'Documents',
+                type: 'GET',
+                url: '/documents/search',
+                action: 'поиск документов',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
 
-      const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
-
-      await this.logger.log({
-        module: 'Documents',
-        type: 'GET',
-        url: '/documents/search',
-        action: 'поиск документов',
-        status: 'error',
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: errorMessage,
-      });
-
-      throw new HttpException(
-        'Ошибка сервера при поиске документов',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+            throw new HttpException(
+                'Ошибка сервера при поиске документов',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
     }
-  }
+
+    // POST /documents/upload - загрузка файла и создание документа
+    async uploadDocument(
+        file: Express.Multer.File,
+        createdBy: number,
+    ): Promise<UploadDocumentResponseDto> {
+        try {
+            const fileExtension = file.originalname.split('.').pop()?.toLowerCase() || '';
+            if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
+                throw new HttpException(
+                    `Неподдерживаемый формат файла: .${fileExtension}. Поддерживаемые: ${ALLOWED_EXTENSIONS.join(', ')}`,
+                    HttpStatus.BAD_REQUEST,
+                );
+            }
+
+            const count = await this.documentRepository.count();
+            const registrationNumber = `ВХ-2026-${String(count + 1).padStart(3, '0')}`;
+
+            const document = this.documentRepository.create({
+                registrationNumber,
+                title: file.originalname,
+                receivedDate: new Date(),
+                senderName: 'Загружен через сканирование',
+                currentStatus: 'in_review',
+                createdBy,
+            });
+
+            const savedDocument = await this.documentRepository.save(document);
+
+            const fs = require('fs');
+            const path = require('path');
+            const docDir = path.join(process.cwd(), 'uploads', 'documents', String(savedDocument.id));
+            if (!fs.existsSync(docDir)) {
+                fs.mkdirSync(docDir, { recursive: true });
+            }
+            const newPath = path.join(docDir, file.originalname);
+            fs.writeFileSync(newPath, file.buffer);
+
+            const fileRecord = this.documentFileRepository.create({
+                documentId: savedDocument.id,
+                fileName: file.originalname,
+                fileType: fileExtension,
+                filePath: `/uploads/documents/${savedDocument.id}/${file.originalname}`,
+                fileSize: file.size,
+            });
+
+            await this.documentFileRepository.save(fileRecord);
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: '/documents/upload',
+                action: 'загрузка документа',
+                status: 'success',
+                statusCode: 201,
+                message: `Документ ${registrationNumber} создан`,
+            });
+
+            return {
+                id: savedDocument.id,
+                registrationNumber: savedDocument.registrationNumber,
+                fileName: file.originalname,
+                fileSize: file.size,
+                filePath: `/uploads/documents/${savedDocument.id}/${file.originalname}`,
+                uploadedAt: new Date(),
+            };
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: '/documents/upload',
+                action: 'загрузка документа',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при загрузке документа',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    // POST /documents/:id/extract-text - извлечение текста из файла
+    async extractText(id: number): Promise<ExtractTextResponseDto> {
+        try {
+            const document = await this.documentRepository.findOne({
+                where: { id },
+                relations: ['files', 'ocrResult'],
+            });
+
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            const file = document.files?.[0];
+            if (!file) {
+                throw new HttpException('Файл не найден', HttpStatus.NOT_FOUND);
+            }
+
+            const path = require('path');
+            const fs = require('fs');
+            const fileName = file.fileName.split('/').pop() || file.fileName;
+            const filePath = path.join(process.cwd(), 'uploads', 'documents', String(document.id), fileName);
+
+            if (!fs.existsSync(filePath)) {
+                throw new HttpException('Файл не найден на диске', HttpStatus.NOT_FOUND);
+            }
+
+            let extractedText = '';
+            const fileExtension: string = file.fileName.split('.').pop()?.toLowerCase() || '';
+
+            if (fileExtension === 'pdf') {
+                const pdfParse = require('pdf-parse');
+                const dataBuffer = fs.readFileSync(filePath);
+                const data = await pdfParse(dataBuffer);
+                extractedText = data.text;
+            } else if (fileExtension === 'docx') {
+                const mammoth = require('mammoth');
+                const result = await mammoth.extractRawText({ path: filePath });
+                extractedText = result.value;
+            } else if (fileExtension === 'txt') {
+                extractedText = fs.readFileSync(filePath, 'utf8');
+            } else if (fileExtension === 'xlsx') {
+                const XLSX = require('xlsx');
+                const workbook = XLSX.readFile(filePath);
+                extractedText = '';
+                workbook.SheetNames.forEach((sheetName: string) => {
+                    const sheet = workbook.Sheets[sheetName];
+                    extractedText += XLSX.utils.sheet_to_csv(sheet) + '\n';
+                });
+            } else if (['jpg', 'jpeg', 'png', 'tiff', 'tif'].includes(fileExtension)) {
+                const Tesseract = require('tesseract.js');
+                const { data: { text } } = await Tesseract.recognize(filePath, 'rus+eng');
+                extractedText = text;
+            } else {
+                throw new HttpException('Неподдерживаемый формат файла', HttpStatus.BAD_REQUEST);
+            }
+
+            if (!extractedText.trim()) {
+                throw new HttpException('Не удалось извлечь текст', HttpStatus.BAD_REQUEST);
+            }
+
+            let ocrResult: OcrResult | undefined = document.ocrResult ?? undefined;
+
+            const confidence = ['pdf', 'docx', 'txt', 'xlsx'].includes(fileExtension) ? 99 : 85;
+
+            if (ocrResult) {
+                ocrResult.rawText = extractedText;
+                ocrResult.normalizedText = extractedText.trim();
+                ocrResult.language = 'ru';
+                ocrResult.ocrConfidence = confidence;
+                ocrResult.processedAt = new Date();
+                await this.ocrResultRepository.save(ocrResult);
+            } else {
+                ocrResult = this.ocrResultRepository.create({
+                    documentId: id,
+                    rawText: extractedText,
+                    normalizedText: extractedText.trim(),
+                    language: 'ru',
+                    ocrConfidence: confidence,
+                    processedAt: new Date(),
+                });
+                await this.ocrResultRepository.save(ocrResult);
+            }
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: `/documents/${id}/extract-text`,
+                action: 'извлечение текста',
+                status: 'success',
+                statusCode: 200,
+                message: `Текст извлечён, символов: ${extractedText.length}`,
+            });
+
+            return {
+                id: ocrResult.id,
+                documentId: id,
+                rawText: extractedText,
+                normalizedText: extractedText.trim(),
+                ocrConfidence: ocrResult.ocrConfidence ? Number(ocrResult.ocrConfidence) : null,
+                language: ocrResult.language,
+                processedAt: ocrResult.processedAt,
+            };
+
+        } catch (error) {
+            console.error('extractText error:', error);
+            if (error instanceof HttpException) throw error;
+
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: `/documents/${id}/extract-text`,
+                action: 'извлечение текста',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при извлечении текста',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
 }
