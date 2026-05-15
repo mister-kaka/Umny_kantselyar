@@ -1,0 +1,103 @@
+@import "./global.css";
+
+/*    Страница настроек    */
+
+/* Вкладки */
+.settings-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.settings-option {
+  color: var(--text-secondary);
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.settings-option.active {
+  background-color: var(--color-accent-light);
+  color: var(--color-accent-hover);
+  border-bottom: 3px solid var(--color-accent-hover);
+  transition: background-color 0.2s;
+}
+
+.settings-option:hover:not(.active) {
+  background-color: rgba(129, 216, 208, 0.1);;
+  transition: 0.2s;
+}
+
+/* Форма настроек провайдера */
+
+.cuttinPaddin{
+    padding-top: 15px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.settings-form-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.settings-form-label {
+  min-width: 120px;
+  color: var(--text-primary);
+}
+
+.settings-form-control {
+  flex: 1;
+}
+
+.settings-form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--border-color);
+  background-color: var(--color-bg-page);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.settings-form-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(129, 216, 208, 0.2);
+}
+
+.settings-actions {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  grid-template-columns: 200px 200px 1fr 300px;
+  grid-template-rows: 35px;
+}
+
+.settings-actions > span:last-child {
+  text-align: right;
+}
+
+.Success {
+  color: var(--color-status-loaded);
+  font-style: italic;
+}
+
+.Fail {
+  color: var(--color-error);
+  font-style: italic;
+}
+
+.appearance-placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
