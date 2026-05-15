@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { SettingsService } from './settings.service';
 import { AiSettingsResponseDto } from './dto/ai-settings-response.dto';
@@ -27,5 +27,11 @@ export class SettingsController {
   @Get('ai/providers')
   async getAiProviders(): Promise<AiProviderDto[]> {
     return this.settingsService.getAiProviders();
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('ai/test-connection')
+  async testConnection(@Body() dto: UpdateAiSettingsDto): Promise<{ status: string; message: string }> {
+    return this.settingsService.testConnection(dto);
   }
 }
