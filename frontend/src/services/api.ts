@@ -147,3 +147,8 @@ export const getDocumentAiResult = async (id: number): Promise<DocumentAiResult 
   const res = await api.get<DocumentAiResult | null>(`/documents/${id}/ai-result`);
   return res.data;
 };
+
+export const testAiConnection = async (data: UpdateAiSettings): Promise<{ status: string; message: string }> => {
+  const res = await api.post<{ status: string; message: string }>('/settings/ai/test-connection', data);
+  return res.data;
+};
