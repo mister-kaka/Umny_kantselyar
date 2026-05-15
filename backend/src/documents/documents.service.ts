@@ -28,6 +28,7 @@ export class DocumentsService {
         private readonly logger: AppLoggerService,
     ) {}
 
+    // GET /documents - список документов с фильтрацией и пагинацией
     async findAll(filters: GetDocumentsDto): Promise<DocumentsListResponseDto> {
         try {
             const page = filters.page ?? 1;
@@ -107,6 +108,7 @@ export class DocumentsService {
         }
     }
 
+    // GET /documents/:id - карточка документа
     async findOne(id: number): Promise<DocumentCardDto> {
         try {
             const document = await this.documentRepository.findOne({
@@ -255,6 +257,7 @@ export class DocumentsService {
         }
     }
 
+    // GET /documents/search?q=... - поиск по документам
     async search(q: string): Promise<DocumentListItemDto[]> {
         try {
             if (!q || q.trim().length === 0) {
@@ -325,7 +328,7 @@ export class DocumentsService {
         }
     }
 
-    // POST /documents/upload — загрузка файла и создание документа
+    // POST /documents/upload - загрузка файла и создание документа
     async uploadDocument(
         file: Express.Multer.File,
         createdBy: number,
@@ -413,7 +416,7 @@ export class DocumentsService {
         }
     }
 
-    // POST /documents/:id/extract-text — извлечение текста из файла
+    // POST /documents/:id/extract-text - извлечение текста из файла
     async extractText(id: number): Promise<ExtractTextResponseDto> {
         try {
             const document = await this.documentRepository.findOne({
