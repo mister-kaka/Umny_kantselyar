@@ -473,7 +473,7 @@ export class DocumentsService {
             }
 
             if (!extractedText.trim()) {
-                throw new HttpException('Не удалось извлечь текст', HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new HttpException('Не удалось извлечь текст', HttpStatus.BAD_REQUEST);
             }
 
             let ocrResult: OcrResult | undefined = document.ocrResult ?? undefined;
