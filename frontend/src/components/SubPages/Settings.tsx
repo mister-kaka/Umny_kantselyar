@@ -4,7 +4,7 @@ import "./../../styles/Settings.css";
 import Card from "../Card";
 import DropdownButton from "../DropdownButton";
 import React, { useState, useEffect } from "react";
-import { getAiProviders, getAiSettings, updateAiSettings } from "../../services/api";
+import { getAiProviders, getAiSettings, updateAiSettings, testAiConnection } from "../../services/api";
 import { AiProvider, AiSettings } from "../../types";
 
 const Settings = () => {
@@ -23,7 +23,8 @@ const Settings = () => {
   const [isProviderOpen, setIsProviderOpen] = useState(false);
   const [isModelOpen, setIsModelOpen] = useState(false);
 
-  const [Settings_Status, setSettings_Status] = useState("");
+  const [settingsStatus, setSettingsStatus] = useState("");
+  const [statusType, setStatusType] = useState<"" | "success" | "error" | "loading">("");
 
   const fetchData = async () => {
     try {
@@ -36,7 +37,7 @@ const Settings = () => {
       setSettings(settingsData);
       setSelectedProviderCode(settingsData.providerCode);
       setSelectedModelCode(settingsData.modelName);
-      setApiKey(settingsData.apiKey || "");
+      setApiKey("");
       setBaseUrl(settingsData.baseUrl || "");
       setError(null);
     } catch (e) {
@@ -52,12 +53,13 @@ const Settings = () => {
   }, []);
 
   useEffect(() => {
-  if (Settings_Status === "") return;               
-  const timer = setTimeout(() => {
-    setSettings_Status("");                 
-  }, 3000);
-  return () => clearTimeout(timer);        
-}, [Settings_Status]);
+    if (settingsStatus === "") return;
+    const timer = setTimeout(() => {
+      setSettingsStatus("");
+      setStatusType("");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [settingsStatus]);
 
   const currentProvider = providers.find((p) => p.providerCode === selectedProviderCode);
   const currentModel = currentProvider?.models.find((m) => m.modelCode === selectedModelCode);
@@ -80,6 +82,25 @@ const Settings = () => {
   };
 
   const handleSave = async () => {
+    setSettingsStatus("");
+    setStatusType("");
+
+    if (!selectedProviderCode) {
+      setSettingsStatus("Выберите провайдера");
+      setStatusType("error");
+      return;
+    }
+    if (!selectedModelCode) {
+      setSettingsStatus("Выберите модель");
+      setStatusType("error");
+      return;
+    }
+    if (!apiKey.trim()) {
+      setSettingsStatus("Введите API ключ");
+      setStatusType("error");
+      return;
+    }
+
     try {
       const updated = await updateAiSettings({
         providerCode: selectedProviderCode,
@@ -88,20 +109,51 @@ const Settings = () => {
         baseUrl: baseUrl || null,
       });
       setSettings(updated);
-      setSettings_Status("Настройки успешно сохранены!") 
+      setSettingsStatus("Настройки успешно сохранены!");
+      setStatusType("success");
     } catch (e) {
-      setSettings_Status("Ошибка при сохранении настроек") 
+      setSettingsStatus("Ошибка при сохранении настроек");
+      setStatusType("error");
       console.error(e);
     }
   };
 
-  const handleTestConnection = async () => { 
-    setSettings_Status("Проверка подключения...")
+  const handleTestConnection = async () => {
+    setSettingsStatus("");
+    setStatusType("");
+
+    if (!selectedProviderCode) {
+      setSettingsStatus("Выберите провайдера");
+      setStatusType("error");
+      return;
+    }
+    if (!apiKey.trim()) {
+      setSettingsStatus("Введите API ключ");
+      setStatusType("error");
+      return;
+    }
+
+    setSettingsStatus("Проверка подключения...");
+    setStatusType("loading");
+
     try {
-      await getAiSettings()
-      setSettings_Status("Успешное подключение!")
+      const result = await testAiConnection({
+        providerCode: selectedProviderCode,
+        modelName: selectedModelCode,
+        apiKey,
+        baseUrl: baseUrl || null,
+      });
+
+      if (result.status === 'success') {
+        setSettingsStatus("Успешное подключение!");
+        setStatusType("success");
+      } else {
+        setSettingsStatus(`Ошибка подключения: ${result.message}`);
+        setStatusType("error");
+      }
     } catch (e) {
-      setSettings_Status("Ошибка подключения")
+      setSettingsStatus("Ошибка подключения: сервер недоступен");
+      setStatusType("error");
     }
   };
 
@@ -127,79 +179,96 @@ const Settings = () => {
 
       {loading ? (
         <p>Загрузка...</p>
-      ) : error ? (<p>{error} — <button className="apply-button" onClick={fetchData}>Повторить</button></p>)
-      : !loading && !error && activeTab === "provider" && (
+      ) : error ? (
+        <p>{error} — <button className="apply-button" onClick={fetchData}>Повторить</button></p>
+      ) : !loading && !error && activeTab === "provider" && (
         <Card className="cuttinPaddin">
-          <div className="settings-form">
-            <div className="settings-form-row">
-              <span className="settings-form-label">Провайдер:</span>
-              <div className="settings-form-control">
-                <DropdownButton
-                  options={providers.map((p) => p.providerName)}
-                  selectedLabel={currentProvider?.providerName || "Выберите провайдера"}
-                  onSelect={handleProviderSelect}
-                  isOpen={isProviderOpen}
-                  onToggle={() => {
-                    setIsProviderOpen((prev) => !prev);
-                    setIsModelOpen(false);
-                  }}/>
+          <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+            <div className="settings-form">
+              <div className="settings-form-row">
+                <span className="settings-form-label">Провайдер:</span>
+                <div className="settings-form-control">
+                  <DropdownButton
+                    options={providers.map((p) => p.providerName)}
+                    selectedLabel={currentProvider?.providerName || "Выберите провайдера"}
+                    onSelect={handleProviderSelect}
+                    isOpen={isProviderOpen}
+                    onToggle={() => {
+                      setIsProviderOpen((prev) => !prev);
+                      setIsModelOpen(false);
+                    }}/>
+                </div>
+              </div>
+
+              <div className="settings-form-row">
+                <span className="settings-form-label">Модель:</span>
+                <div className="settings-form-control">
+                  <DropdownButton
+                    options={currentProvider?.models.map((m) => m.modelName) || []}
+                    selectedLabel={currentModel?.modelName || "Выберите модель"}
+                    onSelect={handleModelSelect}
+                    isOpen={isModelOpen}
+                    onToggle={() => {
+                      setIsModelOpen((prev) => !prev);
+                      setIsProviderOpen(false);
+                    }}/>
+                </div>
+              </div>
+
+              <div className="settings-form-row">
+                <span className="settings-form-label">API Key:</span>
+                <div className="settings-form-control">
+                  <input
+                    type="text"
+                    readOnly
+                    style={{ position: 'absolute', opacity: 0, width: 1, height: 1, pointerEvents: 'none' }}
+                    tabIndex={-1}
+                  />
+                  <input
+                    type="password"
+                    readOnly
+                    style={{ position: 'absolute', opacity: 0, width: 1, height: 1, pointerEvents: 'none' }}
+                    tabIndex={-1}
+                  />
+                  <input
+                    type="password"
+                    name="ai_provider_key"
+                    autoComplete="new-password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder={settings?.apiKey || "Введите API ключ"}
+                    className="settings-form-input"/>
+                </div>
+              </div>
+
+              <div className="settings-form-row">
+                <span className="settings-form-label">Base URL:</span>
+                <div className="settings-form-control">
+                  <input
+                    type="text"
+                    value={baseUrl}
+                    onChange={(e) => setBaseUrl(e.target.value)}
+                    placeholder="https://api.example.com"
+                    className="settings-form-input"/>
+                </div>
+              </div>
+
+              <div className="settings-actions">
+                <button className="apply-button" onClick={handleTestConnection}>
+                  Проверить подключение
+                </button>
+                <button className="apply-button" onClick={handleSave}>
+                  Сохранить настройки
+                </button>
+                <span></span>
+                {settingsStatus && (
+                  <span className={`settings-status ${statusType}`}>
+                    {settingsStatus}
+                  </span>
+                )}
               </div>
             </div>
-
-            <div className="settings-form-row">
-              <span className="settings-form-label">Модель:</span>
-              <div className="settings-form-control">
-                <DropdownButton
-                  options={currentProvider?.models.map((m) => m.modelName) || []}
-                  selectedLabel={currentModel?.modelName || "Выберите модель"}
-                  onSelect={handleModelSelect}
-                  isOpen={isModelOpen}
-                  onToggle={() => {
-                    setIsModelOpen((prev) => !prev);
-                    setIsProviderOpen(false);
-                  }}/>
-              </div>
-            </div>
-
-            <div className="settings-form-row">
-              <span className="settings-form-label">API Key:</span>
-              <div className="settings-form-control">
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className="settings-form-input"/>
-              </div>
-            </div>
-
-            <div className="settings-form-row">
-              <span className="settings-form-label">Base URL:</span>
-              <div className="settings-form-control">
-                <input
-                  type="text"
-                  value={baseUrl}
-                  onChange={(e) => setBaseUrl(e.target.value)}
-                  placeholder="https://api.example.com"
-                  className="settings-form-input"/>
-              </div>
-            </div>
-
-            <div className="settings-actions">
-              <button className="apply-button" onClick={handleTestConnection}>
-                Проверить подключение
-              </button>
-              <button className="apply-button" onClick={handleSave}>
-                Сохранить настройки
-              </button>
-              <span></span>
-              {Settings_Status === "Проверка подключения..." && <span className="appearance-placeholder">{Settings_Status}</span>}
-              {(Settings_Status === "Настройки успешно сохранены!" || Settings_Status === "Успешное подключение!" ) && 
-              <span className="Success">{Settings_Status}</span>}
-              {(Settings_Status === "Ошибка при сохранении настроек" || Settings_Status === "Ошибка подключения"  ) && 
-              <span className="Fail">{Settings_Status}</span>}
-            </div>
-          </div>
+          </form>
         </Card>
       )}
 
