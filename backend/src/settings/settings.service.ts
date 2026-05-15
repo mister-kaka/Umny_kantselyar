@@ -154,7 +154,7 @@ export class SettingsService {
             providerName: 'DeepSeek',
             models: [
                 { modelCode: 'deepseek-4-flash', modelName: 'DeepSeek 4 Flash' },
-                { modelCode: 'deepseek-chat', modelName: 'DeepSeek Chat' },
+                { modelCode: 'deepseek/deepseek-chat', modelName: 'DeepSeek Chat' },
                 { modelCode: 'deepseek-reasoner', modelName: 'DeepSeek Reasoner' },
             ],
         },
