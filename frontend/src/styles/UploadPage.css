@@ -1,0 +1,171 @@
+@import url("../styles/global.css");
+
+.upload-container {
+  max-width: 600px !important;
+  margin: 0 auto !important;
+  text-align: center;
+  width: 100%;
+}
+
+.upload-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+
+.upload-area {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: var(--color-bg-surface);
+  margin-bottom: 20px;
+}
+
+.upload-area:hover {
+  border-color: var(--color-accent);
+  background-color: rgba(129, 216, 208, 0.05);
+}
+
+.upload-area.has-file {
+  border-color: var(--color-status-loaded);
+  background-color: rgba(126, 226, 159, 0.05);
+}
+
+.upload-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.upload-text {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.file-info {
+  text-align: center;
+}
+
+.file-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.file-size {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.status-container {
+  padding: 16px;
+  border-radius: var(--radius-card);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-container.status-success {
+  background-color: rgba(126, 226, 159, 0.1);
+  color: var(--color-status-loaded);
+  border: 1px solid var(--color-status-loaded);
+}
+
+.status-container.status-error {
+  background-color: rgba(232, 115, 115, 0.1);
+  color: var(--color-status-rejected);
+  border: 1px solid var(--color-status-rejected);
+}
+
+.status-container.status-info {
+  background-color: rgba(126, 173, 226, 0.1);
+  color: var(--color-status-assigned);
+  border: 1px solid var(--color-status-assigned);
+}
+
+.status-container.status-loading {
+  background-color: rgba(250, 178, 95, 0.1);
+  color: var(--color-status-low-confidence);
+  border: 1px solid var(--color-status-low-confidence);
+}
+
+.status-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* КНОПКИ — прямоугольные, одинаковые */
+.upload-actions {
+  display: flex;
+  gap: 12px;  /* расстояние между кнопками */
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Переопределяем стили кнопок */
+.upload-actions .button-primary,
+.upload-actions .button-secondary {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Кнопка "Загрузить" — с фоном */
+.upload-actions .button-primary {
+  background-color: var(--color-accent) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.upload-actions .button-primary:hover {
+  background-color: var(--color-accent-hover) !important;
+}
+
+/* Кнопка "Очистить" — прозрачная, БЕЗ границы */
+.upload-actions .button-secondary {
+  background-color: transparent !important;
+  color: var(--color-accent) !important;
+  border: none !important;  /* убираем границу */
+}
+
+.upload-actions .button-secondary:hover {
+  background-color: rgba(129, 216, 208, 0.1) !important;
+  color: var(--color-accent-hover) !important;
+}

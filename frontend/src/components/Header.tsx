@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import "../contexts/SidebarContexts";
 import { useSidebar } from "../contexts/SidebarContexts";
 import "../styles/Dashboard.css";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -17,6 +18,8 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
     setSearchQuery(value);
     if (onSearch) onSearch(value);
   };
+
+  const navigate = useNavigate();
 
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
@@ -41,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
         />
       </div>
 
-      <button className="button-primary header-action-btn">
+      <button className="button-primary header-action-btn" onClick={() => navigate('/dashboard/incoming')}>
         <img src="/DashboardPage_Images/Upload.png" className="Casual-icon" alt="📩" />
       </button>
       <button className="button-secondary-with-border header-action-btn">
