@@ -263,7 +263,7 @@ export class DocumentsService {
         }
     }
 
-    // GET /documents/search?q=... — поиск по документам
+    // GET /documents/search?q=... - поиск по документам
     async search(q: string): Promise<DocumentListItemDto[]> {
         try {
             if (!q || q.trim().length === 0) {
@@ -445,6 +445,7 @@ export class DocumentsService {
             }
 
             let extractedText = '';
+            let ocrConfidence = 99;
             const fileExtension: string = file.fileName.split('.').pop()?.toLowerCase() || '';
 
             if (fileExtension === 'pdf') {
@@ -464,8 +465,9 @@ export class DocumentsService {
                     extractedText += XLSX.utils.sheet_to_csv(sheet) + '\n';
                 });
             } else if (['jpg', 'jpeg', 'png', 'tiff', 'tif'].includes(fileExtension)) {
-                const { data: { text } } = await Tesseract.recognize(filePath, 'rus+eng');
+                const { data: { text, confidence } } = await Tesseract.recognize(filePath, 'rus+eng');
                 extractedText = text;
+                ocrConfidence = Math.round(confidence);
             } else {
                 throw new HttpException('Неподдерживаемый формат файла', HttpStatus.BAD_REQUEST);
             }
@@ -476,13 +478,11 @@ export class DocumentsService {
 
             let ocrResult: OcrResult | undefined = document.ocrResult ?? undefined;
 
-            const confidence = ['pdf', 'docx', 'txt', 'xlsx'].includes(fileExtension) ? 99 : 85;
-
             if (ocrResult) {
                 ocrResult.rawText = extractedText;
                 ocrResult.normalizedText = extractedText.trim();
                 ocrResult.language = 'ru';
-                ocrResult.ocrConfidence = confidence;
+                ocrResult.ocrConfidence = ocrConfidence;
                 ocrResult.processedAt = new Date();
                 await this.ocrResultRepository.save(ocrResult);
             } else {
@@ -491,7 +491,7 @@ export class DocumentsService {
                     rawText: extractedText,
                     normalizedText: extractedText.trim(),
                     language: 'ru',
-                    ocrConfidence: confidence,
+                    ocrConfidence: ocrConfidence,
                     processedAt: new Date(),
                 });
                 await this.ocrResultRepository.save(ocrResult);
