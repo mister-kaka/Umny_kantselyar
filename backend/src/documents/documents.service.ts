@@ -1,6 +1,8 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Document } from '../entities/document.entity';
 import { DocumentRoute } from '../entities/document-route.entity';
 import { DocumentFile } from '../entities/document-file.entity';
@@ -13,6 +15,10 @@ import { ExtractTextResponseDto } from './dto/extract-text-response.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
 
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif'];
+const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
+const XLSX = require('xlsx');
+const Tesseract = require('tesseract.js');
 
 @Injectable()
 export class DocumentsService {
@@ -28,7 +34,7 @@ export class DocumentsService {
         private readonly logger: AppLoggerService,
     ) {}
 
-    // GET /documents - список документов с фильтрацией и пагинацией
+    // GET /documents - список документов 
     async findAll(filters: GetDocumentsDto): Promise<DocumentsListResponseDto> {
         try {
             const page = filters.page ?? 1;
@@ -100,7 +106,6 @@ export class DocumentsService {
                 message: errorMessage,
             });
 
-            console.error('Ошибка при получении списка документов:', error);
             throw new HttpException(
                 'Ошибка сервера при получении списка документов',
                 HttpStatus.INTERNAL_SERVER_ERROR,
@@ -328,6 +333,56 @@ export class DocumentsService {
         }
     }
 
+    // DELETE /documents/:id - удаление документа
+    async delete(id: number): Promise<void> {
+        try {
+            const document = await this.documentRepository.findOne({
+                where: { id },
+            });
+
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            const docDir = path.join(process.cwd(), 'uploads', 'documents', String(id));
+            if (fs.existsSync(docDir)) {
+                fs.rmSync(docDir, { recursive: true, force: true });
+            }
+
+            await this.documentRepository.remove(document);
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'DELETE',
+                url: `/documents/${id}`,
+                action: 'удаление документа',
+                status: 'success',
+                statusCode: 200,
+                message: `Документ ${document.registrationNumber} удалён`,
+            });
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'DELETE',
+                url: `/documents/${id}`,
+                action: 'удаление документа',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при удалении документа',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
     // POST /documents/upload - загрузка файла и создание документа
     async uploadDocument(
         file: Express.Multer.File,
@@ -342,12 +397,19 @@ export class DocumentsService {
                 );
             }
 
-            const count = await this.documentRepository.count();
-            const registrationNumber = `ВХ-2026-${String(count + 1).padStart(3, '0')}`;
+            const safeFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+
+            const maxResult = await this.documentRepository
+                .createQueryBuilder('doc')
+                .select('MAX(doc.id)', 'maxId')
+                .getRawOne();
+
+            const nextNumber = (maxResult?.maxId || 0) + 1;
+            const registrationNumber = `ВХ-2026-${String(nextNumber).padStart(3, '0')}`;
 
             const document = this.documentRepository.create({
                 registrationNumber,
-                title: file.originalname,
+                title: safeFileName,
                 receivedDate: new Date(),
                 senderName: 'Загружен через сканирование',
                 currentStatus: 'in_review',
@@ -356,20 +418,18 @@ export class DocumentsService {
 
             const savedDocument = await this.documentRepository.save(document);
 
-            const fs = require('fs');
-            const path = require('path');
             const docDir = path.join(process.cwd(), 'uploads', 'documents', String(savedDocument.id));
             if (!fs.existsSync(docDir)) {
                 fs.mkdirSync(docDir, { recursive: true });
             }
-            const newPath = path.join(docDir, file.originalname);
+            const newPath = path.join(docDir, safeFileName);
             fs.writeFileSync(newPath, file.buffer);
 
             const fileRecord = this.documentFileRepository.create({
                 documentId: savedDocument.id,
-                fileName: file.originalname,
+                fileName: safeFileName,
                 fileType: fileExtension,
-                filePath: `/uploads/documents/${savedDocument.id}/${file.originalname}`,
+                filePath: `/uploads/documents/${savedDocument.id}/${safeFileName}`,
                 fileSize: file.size,
             });
 
@@ -388,9 +448,9 @@ export class DocumentsService {
             return {
                 id: savedDocument.id,
                 registrationNumber: savedDocument.registrationNumber,
-                fileName: file.originalname,
+                fileName: safeFileName,
                 fileSize: file.size,
-                filePath: `/uploads/documents/${savedDocument.id}/${file.originalname}`,
+                filePath: `/uploads/documents/${savedDocument.id}/${safeFileName}`,
                 uploadedAt: new Date(),
             };
 
@@ -433,8 +493,6 @@ export class DocumentsService {
                 throw new HttpException('Файл не найден', HttpStatus.NOT_FOUND);
             }
 
-            const path = require('path');
-            const fs = require('fs');
             const fileName = file.fileName.split('/').pop() || file.fileName;
             const filePath = path.join(process.cwd(), 'uploads', 'documents', String(document.id), fileName);
 
@@ -443,21 +501,19 @@ export class DocumentsService {
             }
 
             let extractedText = '';
+            let ocrConfidence = 99;
             const fileExtension: string = file.fileName.split('.').pop()?.toLowerCase() || '';
 
             if (fileExtension === 'pdf') {
-                const pdfParse = require('pdf-parse');
                 const dataBuffer = fs.readFileSync(filePath);
                 const data = await pdfParse(dataBuffer);
                 extractedText = data.text;
             } else if (fileExtension === 'docx') {
-                const mammoth = require('mammoth');
                 const result = await mammoth.extractRawText({ path: filePath });
                 extractedText = result.value;
             } else if (fileExtension === 'txt') {
                 extractedText = fs.readFileSync(filePath, 'utf8');
             } else if (fileExtension === 'xlsx') {
-                const XLSX = require('xlsx');
                 const workbook = XLSX.readFile(filePath);
                 extractedText = '';
                 workbook.SheetNames.forEach((sheetName: string) => {
@@ -465,9 +521,9 @@ export class DocumentsService {
                     extractedText += XLSX.utils.sheet_to_csv(sheet) + '\n';
                 });
             } else if (['jpg', 'jpeg', 'png', 'tiff', 'tif'].includes(fileExtension)) {
-                const Tesseract = require('tesseract.js');
-                const { data: { text } } = await Tesseract.recognize(filePath, 'rus+eng');
+                const { data: { text, confidence } } = await Tesseract.recognize(filePath, 'rus+eng');
                 extractedText = text;
+                ocrConfidence = Math.round(confidence);
             } else {
                 throw new HttpException('Неподдерживаемый формат файла', HttpStatus.BAD_REQUEST);
             }
@@ -476,28 +532,16 @@ export class DocumentsService {
                 throw new HttpException('Не удалось извлечь текст', HttpStatus.BAD_REQUEST);
             }
 
-            let ocrResult: OcrResult | undefined = document.ocrResult ?? undefined;
-
-            const confidence = ['pdf', 'docx', 'txt', 'xlsx'].includes(fileExtension) ? 99 : 85;
-
-            if (ocrResult) {
-                ocrResult.rawText = extractedText;
-                ocrResult.normalizedText = extractedText.trim();
-                ocrResult.language = 'ru';
-                ocrResult.ocrConfidence = confidence;
-                ocrResult.processedAt = new Date();
-                await this.ocrResultRepository.save(ocrResult);
-            } else {
-                ocrResult = this.ocrResultRepository.create({
-                    documentId: id,
-                    rawText: extractedText,
-                    normalizedText: extractedText.trim(),
-                    language: 'ru',
-                    ocrConfidence: confidence,
-                    processedAt: new Date(),
-                });
-                await this.ocrResultRepository.save(ocrResult);
+            let ocrResult = document.ocrResult;
+            if (!ocrResult) {
+                ocrResult = this.ocrResultRepository.create({ documentId: id });
             }
+            ocrResult.rawText = extractedText;
+            ocrResult.normalizedText = extractedText.trim();
+            ocrResult.language = 'ru';
+            ocrResult.ocrConfidence = ocrConfidence;
+            ocrResult.processedAt = new Date();
+            await this.ocrResultRepository.save(ocrResult);
 
             await this.logger.log({
                 module: 'Documents',

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors, Delete } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
@@ -36,6 +36,13 @@ export class DocumentsController {
     @Get(':id')
     async getDocumentById(@Param('id', ParseIntPipe) id: number): Promise<DocumentCardDto> {
         return this.documentsService.findOne(id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete(':id')
+    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+        await this.documentsService.delete(id);
+        return { message: 'Документ удалён' };
     }
 
     @UseGuards(AuthGuard('jwt'))

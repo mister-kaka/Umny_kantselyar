@@ -154,6 +154,10 @@ export const testAiConnection = async (data: UpdateAiSettings): Promise<{ status
   return res.data;
 };
 
+export const deleteDocument = async (id: number): Promise<void> => {
+    await api.delete(`/documents/${id}`);
+};
+
 export const uploadDocument = async (
   file: File
 ): Promise<UploadResponse> => {

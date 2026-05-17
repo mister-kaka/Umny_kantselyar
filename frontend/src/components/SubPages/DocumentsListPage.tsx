@@ -195,7 +195,7 @@ const DocumentsListPage = () => {
           <thead>
             <tr>
               <th>Рег. номер</th>
-              <th>Тема</th>
+              <th>Название файла</th>
               <th>Отправитель</th>
               <th>Дата</th>
               <th>Тип</th>
