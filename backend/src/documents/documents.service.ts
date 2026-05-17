@@ -34,7 +34,7 @@ export class DocumentsService {
         private readonly logger: AppLoggerService,
     ) {}
 
-    // GET /documents - список документов с фильтрацией и пагинацией
+    // GET /documents - список документов 
     async findAll(filters: GetDocumentsDto): Promise<DocumentsListResponseDto> {
         try {
             const page = filters.page ?? 1;
@@ -106,7 +106,6 @@ export class DocumentsService {
                 message: errorMessage,
             });
 
-            console.error('Ошибка при получении списка документов:', error);
             throw new HttpException(
                 'Ошибка сервера при получении списка документов',
                 HttpStatus.INTERNAL_SERVER_ERROR,
@@ -334,6 +333,56 @@ export class DocumentsService {
         }
     }
 
+    // DELETE /documents/:id - удаление документа
+    async delete(id: number): Promise<void> {
+        try {
+            const document = await this.documentRepository.findOne({
+                where: { id },
+            });
+
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            const docDir = path.join(process.cwd(), 'uploads', 'documents', String(id));
+            if (fs.existsSync(docDir)) {
+                fs.rmSync(docDir, { recursive: true, force: true });
+            }
+
+            await this.documentRepository.remove(document);
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'DELETE',
+                url: `/documents/${id}`,
+                action: 'удаление документа',
+                status: 'success',
+                statusCode: 200,
+                message: `Документ ${document.registrationNumber} удалён`,
+            });
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'DELETE',
+                url: `/documents/${id}`,
+                action: 'удаление документа',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при удалении документа',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
     // POST /documents/upload - загрузка файла и создание документа
     async uploadDocument(
         file: Express.Multer.File,
@@ -348,12 +397,14 @@ export class DocumentsService {
                 );
             }
 
+            const safeFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+
             const count = await this.documentRepository.count();
             const registrationNumber = `ВХ-2026-${String(count + 1).padStart(3, '0')}`;
 
             const document = this.documentRepository.create({
                 registrationNumber,
-                title: file.originalname,
+                title: safeFileName,
                 receivedDate: new Date(),
                 senderName: 'Загружен через сканирование',
                 currentStatus: 'in_review',
@@ -366,14 +417,14 @@ export class DocumentsService {
             if (!fs.existsSync(docDir)) {
                 fs.mkdirSync(docDir, { recursive: true });
             }
-            const newPath = path.join(docDir, file.originalname);
+            const newPath = path.join(docDir, safeFileName);
             fs.writeFileSync(newPath, file.buffer);
 
             const fileRecord = this.documentFileRepository.create({
                 documentId: savedDocument.id,
-                fileName: file.originalname,
+                fileName: safeFileName,
                 fileType: fileExtension,
-                filePath: `/uploads/documents/${savedDocument.id}/${file.originalname}`,
+                filePath: `/uploads/documents/${savedDocument.id}/${safeFileName}`,
                 fileSize: file.size,
             });
 
@@ -392,9 +443,9 @@ export class DocumentsService {
             return {
                 id: savedDocument.id,
                 registrationNumber: savedDocument.registrationNumber,
-                fileName: file.originalname,
+                fileName: safeFileName,
                 fileSize: file.size,
-                filePath: `/uploads/documents/${savedDocument.id}/${file.originalname}`,
+                filePath: `/uploads/documents/${savedDocument.id}/${safeFileName}`,
                 uploadedAt: new Date(),
             };
 
