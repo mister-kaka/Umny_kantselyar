@@ -187,3 +187,15 @@ export interface DocumentAiResult {
   modelName: string;
   createdAt: string;
 }
+
+export interface UploadResponse {
+  id: number;
+}
+
+export interface ExtractTextResponse {
+  id: number;
+  rawText: string;
+  normalizedText: string;
+  language: string;
+  ocrConfidence: number;
+}
