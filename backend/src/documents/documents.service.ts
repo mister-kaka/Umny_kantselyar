@@ -476,26 +476,16 @@ export class DocumentsService {
                 throw new HttpException('Не удалось извлечь текст', HttpStatus.BAD_REQUEST);
             }
 
-            let ocrResult: OcrResult | undefined = document.ocrResult ?? undefined;
-
-            if (ocrResult) {
-                ocrResult.rawText = extractedText;
-                ocrResult.normalizedText = extractedText.trim();
-                ocrResult.language = 'ru';
-                ocrResult.ocrConfidence = ocrConfidence;
-                ocrResult.processedAt = new Date();
-                await this.ocrResultRepository.save(ocrResult);
-            } else {
-                ocrResult = this.ocrResultRepository.create({
-                    documentId: id,
-                    rawText: extractedText,
-                    normalizedText: extractedText.trim(),
-                    language: 'ru',
-                    ocrConfidence: ocrConfidence,
-                    processedAt: new Date(),
-                });
-                await this.ocrResultRepository.save(ocrResult);
+            let ocrResult = document.ocrResult;
+            if (!ocrResult) {
+                ocrResult = this.ocrResultRepository.create({ documentId: id });
             }
+            ocrResult.rawText = extractedText;
+            ocrResult.normalizedText = extractedText.trim();
+            ocrResult.language = 'ru';
+            ocrResult.ocrConfidence = ocrConfidence;
+            ocrResult.processedAt = new Date();
+            await this.ocrResultRepository.save(ocrResult);
 
             await this.logger.log({
                 module: 'Documents',
