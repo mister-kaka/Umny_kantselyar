@@ -169,3 +169,13 @@
   background-color: rgba(129, 216, 208, 0.1) !important;
   color: var(--color-accent-hover) !important;
 }
+
+.upload-icon {
+  margin-bottom: 16px;
+}
+
+.upload-icon img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}

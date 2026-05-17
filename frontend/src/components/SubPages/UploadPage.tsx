@@ -189,8 +189,7 @@ const UploadPage = () => {
 
             {step === "idle" ? (
               <>
-                            { /* добавить картинку вместо 📁 */ }
-                <div className="upload-icon">📁</div>
+                <img src="/DashboardPage_Images/UploadIcon.png" className="upload-icon" alt="Загрузка" />
                 <p className="upload-text">
                   Перетащите файл сюда или кликните для выбора
                 </p>
