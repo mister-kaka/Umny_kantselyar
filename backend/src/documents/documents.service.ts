@@ -1,6 +1,8 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Document } from '../entities/document.entity';
 import { DocumentRoute } from '../entities/document-route.entity';
 import { DocumentFile } from '../entities/document-file.entity';
@@ -13,6 +15,10 @@ import { ExtractTextResponseDto } from './dto/extract-text-response.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
 
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif'];
+const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
+const XLSX = require('xlsx');
+const Tesseract = require('tesseract.js');
 
 @Injectable()
 export class DocumentsService {
@@ -257,7 +263,7 @@ export class DocumentsService {
         }
     }
 
-    // GET /documents/search?q=... - поиск по документам
+    // GET /documents/search?q=... — поиск по документам
     async search(q: string): Promise<DocumentListItemDto[]> {
         try {
             if (!q || q.trim().length === 0) {
@@ -356,8 +362,6 @@ export class DocumentsService {
 
             const savedDocument = await this.documentRepository.save(document);
 
-            const fs = require('fs');
-            const path = require('path');
             const docDir = path.join(process.cwd(), 'uploads', 'documents', String(savedDocument.id));
             if (!fs.existsSync(docDir)) {
                 fs.mkdirSync(docDir, { recursive: true });
@@ -433,8 +437,6 @@ export class DocumentsService {
                 throw new HttpException('Файл не найден', HttpStatus.NOT_FOUND);
             }
 
-            const path = require('path');
-            const fs = require('fs');
             const fileName = file.fileName.split('/').pop() || file.fileName;
             const filePath = path.join(process.cwd(), 'uploads', 'documents', String(document.id), fileName);
 
@@ -446,18 +448,15 @@ export class DocumentsService {
             const fileExtension: string = file.fileName.split('.').pop()?.toLowerCase() || '';
 
             if (fileExtension === 'pdf') {
-                const pdfParse = require('pdf-parse');
                 const dataBuffer = fs.readFileSync(filePath);
                 const data = await pdfParse(dataBuffer);
                 extractedText = data.text;
             } else if (fileExtension === 'docx') {
-                const mammoth = require('mammoth');
                 const result = await mammoth.extractRawText({ path: filePath });
                 extractedText = result.value;
             } else if (fileExtension === 'txt') {
                 extractedText = fs.readFileSync(filePath, 'utf8');
             } else if (fileExtension === 'xlsx') {
-                const XLSX = require('xlsx');
                 const workbook = XLSX.readFile(filePath);
                 extractedText = '';
                 workbook.SheetNames.forEach((sheetName: string) => {
@@ -465,7 +464,6 @@ export class DocumentsService {
                     extractedText += XLSX.utils.sheet_to_csv(sheet) + '\n';
                 });
             } else if (['jpg', 'jpeg', 'png', 'tiff', 'tif'].includes(fileExtension)) {
-                const Tesseract = require('tesseract.js');
                 const { data: { text } } = await Tesseract.recognize(filePath, 'rus+eng');
                 extractedText = text;
             } else {
