@@ -399,8 +399,13 @@ export class DocumentsService {
 
             const safeFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
 
-            const count = await this.documentRepository.count();
-            const registrationNumber = `ВХ-2026-${String(count + 1).padStart(3, '0')}`;
+            const maxResult = await this.documentRepository
+                .createQueryBuilder('doc')
+                .select('MAX(doc.id)', 'maxId')
+                .getRawOne();
+
+            const nextNumber = (maxResult?.maxId || 0) + 1;
+            const registrationNumber = `ВХ-2026-${String(nextNumber).padStart(3, '0')}`;
 
             const document = this.documentRepository.create({
                 registrationNumber,
