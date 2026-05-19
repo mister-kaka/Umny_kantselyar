@@ -33,6 +33,8 @@ const DocumentCardPage: React.FC = () => {
 
     getDocumentById(Number(id))
       .then(async (response) => {
+        setData(response);
+        // Если есть сохранённый AI-результат в документе
         if (response.aiResult) {
           setAiResult(response.aiResult);
         } else {
