@@ -153,7 +153,7 @@ const MainMenu = () => {
                         <thead>
                             <tr>
                                 <th>Рег. номер</th>
-                                <th>Тема</th>
+                                <th>Название файла</th>
                                 <th>Статус</th>
                                 <th>Дата</th>
                             </tr>

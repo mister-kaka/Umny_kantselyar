@@ -28,6 +28,9 @@ import { DocumentCategoriesModule } from './document-categories/document-categor
 import { AiModule } from './ai/ai.module';
 import { SettingsModule } from './settings/settings.module';
 
+import { MulterModule } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+
 @Module({
   imports: [
     LoggerModule,
@@ -63,8 +66,16 @@ import { SettingsModule } from './settings/settings.module';
         ],
         synchronize: false, 
         logging: ['error'],  
+        timezone: 'Europe/Moscow',
       }),
       inject: [ConfigService],
+    }),
+
+    MulterModule.register({
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 20 * 1024 * 1024,
+      },
     }),
 
     AuthModule,

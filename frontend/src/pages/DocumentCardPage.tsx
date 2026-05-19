@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
-import { getDocumentById, getDocumentAiResult, analyzeDocument } from '../services/api';
+import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument } from '../services/api';
 import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult } from '../types/';
 import Card from '../components/Card';
 import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu';
@@ -16,10 +16,10 @@ const DocumentCardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // AI-анализ (с реальным типом)
   const [aiResult, setAiResult] = useState<DocumentAiResult | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiAnalyzed, setAiAnalyzed] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -32,13 +32,13 @@ const DocumentCardPage: React.FC = () => {
     setError(null);
 
     getDocumentById(Number(id))
-      .then(async (response) => {
+      .then((response) => {
         setData(response);
-        // Если есть сохранённый AI-результат в документе
         if (response.aiResult) {
           setAiResult(response.aiResult);
+          setAiAnalyzed(true);
         } else {
-          await loadAiResult(Number(id));
+          loadAiResult(Number(id));
         }
         setLoading(false);
       })
@@ -53,20 +53,18 @@ const DocumentCardPage: React.FC = () => {
       });
   }, [id]);
 
-  // Загрузка существующего AI-результата
   const loadAiResult = async (docId: number) => {
     try {
       const result = await getDocumentAiResult(docId);
       if (result) {
         setAiResult(result);
+        setAiAnalyzed(true);
       }
     } catch (err) {
       console.error('Ошибка загрузки AI-результата:', err);
-      // 404 — просто нет результата, не показываем ошибку
     }
   };
 
-  // Запуск AI-анализа
   const handleAiAnalysis = async () => {
     if (!id) return;
     
@@ -77,17 +75,31 @@ const DocumentCardPage: React.FC = () => {
       await analyzeDocument(Number(id));
       const result = await getDocumentAiResult(Number(id));
       setAiResult(result);
-      if (result) {
-        setData(prev => prev ? { ...prev, aiResult: result } : prev);
-      }
-    } catch (err: unknown) {
+      setAiAnalyzed(true);
+      setData(prev => prev ? { ...prev, aiResult: result } : prev);
+    } catch (err) {
       console.error('Ошибка AI-анализа:', err);
-      const errorMessage = err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data
-        ? String(err.response.data.message)
-        : 'Не удалось выполнить анализ документа';
-      setAiError(errorMessage);
+      setAiError('Не удалось выполнить анализ документа');
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const handleAiReset = () => {
+    setAiResult(null);
+    setAiAnalyzed(false);
+    setAiError(null);
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    if (!window.confirm('Удалить документ? Это действие нельзя отменить.')) return;
+    try {
+      await deleteDocument(Number(id));
+      navigate('/dashboard/documents');
+    } catch (err) {
+      console.error('Ошибка удаления:', err);
+      alert('Ошибка при удалении документа');
     }
   };
 
@@ -110,11 +122,7 @@ const DocumentCardPage: React.FC = () => {
   };
 
   const overallConfidence = (data.confidenceScore || 0) * 100;
-
-  // Проверяем, есть ли OCR-текст для AI-анализа
   const hasOcrText = !!data.ocrResult?.rawText;
-  const isAiAvailable = hasOcrText;
-  const isAiDone = !!aiResult?.id;
 
   return (
     <div className="document-page">
@@ -128,7 +136,12 @@ const DocumentCardPage: React.FC = () => {
       <div className="doc-header">
         <div>
           <h1>Карточка документа</h1>
-          <div className="doc-number">{data.registrationNumber}</div>
+          <div className="doc-number-row">
+            <div className="doc-number">{data.registrationNumber}</div>
+            <button className="delete-doc-btn" onClick={handleDelete}>
+              Удалить документ
+            </button>
+          </div>
         </div>
       
         <div className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}>
@@ -145,7 +158,7 @@ const DocumentCardPage: React.FC = () => {
             <Card>
               <div className="info-block">
                 <div className="info-row">
-                  <span>Название</span>
+                  <span>Название файла</span>
                   <strong>{data.title}</strong>
                 </div>
                 <div className="info-row">
@@ -219,7 +232,7 @@ const DocumentCardPage: React.FC = () => {
                       <strong>{data.registrationNumber}</strong>
                     </div>
                     <div className="info-row">
-                      <span>Тема</span>
+                      <span>Название файла</span>
                       <strong>{data.title}</strong>
                     </div>
                     <div className="info-row">
@@ -347,29 +360,35 @@ const DocumentCardPage: React.FC = () => {
                 <h3>AI-анализ документа</h3>
                 
                 <div className="ai-analysis-control">
-                  {!isAiAvailable ? (
-                    <div className="ai-warning">
-                      <p>Для запуска AI-анализа необходимо сначала выполнить OCR-распознавание документа</p>
-                    </div>
-                  ) : isAiDone ? (
-                    <div className="ai-success-block">
-                      <p className="ai-success">✓ Анализ выполнен</p>
-                    </div>
+                  {!aiAnalyzed ? (
+                    <>
+                      <button 
+                        className="ai-btn"
+                        onClick={handleAiAnalysis}
+                        disabled={aiLoading || !hasOcrText}
+                      >
+                        {aiLoading ? 'Анализ выполняется...' : 
+                         !hasOcrText ? 'Требуется OCR-текст' :
+                         'Запустить AI-анализ'}
+                      </button>
+                      {!hasOcrText && (
+                        <p className="ai-warning">Для запуска AI-анализа необходимо сначала выполнить OCR-распознавание документа</p>
+                      )}
+                    </>
                   ) : (
-                    <button 
-                      className="btn-primary"
-                      onClick={handleAiAnalysis}
-                      disabled={aiLoading}
-                    >
-                      {aiLoading ? 'Анализ выполняется...' : 'Запустить AI-анализ'}
-                    </button>
+                    <div className="ai-analysis-control">
+                      <p className="ai-success">Анализ выполнен!</p>
+                      <button className="ai-btn-secondary" onClick={handleAiReset}>
+                        Повторить анализ
+                      </button>
+                    </div>
                   )}
                 </div>
                 
                 {aiError && (
                   <div className="ai-error">
                     <p>{aiError}</p>
-                    <button className="btn-secondary" onClick={handleAiAnalysis}>Повторить</button>
+                    <button className="ai-btn-secondary" onClick={handleAiAnalysis}>Повторить</button>
                   </div>
                 )}
                 
@@ -399,7 +418,7 @@ const DocumentCardPage: React.FC = () => {
                     </div>
                     <div className="ai-result-row">
                       <span className="ai-label">Использованная модель:</span>
-                      <span className="ai-value">{aiResult.modelName || aiResult.providerCode || '—'}</span>
+                      <span className="ai-value">{aiResult.modelName || '—'}</span>
                     </div>
                   </div>
                 )}
@@ -413,10 +432,6 @@ const DocumentCardPage: React.FC = () => {
                   <div className="ocr-block">
                     <h3>Исходный текст</h3>
                     <pre>{data.ocrResult?.rawText || 'Текст не распознан'}</pre>
-                  </div>
-                  <div className="ocr-block">
-                    <h3>Нормализованный текст</h3>
-                    <p>{data.ocrResult?.normalizedText || 'Текст не распознан'}</p>
                   </div>
                   {data.ocrResult && (
                     <div className="info-row">

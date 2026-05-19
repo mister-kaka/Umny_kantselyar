@@ -295,6 +295,6 @@ INSERT INTO document_classifications (document_id, type_id, category_id, type_co
 (14, 5, 6, 98.5, 97.2, TRUE),
 (15, 6, 6, 85.5, 83.0, TRUE);
 
--- api_key пока заглушка
+-- api_key (пока тестовый бесплатный ключ от OpenRouter)
 INSERT INTO ai_settings (provider_code, model_name, api_key, base_url, is_active) VALUES
-('deepseek', 'deepseek-4-flash', '2d9bd01814f77aba9f9204742e86a114:8419243e514b0e10ff6ef114118efe2a', 'https://api.deepseek.com', TRUE);
+('deepseek', 'deepseek/deepseek-chat', 'd82134df1601e0540ac2687f7b0ca6d4:5e2b45c666275aea6d76fc81c0bf3cb92b2605798c5d26dc6e301910501c4f96f268946f61c112bf494baac5921c4769774e99762ca6cec908c5a4bc2117891c0b30055dd8a3245d1c1d2b813aecd4cc', 'https://openrouter.ai/api/v1', TRUE);

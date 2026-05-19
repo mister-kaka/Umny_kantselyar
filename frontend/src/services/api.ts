@@ -2,7 +2,8 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings, AiProvider,  UpdateAiSettings, DocumentAiResult, DocumentListItem  } from '../types';
+import { Department, AiSettings, AiProvider,  UpdateAiSettings, DocumentAiResult, DocumentListItem, UploadResponse,
+ExtractTextResponse } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -146,4 +147,53 @@ export const analyzeDocument = async (id: number): Promise<DocumentAiResult> => 
 export const getDocumentAiResult = async (id: number): Promise<DocumentAiResult | null> => {
   const res = await api.get<DocumentAiResult | null>(`/documents/${id}/ai-result`);
   return res.data;
+};
+
+export const testAiConnection = async (data: UpdateAiSettings): Promise<{ status: string; message: string }> => {
+  const res = await api.post<{ status: string; message: string }>('/settings/ai/test-connection', data);
+  return res.data;
+};
+
+export const deleteDocument = async (id: number): Promise<void> => {
+    await api.delete(`/documents/${id}`);
+};
+
+export const uploadDocument = async (
+  file: File
+): Promise<UploadResponse> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await api.post<UploadResponse>(
+      "/documents/upload",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("Ошибка загрузки документа", error);
+    throw error;
+  }
+};
+
+
+export const extractText = async (
+  id: number
+): Promise<ExtractTextResponse> => {
+  try {
+    const res = await api.post<ExtractTextResponse>(
+      `/documents/${id}/extract-text`
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("Ошибка извлечения текста", error);
+    throw error;
+  }
 };
