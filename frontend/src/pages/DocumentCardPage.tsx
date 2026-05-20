@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
-import { getDocumentById, getDocumentAiResult, analyzeDocument } from '../services/api';
+import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument } from '../services/api';
 import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult } from '../types/';
 import Card from '../components/Card';
 import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu';
@@ -91,6 +91,18 @@ const DocumentCardPage: React.FC = () => {
     setAiError(null);
   };
 
+  const handleDelete = async () => {
+    if (!id) return;
+    if (!window.confirm('Удалить документ? Это действие нельзя отменить.')) return;
+    try {
+      await deleteDocument(Number(id));
+      navigate('/dashboard/documents');
+    } catch (err) {
+      console.error('Ошибка удаления:', err);
+      alert('Ошибка при удалении документа');
+    }
+  };
+
   if (loading) {
     return <div className="loading">Загрузка документа...</div>;
   }
@@ -124,7 +136,12 @@ const DocumentCardPage: React.FC = () => {
       <div className="doc-header">
         <div>
           <h1>Карточка документа</h1>
-          <div className="doc-number">{data.registrationNumber}</div>
+          <div className="doc-number-row">
+            <div className="doc-number">{data.registrationNumber}</div>
+            <button className="delete-doc-btn" onClick={handleDelete}>
+              Удалить документ
+            </button>
+          </div>
         </div>
       
         <div className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}>
@@ -141,7 +158,7 @@ const DocumentCardPage: React.FC = () => {
             <Card>
               <div className="info-block">
                 <div className="info-row">
-                  <span>Название</span>
+                  <span>Название файла</span>
                   <strong>{data.title}</strong>
                 </div>
                 <div className="info-row">
@@ -215,7 +232,7 @@ const DocumentCardPage: React.FC = () => {
                       <strong>{data.registrationNumber}</strong>
                     </div>
                     <div className="info-row">
-                      <span>Тема</span>
+                      <span>Название файла</span>
                       <strong>{data.title}</strong>
                     </div>
                     <div className="info-row">
@@ -415,10 +432,6 @@ const DocumentCardPage: React.FC = () => {
                   <div className="ocr-block">
                     <h3>Исходный текст</h3>
                     <pre>{data.ocrResult?.rawText || 'Текст не распознан'}</pre>
-                  </div>
-                  <div className="ocr-block">
-                    <h3>Нормализованный текст</h3>
-                    <p>{data.ocrResult?.normalizedText || 'Текст не распознан'}</p>
                   </div>
                   {data.ocrResult && (
                     <div className="info-row">

@@ -10,6 +10,8 @@ const Header = () => {
   const { collapsed, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
 
+  const navigate = useNavigate();
+
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
       

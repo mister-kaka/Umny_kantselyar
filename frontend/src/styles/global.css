@@ -44,6 +44,8 @@
 
     /* Sidebar */
      --sidebar-width: 260px;
+     --sidebar-width: 260px;
+    --sidebarButtAndHeaderButt-height: 40px; 
 
     /* ошибки */
     --color-error: #d93025;

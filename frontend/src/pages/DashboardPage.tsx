@@ -1,7 +1,7 @@
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import MainMenu from "../components/SubPages/MainMenu";
-import IncomingD from "../components/SubPages/IncomingD";
+import UploadPage from "../components/SubPages/UploadPage";
 import Verification from "../components/SubPages/Verification";
 import Routing from "../components/SubPages/Routing";
 import DocumentsListPage from "../components/SubPages/DocumentsListPage";
@@ -24,7 +24,7 @@ const DashboardContent = () => {
         <Routes>
           <Route path="/" element={<Navigate to="main" replace />} />
           <Route path="main" element={<MainMenu />} />
-          <Route path="incoming" element={<IncomingD />} />
+          <Route path="incoming" element={<UploadPage />} />
           <Route path="verification" element={<Verification />} />
           <Route path="routing" element={<Routing />} />
           <Route path="documents" element={<DocumentsListPage />} />
