@@ -1,0 +1,225 @@
+@import url('./global.css');
+
+:root {
+  --sidebarButtAndHeaderButt-height: 42px;
+}
+
+.header.collapsed {
+  left: 78px;
+  transition: left 0.2s ease;
+}
+
+.button-secondary-with-border {
+  display: flex;
+  background-color: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--border-color);
+  align-items: center;
+  justify-content: center;
+  height: var(--sidebarButtAndHeaderButt-height);
+  width: var(--sidebarButtAndHeaderButt-height);
+  min-width: var(--sidebarButtAndHeaderButt-height);
+  min-height: var(--sidebarButtAndHeaderButt-height);
+  border-radius: var(--radius-button);
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 5.5px;
+}
+
+.button-secondary-with-border:hover {
+  color: var(--color-accent-hover);
+  background-color: rgba(129, 216, 208, 0.08);
+}
+
+.button-secondary-with-border:focus {
+  outline: none;
+}
+
+.profile-block {
+  display: block;
+  align-content: center;
+  justify-items: right;
+  padding-left: 11px;
+  height: var(--sidebarButtAndHeaderButt-height);
+  border-left: 1px solid var(--border-color);
+}
+
+.profile-block > * {
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.profile-image {
+  width: var(--sidebarButtAndHeaderButt-height);
+  height: var(--sidebarButtAndHeaderButt-height);
+  margin-left: 11px;
+  border-radius: 420px;
+}
+
+.Search {
+  display: flex;
+  flex: 1;
+  height: var(--sidebarButtAndHeaderButt-height);
+  min-width: 52px;
+  max-width: none;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--color-bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-button);
+  padding-left: 12px;
+  margin-right: 18.5px;
+}
+
+.Search-icon {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+.Search-input {
+  background-color: transparent;
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+  margin-left: 36px;
+}
+
+.Search-input:focus {
+  outline: none;
+}
+
+.Search:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(129, 216, 208, 0.2);
+  outline: none;
+}
+
+.Casual-icon {
+  width: 24px;
+  margin: 5px;
+  height: 24px;
+}
+
+.burger-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 20px;
+  height: 16px;
+}
+
+.burger-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-accent, #81D8D0);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.mobile-header-arrow {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  -webkit-tap-highlight-color: rgba(129, 216, 208, 0.2);
+}
+
+.mobile-header-arrow:focus {
+  outline: none;
+}
+
+.mobile-header-arrow:active {
+  opacity: 0.7;
+}
+
+.header-action-btn {
+  flex-shrink: 0;
+}
+
+.button-primary.header-action-btn .Casual-icon {
+  width: 26px;
+  height: 26px;
+}
+
+@media (max-width: 768px) {
+  .header {
+    left: 0 !important;
+    width: 100%;
+    padding: 0 12px;
+  }
+
+  .mobile-header-arrow {
+    display: flex;
+    margin-right: 8px;
+  }
+
+  .Search {
+    flex: 1;
+    margin-right: 8px;
+    max-width: none;
+  }
+
+  .profile-block {
+    display: none;
+  }
+
+  .header-action-btn {
+    display: flex;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    margin: 2px;
+  }
+
+  .header-action-btn .Casual-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-action-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    margin: 1px;
+  }
+
+  .header-action-btn .Casual-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 375px) {
+  .header-action-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .header-action-btn .Casual-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 320px) {
+  .header-action-btn {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    min-height: 26px;
+  }
+}

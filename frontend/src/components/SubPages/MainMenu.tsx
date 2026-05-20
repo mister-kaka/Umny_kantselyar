@@ -7,6 +7,7 @@ import "../../styles/DocumentsListPage.css"
 import { getDashboard } from "../../services/api";
 import { DashboardData, GroupedDepartment } from "../../types";
 import { NavLink, useNavigate } from 'react-router-dom';
+import "../../styles/MainMenu.css";
 
 export const statusMap: Record<string, string> = {
     'in_progress': 'В работе',
