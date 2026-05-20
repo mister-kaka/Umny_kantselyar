@@ -5,6 +5,7 @@ import { useSidebar } from "../contexts/SidebarContexts";
 import "../styles/Dashboard.css";
 import Search from "./Search";
 import { useNavigate } from "react-router-dom";
+import "../styles/Header.css";
 
 const Header = () => {
   const { collapsed, toggleSidebar } = useSidebar();

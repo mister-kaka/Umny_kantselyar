@@ -5,12 +5,13 @@ import UploadPage from "../components/SubPages/UploadPage";
 import Verification from "../components/SubPages/Verification";
 import Routing from "../components/SubPages/Routing";
 import DocumentsListPage from "../components/SubPages/DocumentsListPage";
-import DocumentCardPage from "./DocumentCardPage"; // Импортируем карточку сюда
+import DocumentCardPage from "./DocumentCardPage";
 import Departments from "../components/SubPages/Departments";
 import Analytics from "../components/SubPages/Analytics";
 import Settings from "../components/SubPages/Settings";
 import Notifications from "../components/SubPages/Notifications";
 import "../styles/global.css";
+import "../styles/Dashboard.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, useSidebar } from "../contexts/SidebarContexts";
 

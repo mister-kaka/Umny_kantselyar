@@ -1,8 +1,8 @@
 import React from "react";
-import "../styles/global.css"
+import "../styles/global.css";
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useSidebar } from "../contexts/SidebarContexts";
-import "../styles/Dashboard.css"
+import "../styles/Sidebar.css";
 
 const Sidebar = () => {
   const { collapsed, toggleSidebar } = useSidebar();
