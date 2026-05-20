@@ -127,9 +127,9 @@ const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
               onClick={() => handleSelect(doc.id)}
               className="document-search-item">
               <div className="doc-search-main">
-                <span className="doc-search-reg">{doc.senderName}</span>
+                <span className="doc-search-reg">{doc.registrationNumber}</span>
                 <span className="doc-search-title">{doc.title}</span>
-                <span className="doc-search-sender">{doc.registrationNumber}</span>
+                <span className="doc-search-sender">{doc.senderName}</span>
               </div>
               <span className={`status-badge ${getStatusColor(doc.currentStatus)}`}>
                 {translateStatus(doc.currentStatus)}
