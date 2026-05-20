@@ -69,4 +69,12 @@
 - aiResult в карточке документа
 - Логирование всех новых эндпоинтов
 
-
+### Этап 4
+- Загрузка файлов: POST /documents/upload (multipart/form-data, до 20 МБ)
+- Валидация форматов: PDF, DOCX, TXT, XLSX, JPG, PNG, TIFF
+- Извлечение текста: POST /documents/:id/extract-text (pdf-parse, mammoth, xlsx, tesseract.js)
+- Сохранение OCR-результатов в таблицу ocr_results
+- Автоматическая генерация регистрационного номера (ВХ-2026-XXX)
+- Удаление документа: DELETE /documents/:id (удаление из БД и папки uploads)
+- Лимит загрузки до 20 МБ
+- Логирование всех новых эндпоинтов
