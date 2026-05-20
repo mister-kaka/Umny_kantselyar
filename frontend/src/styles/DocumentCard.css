@@ -343,3 +343,343 @@
 .btn-secondary:hover {
   background-color: rgba(129, 216, 208, 0.1);
 }
+/* ===== АДАПТИВНАЯ ВЕРСТКА ===== */
+
+/* Планшеты и небольшие ноутбуки (1024px и меньше) */
+@media (max-width: 1024px) {
+  .document-page {
+    padding: 20px 24px;
+  }
+
+  .two-columns {
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+  }
+
+  .document-preview {
+    padding: 24px;
+  }
+
+  .tab-content {
+    padding: 16px 20px;
+  }
+}
+
+/* Планшеты вертикально (768px и меньше) */
+@media (max-width: 768px) {
+  .document-page {
+    padding: 16px;
+  }
+
+  .doc-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+
+  .doc-header h1 {
+    font-size: 24px;
+  }
+
+  .two-columns {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .right-panel {
+    order: 2; /* Панель справа опускается вниз */
+  }
+
+  .document-preview {
+    order: 1;
+    padding: 20px;
+  }
+
+  .document-preview h2 {
+    font-size: 20px;
+  }
+
+  .tab-content {
+    max-height: 60vh;
+    padding: 16px;
+  }
+
+  .info-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-row span {
+    width: auto;
+  }
+
+  .info-row strong {
+    text-align: left;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    padding: 12px 20px;
+  }
+}
+
+/* Мобильные устройства (480px и меньше) */
+@media (max-width: 480px) {
+  .document-page {
+    padding: 12px;
+  }
+
+  .doc-header h1 {
+    font-size: 20px;
+  }
+
+  .doc-number {
+    font-size: 12px;
+  }
+
+  .confidence-badge {
+    font-size: 12px;
+    padding: 4px 12px;
+  }
+
+  .document-preview {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .document-preview h2 {
+    font-size: 18px;
+  }
+
+  .document-preview .doc-date {
+    font-size: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .document-preview p {
+    font-size: 13px;
+    margin: 12px 0;
+  }
+
+  .party {
+    padding: 12px;
+    margin: 16px 0;
+  }
+
+  .party strong {
+    font-size: 13px;
+  }
+
+  .party p {
+    font-size: 12px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab {
+    flex: none;
+    min-width: 100px;
+    padding: 12px 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .tab-content {
+    padding: 12px;
+    max-height: 55vh;
+  }
+
+  .info-block h3 {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .info-row {
+    padding: 8px 0;
+    font-size: 12px;
+  }
+
+  .file-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .file-size {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .classif-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .classif-row span:first-child {
+    width: auto;
+  }
+
+  .classif-value {
+    padding-left: 0;
+    width: 100%;
+  }
+
+  .entity-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .entity-label {
+    width: auto;
+  }
+
+  .entity-count {
+    margin-left: auto;
+  }
+
+  .ocr-block pre,
+  .ocr-block p {
+    padding: 12px;
+    font-size: 11px;
+  }
+
+  .history-table {
+    font-size: 11px;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 8px 4px;
+  }
+
+  .status-badge {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
+}
+
+/* Очень маленькие устройства (380px и меньше) */
+@media (max-width: 380px) {
+  .document-page {
+    padding: 8px;
+  }
+
+  .doc-header h1 {
+    font-size: 18px;
+  }
+
+  .document-preview {
+    padding: 12px;
+  }
+
+  .tab {
+    min-width: 85px;
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+
+  .tab-content {
+    padding: 10px;
+  }
+
+  .history-table th,
+  .history-table td {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 6px 4px;
+  }
+
+  .history-table td {
+    border-bottom: none;
+  }
+
+  .history-table tr {
+    display: block;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border-color, #e5e5e5);
+    padding-bottom: 8px;
+  }
+
+  .history-table td:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Альбомная ориентация на мобильных */
+@media (max-width: 768px) and (orientation: landscape) {
+  .right-panel {
+    max-height: 80vh;
+  }
+
+  .tab-content {
+    max-height: 65vh;
+  }
+
+  .document-preview {
+    max-height: none;
+  }
+}
+
+/* Desktop с большими экранами (1400px+) */
+@media (min-width: 1400px) {
+  .document-page {
+    max-width: 1600px;
+    padding: 32px 48px;
+  }
+
+  .two-columns {
+    gap: 40px;
+  }
+
+  .document-preview {
+    padding: 40px;
+  }
+
+  .document-preview p {
+    font-size: 15px;
+  }
+
+  .tab-content {
+    padding: 24px 28px;
+  }
+}
+
+/* Retina-экраны и улучшенная читаемость */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .document-preview p,
+  .info-row,
+  .file-row,
+  .entity-row {
+    font-weight: 400;
+  }
+}
+
+/* Улучшение touch-целей для мобильных */
+@media (max-width: 768px) {
+  .tab,
+  .btn-primary,
+  .btn-secondary,
+  .file-row {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(129, 216, 208, 0.2);
+  }
+
+  .tab:active {
+    opacity: 0.7;
+  }
+
+  .btn-primary:active,
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+}
