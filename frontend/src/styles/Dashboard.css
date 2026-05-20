@@ -247,7 +247,7 @@ tbody tr {
 .button-hide {
   display: flex;
   background-color: transparent;
-  color: var(--color-accent);  
+  color: var(--text-tertiary);
   border: none;
   align-items: center;
   justify-content: center;
@@ -264,8 +264,8 @@ tbody tr {
 }
 
 .button-hide:hover {
-  color: var(--color-accent-hover); 
-  background-color: var(--optional-Hover);
+  color: var(--text-secondary);
+  background-color: rgba(105, 105, 105, 0.08);
 }
 
 .button-hide:focus{
