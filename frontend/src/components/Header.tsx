@@ -1,22 +1,14 @@
 import "../styles/global.css";
-import React, { useState } from "react";
+import "../styles/Search.css";
 import "../contexts/SidebarContexts";
 import { useSidebar } from "../contexts/SidebarContexts";
 import "../styles/Dashboard.css";
+import Search from "./Search";
+import { useNavigate } from "react-router-dom";
 
-interface HeaderProps {
-  onSearch?: (query: string) => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ onSearch }) => {
+const Header = () => {
   const { collapsed, toggleSidebar } = useSidebar();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    if (onSearch) onSearch(value);
-  };
+  const navigate = useNavigate();
 
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
@@ -30,18 +22,11 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
         </span>
       </button>
 
-      <div className="Search">
-        <img src="/DashboardPage_Images/Search.jpg" className="Search-icon" alt="🔍" />
-        <input 
-          type="text"
-          placeholder="Поиск по документам, номерам, отправителям"
-          value={searchQuery}
-          onChange={handleChange}
-          className="Search-input"
-        />
+      <div className="header-search-wrapper">
+        <Search />
       </div>
 
-      <button className="button-primary header-action-btn">
+      <button className="button-primary header-action-btn" onClick={() => navigate('/dashboard/incoming')}>
         <img src="/DashboardPage_Images/Upload.png" className="Casual-icon" alt="📩" />
       </button>
       <button className="button-secondary-with-border header-action-btn">
