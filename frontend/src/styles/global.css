@@ -383,3 +383,46 @@ ul, ol {
 input, textarea, select {
   font-family: 'Inter', sans-serif;
 }
+
+/* Адаптив - глобальные правила */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .status-badge {
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+
+  .confidence-badge {
+    width: fit-content;
+  }
+
+  .table-wrapper {
+    position: relative;
+  }
+
+  .table-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 28px;
+    background: linear-gradient(to right, rgba(255,255,255,0), var(--color-bg-surface, #ffffff));
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+
+  .status-badge {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
+}

@@ -199,7 +199,6 @@
 
 /* Адаптив */
 
-/* Планшеты и небольшие ноутбуки (1024px и меньше) */
 @media (max-width: 1024px) {
   .filtersButtsWrapper {
     gap: 4px;
@@ -233,7 +232,6 @@
   }
 }
 
-/* Планшеты вертикально (768px и меньше) */
 @media (max-width: 768px) {
   .filtersButtsWrapper {
     flex-wrap: wrap;
@@ -256,6 +254,18 @@
   .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  .table-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 28px;
+    background: linear-gradient(to right, rgba(255,255,255,0), var(--color-bg-surface, #ffffff));
+    pointer-events: none;
   }
 
   .data-table {
@@ -288,7 +298,7 @@
     font-size: 12px;
   }
 
-   .dropdown-button,
+  .dropdown-button,
   .removeFiltersButt,
   .apply-button,
   tbody tr {
@@ -300,71 +310,8 @@
   .removeFiltersButt:active {
     opacity: 0.7;
   }
-
-  .apply-button:active {
-    transform: scale(0.96);
-  }
-
-  tbody tr:active {
-    background-color: rgba(129, 216, 208, 0.08);
-  }
-
-  .dropdown-menu li {
-    padding: 10px 16px;
-    font-size: 14px;
-  }
 }
 
-/* Средние мобильные (650px и меньше) */
-@media (max-width: 650px) {
-  .filtersButtsWrapper {
-    gap: 4px;
-    padding: 8px;
-  }
-
-  .dropdown-button {
-    padding: 4px 8px;
-    font-size: 11px;
-    height: 34px;
-  }
-
-  .DropButt-icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  .removeFiltersButt {
-    height: 34px;
-    font-size: 11px;
-    padding: 0px 8px;
-  }
-
-  .data-table {
-    min-width: 540px;
-    font-size: 11px;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: 0 6px;
-    height: 36px;
-  }
-
-  .apply-button {
-    padding: 4px 8px;
-    font-size: 11px;
-  }
-
-  .paginationWrapper span {
-    font-size: 11px;
-  }
-
-  .dropdown-button .DropButt-icon {
-    display: none;
-  }
-}
-
-/* Мобильные устройства (480px и меньше) */
 @media (max-width: 480px) {
   .filtersButtsWrapper {
     flex-direction: column;
@@ -392,6 +339,8 @@
     order: 10;
     margin-top: 4px;
     border: 1px dashed var(--color-accent);
+    background: transparent;
+    color: var(--color-accent);
   }
 
   .dropdown-menu {
@@ -455,7 +404,6 @@
   }
 }
 
-/* Маленькие мобильные (375px и меньше) */
 @media (max-width: 375px) {
   .dropdown-button {
     height: 36px;
@@ -501,7 +449,6 @@
   }
 }
 
-/* Самые маленькие (320px) */
 @media (max-width: 320px) {
   .dropdown-button {
     height: 32px;
@@ -540,38 +487,6 @@
   }
 }
 
-/* Альбомная ориентация на мобильных */
-@media (max-width: 768px) and (orientation: landscape) {
-  .filtersButtsWrapper {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .dropdown {
-    width: auto;
-  }
-
-  .dropdown-button {
-    width: auto;
-  }
-
-  .removeFiltersButt {
-    width: auto;
-  }
-
-  .data-table th:nth-child(6),
-  .data-table td:nth-child(6),
-  .data-table th:nth-child(8),
-  .data-table td:nth-child(8) {
-    display: table-cell;
-  }
-
-  .data-table {
-    min-width: 700px;
-  }
-}
-
-/* Большие экраны (1400px+) */
 @media (min-width: 1400px) {
   .data-table {
     font-size: 14px;
@@ -589,7 +504,6 @@
   }
 }
 
-/* Retina-экраны */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   .data-table td,
   .dropdown-button,
