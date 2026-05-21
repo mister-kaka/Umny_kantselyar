@@ -1,3 +1,5 @@
+import { AiResultResponseDto } from '../../ai/dto/ai-result.dto';
+
 export class DocumentFileDto {
     id!: number;
     fileName!: string;
@@ -33,6 +35,13 @@ export class DocumentRouteDto {
     routedAt!: Date;
 }
 
+export class DocumentSourceDto {
+    sourceType!: string;
+    organizationName!: string | null;
+    senderName!: string | null;
+    contactInfo!: string | null;
+}
+
 export class DocumentCardDto {
     id!: number;
     registrationNumber!: string;
@@ -52,4 +61,8 @@ export class DocumentCardDto {
     ocrResult!: OcrResultDto | null;
     classification!: DocumentClassificationDto | null;
     routes!: DocumentRouteDto[];
+
+     source!: DocumentSourceDto | null;
+
+     aiResult!: AiResultResponseDto | null;
 }

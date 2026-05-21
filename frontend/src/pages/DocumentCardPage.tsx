@@ -1,153 +1,365 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom'; 
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
-import { getDocumentById } from '../services/api';
-import { DocumentCard } from '../types';
+import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument } from '../services/api';
+import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult } from '../types/';
+import Card from '../components/Card';
+import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu';
 
 const DocumentCardPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); 
-  const [activeTab, setActiveTab] = useState<"overview" | "ocr" | "entities" | "history" >("overview");
-  
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "ocr" | "history">("overview");
+
+  const [data, setData] = useState<DocumentCardType | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [aiResult, setAiResult] = useState<DocumentAiResult | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiAnalyzed, setAiAnalyzed] = useState(false);
+
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!id) {
+      setError("ID документа не указан");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    getDocumentById(Number(id))
+      .then((response) => {
+        setData(response);
+        if (response.aiResult) {
+          setAiResult(response.aiResult);
+          setAiAnalyzed(true);
+        } else {
+          loadAiResult(Number(id));
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (err.response?.status === 404) setError("Документ не найден");
+        else setError("Ошибка загрузки документа");
+        setLoading(false);
+      });
+  }, [id]);
+
+  const loadAiResult = async (docId: number) => {
+    try {
+      const result = await getDocumentAiResult(docId);
+      if (result) {
+        setAiResult(result);
+        setAiAnalyzed(true);
+      }
+    } catch {}
+  };
+
+  const handleAiAnalysis = async () => {
+    if (!id) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      await analyzeDocument(Number(id));
+      const result = await getDocumentAiResult(Number(id));
+      setAiResult(result);
+      setAiAnalyzed(true);
+      setData(prev => prev ? { ...prev, aiResult: result } : prev);
+    } catch {
+      setAiError('Не удалось выполнить анализ документа');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    if (!window.confirm('Удалить документ? Это действие нельзя отменить.')) return;
+    try {
+      await deleteDocument(Number(id));
+      navigate('/dashboard/documents');
+    } catch {
+      alert('Ошибка при удалении документа');
+    }
+  };
+
+  const handleCopyOcr = () => {
+    if (!data?.ocrResult?.rawText) return;
+    navigator.clipboard.writeText(data.ocrResult.rawText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  if (loading) return <div className="doc-loading">Загрузка документа...</div>;
+  if (error) return <div className="doc-error">{error}</div>;
+  if (!data) return <div className="doc-error">Документ не найден</div>;
+
+  const getConfidenceClass = (percent: number): string => {
+    if (percent >= 90) return "confidence-high";
+    if (percent >= 70) return "confidence-medium";
+    return "confidence-low";
+  };
+
+  const overallConfidence = (data.confidenceScore || 0) * 100;
+  const hasOcrText = !!data.ocrResult?.rawText;
+
   return (
     <div className="document-page">
-      <div className="doc-header">
-        <div>
-          <h1>Проверка документа</h1>
-          <div className="doc-number">ВХ-2026-001234</div>
-        </div>
-        <div className="confidence-badge">Уверенность: 94%</div>
+      <div className="doc-topbar">
+        <button className="back-to-list-btn" onClick={() => navigate('/dashboard/documents')}>
+          ← Все документы
+        </button>
+        <button className="delete-doc-btn" onClick={handleDelete}>
+          Удалить документ
+        </button>
       </div>
 
-      <div className="two-columns">
-        <div className="document-preview">
-          <h2>ДОГОВОР ПОСТАВКИ № 2026/ТТ-145</h2>
-          <p className="doc-date">От 20 марта 2026 года</p>
-          <p>Настоящий договор заключен между:</p>
+      <div className="doc-header">
+        <div className="doc-header-left">
+          <h1 className="doc-title">Карточка документа</h1>
+          <span className="doc-number">{data.registrationNumber}</span>
+        </div>
+        <div className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}>
+          Уверенность: {overallConfidence.toFixed(0)}%
+        </div>
+      </div>
 
-          <div className="party">
-            <strong>Заказчик:</strong>
-            <p>АО "Московский Метрополитен"<br />Адрес: г. Москва, ул. Каланчевская, д. 13<br />ИНН: 7702005605</p>
-          </div>
+      <div className="doc-info-panel">
+        <div className="doc-info-item">
+          <span className="doc-info-label">Название файла</span>
+          <span className="doc-info-value">{data.title}</span>
+        </div>
+        <div className="doc-info-divider" />
+        <div className="doc-info-item">
+          <span className="doc-info-label">Дата поступления</span>
+          <span className="doc-info-value">{new Date(data.receivedDate).toLocaleDateString('ru-RU')}</span>
+        </div>
+        <div className="doc-info-divider" />
+        <div className="doc-info-item">
+          <span className="doc-info-label">Отправитель</span>
+          <span className="doc-info-value">{data.senderName}</span>
+        </div>
+        <div className="doc-info-divider" />
+        <div className="doc-info-item">
+          <span className="doc-info-label">Тип документа</span>
+          <span className="doc-info-value">{data.documentType ?? '-'}</span>
+        </div>
+        <div className="doc-info-divider" />
+        <div className="doc-info-item">
+          <span className="doc-info-label">Статус</span>
+          <span className={`status-badge ${getStatusColor(data.currentStatus)}`}>
+            {translateStatus(data.currentStatus)}
+          </span>
+        </div>
+        <div className="doc-info-divider" />
+        <div className="doc-info-item">
+          <span className="doc-info-label">Текущий отдел</span>
+          <span className="doc-info-value">{data.routes?.[0]?.departmentName ?? 'Не назначен'}</span>
+        </div>
+      </div>
 
-          <div className="party">
-            <strong>Поставщик:</strong>
-            <p>ООО "Транспортные Технологии"<br />Адрес: г. Москва, Варшавское шоссе, д. 47<br />ИНН: 7725123456</p>
-          </div>
-
-          <p><strong>Предмет договора:</strong> Поставка запасных частей для вагонов метро модели 81-765/766/767 "Москва" в количестве согласно спецификации.</p>
-          <p><strong>Сумма договора:</strong> 12 450 000 (Двенадцать миллионов четыреста пятьдесят тысяч) рублей 00 копеек, включая НДС 20%.</p>
-          <p><strong>Срок поставки:</strong> до 30 июня 2026 года.</p>
+      <div className="doc-tabs-wrapper">
+        <div className="tabs">
+          <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Обзор</button>
+          <button className={`tab ${activeTab === "ai" ? "active" : ""}`} onClick={() => setActiveTab("ai")}>AI-анализ</button>
+          <button className={`tab ${activeTab === "ocr" ? "active" : ""}`} onClick={() => setActiveTab("ocr")}>Текст OCR</button>
+          <button className={`tab ${activeTab === "history" ? "active" : ""}`} onClick={() => setActiveTab("history")}>История маршрутов</button>
         </div>
 
-        <div className="right-panel">
-          <div className="tabs">
-            <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Обзор</button>
-            <button className={`tab ${activeTab === "ocr" ? "active" : ""}`} onClick={() => setActiveTab("ocr")}>Текст OCR</button>
-            <button className={`tab ${activeTab === "entities" ? "active" : ""}`} onClick={() => setActiveTab("entities")}>Сущности</button>
-            <button className={`tab ${activeTab === "history" ? "active" : ""}`} onClick={() => setActiveTab("history")}>История</button>
-          </div>
-
-          <div className="tab-content">
-            {activeTab === "overview" && (
-              <>
+        <div className="tab-content">
+          {activeTab === "overview" && (
+            <div className="overview-grid">
+              <Card>
+                <h3 className="card-section-title">Общая информация</h3>
                 <div className="info-block">
-                  <h3>Общая информация</h3>
-                  <div className="info-row"><span>Регистрационный номер:</span><strong>ВХ-2026-001234</strong></div>
-                  <div className="info-row"><span>Тема документа:</span><strong>Договор поставки товаров №45/23</strong></div>
-                  <div className="info-row"><span>Отправитель:</span><strong>ООО "Ромашка", Иванов И.И.</strong></div>
-                  <div className="info-row"><span>Дата поступления:</span><strong>23.04.2026</strong></div>
-                  <div className="info-row"><span>Текущий статус:</span><strong>На согласовании</strong></div>
-                  <div className="info-row"><span>Тип документа:</span><strong>Договор</strong></div>
-                  <div className="info-row"><span>Категория:</span><strong>Коммерческий</strong></div>
-                  <div className="info-row"><span>Кто создал запись:</span><strong>Петрова Анна Сергеевна</strong></div>
-                  <div className="info-row"><span>Текущий отдел:</span><strong>Юридический отдел</strong></div>
+                  <div className="info-row"><span>Рег. номер</span><strong>{data.registrationNumber}</strong></div>
+                  <div className="info-row"><span>Название файла</span><strong>{data.title}</strong></div>
+                  <div className="info-row"><span>Отправитель</span><strong>{data.senderName}</strong></div>
+                  <div className="info-row"><span>Дата поступления</span><strong>{new Date(data.receivedDate).toLocaleDateString('ru-RU')}</strong></div>
+                  <div className="info-row"><span>Тип документа</span><strong>{data.documentType ?? '-'}</strong></div>
+                  <div className="info-row"><span>Категория</span><strong>{data.category ?? '-'}</strong></div>
+                  <div className="info-row"><span>Внёс в систему</span><strong>{data.createdBy}</strong></div>
+                  <div className="info-row"><span>Статус</span><span className={`status-badge ${getStatusColor(data.currentStatus)}`}>{translateStatus(data.currentStatus)}</span></div>
+                  <div className="info-row"><span>Текущий отдел</span><strong>{data.routes?.[0]?.departmentName ?? 'Не назначен'}</strong></div>
                 </div>
+              </Card>
 
-                <div className="info-block">
-                  <h3>Связанные файлы</h3>
-                  <div className="file-row"><span>📄</span> dogovor_45.pdf <span className="file-size">2.3 МБ</span></div>
-                  <div className="file-row"><span>📊</span> specifikaciya.xlsx <span className="file-size">1.1 МБ</span></div>
-                  <div className="file-row"><span>🖊️</span> podpis.pdf <span className="file-size">0.8 МБ</span></div>
-                </div>
-
-                <div className="info-block">
-                  <h3>Классификация</h3>
-                  <div className="classif-row">
-                    <span>Тип документа:</span>
-                    <span className="classif-value">Договор</span>
-                    <span className="confidence-chip confidence-high">94%</span>
+              <Card>
+                <h3 className="card-section-title">Классификация</h3>
+                <div className="classif-list">
+                  <div className="classif-item">
+                    <span className="classif-label">Тип документа</span>
+                    <div className="classif-right">
+                      <span className="classif-value">{data.classification?.type || '-'}</span>
+                      <span className={`confidence-chip ${getConfidenceClass(data.classification?.typeConfidence || 0)}`}>{data.classification?.typeConfidence || 0}%</span>
+                    </div>
                   </div>
-                  <div className="classif-row">
-                    <span>Категория:</span>
-                    <span className="classif-value">Коммерческий</span>
-                    <span className="confidence-chip confidence-medium">91%</span>
+                  <div className="classif-item">
+                    <span className="classif-label">Категория</span>
+                    <div className="classif-right">
+                      <span className="classif-value">{data.classification?.category || '-'}</span>
+                      <span className={`confidence-chip ${getConfidenceClass(data.classification?.categoryConfidence || 0)}`}>{data.classification?.categoryConfidence || 0}%</span>
+                    </div>
                   </div>
                 </div>
+              </Card>
 
-                <div className="action-buttons">
-                  <button className="btn-primary">Подтвердить классификацию</button>
-                  <button className="btn-secondary">Редактировать поля</button>
+              {data.source && (
+                <Card>
+                  <h3 className="card-section-title">Источник документа</h3>
+                  <div className="info-block">
+                    <div className="info-row"><span>Тип источника</span><strong>{data.source.sourceType === 'organization' ? 'Организация' : data.source.sourceType === 'individual' ? 'Физ. лицо' : data.source.sourceType}</strong></div>
+                    {data.source.organizationName && <div className="info-row"><span>Организация</span><strong>{data.source.organizationName}</strong></div>}
+                    {data.source.senderName && <div className="info-row"><span>Отправитель</span><strong>{data.source.senderName}</strong></div>}
+                    {data.source.contactInfo && <div className="info-row"><span>Контакты</span><strong>{data.source.contactInfo}</strong></div>}
+                  </div>
+                </Card>
+              )}
+
+              <Card>
+                <h3 className="card-section-title">Связанные файлы</h3>
+                {data.files?.length > 0 ? (
+                  <div className="files-list">
+                    {data.files.map((file: DocumentFile) => (
+                      <div key={file.id} className="file-row">
+                        <span className="file-icon" />
+                        <span className="file-name">{file.fileName}</span>
+                        <span className="file-size">{(file.fileSize / 1024).toFixed(0)} КБ</span>
+                        <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${file.filePath}`} download={file.fileName} className="file-download" target="_blank" rel="noopener noreferrer">Скачать</a>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-message">Нет файлов</div>
+                )}
+              </Card>
+
+              <Card>
+                <h3 className="card-section-title">О процентах</h3>
+                <div className="percentage-legend">
+                  <div className="legend-item">
+                    <span className="legend-dot" />
+                    <span className="legend-text"><strong>Уверенность:</strong> общая оценка достоверности документа</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-dot" />
+                    <span className="legend-text"><strong>Классификация:</strong> точность определения типа и категории</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-dot" />
+                    <span className="legend-text"><strong>Точность:</strong> качество извлечения текста из файла</span>
+                  </div>
                 </div>
-              </>
-            )}
+              </Card>
+            </div>
+          )}
 
-           
-            {activeTab === "ocr" && (
-              <>
-                <div className="ocr-block">
-                  <h3>Raw text</h3>
-                  <pre> ДОГОВОР ПОСТАВКИ № 2026/ТТ-145
-                        От 20 марта 2026 года
-
-                        Настоящий договор заключен между:
-                        Заказчик: АО "Московский Метрополитен"
-
-                        Адрес: г. Москва, ул. Каланчевская, д. 13
-                        ИНН: 7702005605
-
-                        Поставщик: ООО "Транспортные Технологии"
-                        Адрес: г. Москва, Варшавское шоссе, д. 47
-                        ИНН: 7725123456
-
-                        Предмет договора: Поставка запасных частей для вагонов метро модели 81-765/766/767 "Москва" в количестве согласно спецификации.
-
-                        Сумма договора: 12 450 000 (Двенадцать миллионов четыреста пятьдесят тысяч) рублей 00 копеек, включая НДС 20%.
-
-                        Срок поставки: до 30 июня 2026 года.</pre>
+          {activeTab === "ai" && (
+            <div className="ai-tab-layout">
+              <Card>
+                <h3 className="card-section-title">AI-анализ документа</h3>
+                <div className="ai-analysis-control">
+                  {!aiAnalyzed ? (
+                    <>
+                      <button className="ai-btn" onClick={handleAiAnalysis} disabled={aiLoading || !hasOcrText}>
+                        {aiLoading ? 'Анализ выполняется...' : !hasOcrText ? 'Требуется OCR-текст' : 'Запустить AI-анализ'}
+                      </button>
+                      {!hasOcrText && <p className="ai-warning">Для запуска AI-анализа необходимо сначала загрузить документ через сканирование</p>}
+                    </>
+                  ) : (
+                    <>
+                      <p className="ai-success">Анализ выполнен</p>
+                      <button className="ai-btn-secondary" onClick={() => { setAiResult(null); setAiAnalyzed(false); setAiError(null); }}>Повторить анализ</button>
+                    </>
+                  )}
                 </div>
-                <div className="ocr-block">
-                  <h3>Normalized text</h3>
-                  <p>Договор поставки №2026/ТТ-145 от 20.03.2026 между АО "Московский Метрополитен" и ООО "Транспортные Технологии". Предмет: поставка запасных частей для вагонов метро. Сумма: 12 450 000 руб. Срок: 30.06.2026.</p>
-                </div>
-              </>
-            )}
+                {aiError && (
+                  <div className="ai-error">
+                    <p>{aiError}</p>
+                    <button className="ai-btn-secondary" onClick={handleAiAnalysis}>Повторить</button>
+                  </div>
+                )}
+              </Card>
 
-            {activeTab === "entities" && (
-              <div className="entities-list">
-                <div className="entity-row"><span className="entity-label">Организация</span><span className="entity-value">ООО "Транспортные Технологии"</span><span className="entity-count">3x</span></div>
-                <div className="entity-row"><span className="entity-label">Организация</span><span className="entity-value">АО "Московский Метрополитен"</span><span className="entity-count">2x</span></div>
-                <div className="entity-row"><span className="entity-label">Дата</span><span className="entity-value">20.03.2026</span><span className="entity-count">1x</span></div>
-                <div className="entity-row"><span className="entity-label">Дата</span><span className="entity-value">30.06.2026</span><span className="entity-count">1x</span></div>
-                <div className="entity-row"><span className="entity-label">Деньги</span><span className="entity-value">12 450 000 руб.</span><span className="entity-count">1x</span></div>
-                <div className="entity-row"><span className="entity-label">ИНН</span><span className="entity-value">7702005605</span><span className="entity-count">1x</span></div>
-                <div className="entity-row"><span className="entity-label">ИНН</span><span className="entity-value">7725123456</span><span className="entity-count">1x</span></div>
+              {aiResult && (
+                <div className="ai-results-grid">
+                  <div className="ai-result-card">
+                    <div className="ai-result-card-label">Тип документа</div>
+                    <div className="ai-result-card-value">{aiResult.documentTypeSuggested || '-'}</div>
+                  </div>
+                  <div className="ai-result-card">
+                    <div className="ai-result-card-label">Категория</div>
+                    <div className="ai-result-card-value">{aiResult.categorySuggested || '-'}</div>
+                  </div>
+                  <div className="ai-result-card">
+                    <div className="ai-result-card-label">Рекомендуемый отдел</div>
+                    <div className="ai-result-card-value">{aiResult.departmentSuggested || '-'}</div>
+                  </div>
+                  <div className="ai-result-card">
+                    <div className="ai-result-card-label">Уверенность модели</div>
+                    <div className="ai-result-card-value">
+                      <span className={`confidence-chip ${getConfidenceClass(aiResult.confidenceScore || 0)}`}>{aiResult.confidenceScore || 0}%</span>
+                    </div>
+                  </div>
+                  <div className="ai-result-card ai-result-card--wide">
+                    <div className="ai-result-card-label">Краткая сводка</div>
+                    <div className="ai-result-card-value">{aiResult.summaryText || '-'}</div>
+                  </div>
+                  <div className="ai-result-card ai-result-card--wide">
+                    <div className="ai-result-card-label">Использованная модель</div>
+                    <div className="ai-result-card-value ai-result-card-value--muted">{aiResult.modelName || '-'}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "ocr" && (
+            <Card>
+              <div className="ocr-header">
+                <h3 className="card-section-title">Распознанный текст</h3>
+                <div className="ocr-header-right">
+                  {data.ocrResult && (
+                    <span className={`confidence-chip ${getConfidenceClass(data.ocrResult.ocrConfidence)}`}>
+                      Точность: {data.ocrResult.ocrConfidence}%
+                    </span>
+                  )}
+                  <button className="ocr-copy-btn" onClick={handleCopyOcr} disabled={!data.ocrResult?.rawText}>
+                    {copied ? 'Скопировано' : 'Копировать'}
+                  </button>
+                </div>
               </div>
-            )}
+              <pre className="ocr-text">{data.ocrResult?.rawText || 'Текст не распознан'}</pre>
+            </Card>
+          )}
 
-            {activeTab === "history" && (
-              <table className="history-table">
-                <thead>
-                  <tr><th>Отдел</th><th>Статус</th><th>Причина</th><th>Дата</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>Канцелярия</td><td><span className="status-badge green">Завершено</span></td><td>Регистрация входящего документа</td><td>23.04.2026 09:15</td></tr>
-                  <tr><td>Юридический отдел</td><td><span className="status-badge orange">На рассмотрении</span></td><td>Проверка договора на соответствие законодательству</td><td>23.04.2026 11:30</td></tr>
-                  <tr><td>Отдел закупок</td><td><span className="status-badge blue">Ожидает</span></td><td>Согласование бюджета и условий поставки</td><td>24.04.2026</td></tr>
-                </tbody>
-              </table>
-            )}
-          </div>
+          {activeTab === "history" && (
+            <Card>
+              <h3 className="card-section-title">История маршрутов</h3>
+              <div className="table-wrapper">
+                <table className="history-table">
+                  <thead>
+                    <tr><th>Отдел</th><th>Статус</th><th>Причина</th><th>Дата</th></tr>
+                  </thead>
+                  <tbody>
+                    {data.routes.map((route: DocumentRoute, idx: number) => (
+                      <tr key={idx}>
+                        <td>{route.departmentName}</td>
+                        <td><span className={`status-badge ${getStatusColor(route.routeStatus)}`}>{translateStatus(route.routeStatus)}</span></td>
+                        <td>{route.routeReason || '-'}</td>
+                        <td>{new Date(route.routedAt).toLocaleDateString('ru-RU')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>

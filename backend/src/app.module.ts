@@ -16,6 +16,8 @@ import { DocumentSource } from './entities/document-source.entity';
 import { DocumentFile } from './entities/document-file.entity';
 import { OcrResult } from './entities/ocr-result.entity';
 import { DocumentClassification } from './entities/document-classification.entity';
+import { AiSetting } from './entities/ai-setting.entity';
+import { DocumentAiResult } from './entities/document-ai-result.entity';
 
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
@@ -23,6 +25,11 @@ import { DocumentsModule } from './documents/documents.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { DocumentTypesModule } from './document-types/document-types.module';
 import { DocumentCategoriesModule } from './document-categories/document-categories.module';
+import { AiModule } from './ai/ai.module';
+import { SettingsModule } from './settings/settings.module';
+
+import { MulterModule } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 
 @Module({
   imports: [
@@ -54,11 +61,21 @@ import { DocumentCategoriesModule } from './document-categories/document-categor
           DocumentFile,         
           OcrResult,             
           DocumentClassification,
+          AiSetting,
+          DocumentAiResult,
         ],
         synchronize: false, 
-        logging: true,   
+        logging: ['error'],  
+        timezone: 'Europe/Moscow',
       }),
       inject: [ConfigService],
+    }),
+
+    MulterModule.register({
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 20 * 1024 * 1024,
+      },
     }),
 
     AuthModule,
@@ -67,6 +84,8 @@ import { DocumentCategoriesModule } from './document-categories/document-categor
     DepartmentsModule,
     DocumentTypesModule,
     DocumentCategoriesModule,
+    SettingsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

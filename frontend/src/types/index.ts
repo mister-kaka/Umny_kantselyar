@@ -4,6 +4,7 @@ export interface LoginResponse {
 
 export interface RecentDocument {
   id: number;
+  registrationNumber: string;
   title: string;
   status: string;
   date: string;
@@ -47,23 +48,31 @@ export interface DocumentListItem {
   department: string;
 }
 
+export interface DocumentSource {
+    sourceType: string;
+    organizationName: string | null;
+    senderName: string | null;
+    contactInfo: string | null;
+}
+
 export interface DocumentCard {
   id: number;
   registrationNumber: string;
   title: string;
   senderName: string;
   receivedDate: string;
-  documentType: string;
-  category: string;
+  documentType: string | null;   
+  category: string | null;       
   currentStatus: string;
-  department: string;
   files: DocumentFile[];
-  createdBy: string;          
-  createdAt: string;          
-  confidenceScore: number | null; 
-  ocrResult: OcrResult | null; 
-  classification: DocumentClassification;
+  createdBy: string;
+  createdAt: string;
+  confidenceScore: number | null;
+  ocrResult: OcrResult | null;
+  classification: DocumentClassification | null; 
   routes: DocumentRoute[];
+  source: DocumentSource | null;  
+  aiResult: DocumentAiResult | null;
 }
 
 export interface DocumentFile {
@@ -135,4 +144,65 @@ export interface Department {
   name: string;
   code: string;
   isActive: boolean;
+}
+
+
+export interface AiSettings {
+  id: number;
+  providerCode: string;
+  modelName: string;
+  apiKey: string;
+  baseUrl: string | null;
+  isActive: boolean;
+  updatedAt: string;
+}
+
+export interface UpdateAiSettings {
+  providerCode: string;
+  modelName: string;
+  apiKey: string;
+  baseUrl?: string | null;
+}
+
+export interface AiProvider {
+  providerCode: string;
+  providerName: string;
+  models: AiModel[];
+}
+
+export interface AiModel {
+  modelCode: string;
+  modelName: string;
+}
+
+export interface DocumentAiResult {
+  id: number;
+  documentId: number;
+  documentTypeSuggested: string | null;
+  categorySuggested: string | null;
+  summaryText: string | null;
+  departmentSuggested: string | null;
+  confidenceScore: number | null;
+  providerCode: string;
+  modelName: string;
+  createdAt: string;
+}
+
+export interface UploadResponse {
+  id: number;
+  registrationNumber: string;
+  fileName: string;
+  fileSize: number;
+  filePath: string;
+  uploadedAt: string;
+}
+
+export interface ExtractTextResponse {
+  id: number;
+  documentId: number;
+  rawText: string;
+  normalizedText: string;
+  language: string;
+  ocrConfidence: number;
+  processedAt: string;
 }

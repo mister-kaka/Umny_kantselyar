@@ -1,47 +1,29 @@
 ﻿# Backend для Умного канцеляра
 
-## Быстрый запуск проекта (части бека):
+# Быстрый старт проекта (Backend): 
 
-### 1. Установка зависимостей
-- cd backend
-- npm install
+ВАЖНО: для ПОЛНОЦЕННОГО запуска проекта, необходимо поднять и бэкенд и фронтенд.
 
-### 2. Настройка окружения
-cp .env.example .env 
+### Требования
+- Node.js 18+
+- Docker Desktop
+- npm 9+
 
-В файле .env необходимо внести следующие переменные следующие переменные:
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=12345
-DB_NAME=umny_kan_db
-PORT=3000
-JWT_SECRET=your_secret_key_here //любой секретный ключ
+### 1. Запуск базы данных (PostgreSQL в Docker) 
+- docker должен быть запущен фоново
+- docker run --name umny_kan_postgres -e POSTGRES_PASSWORD=12345 -e POSTGRES_USER=postgres -e POSTGRES_DB=umny_kan_db -p 5432:5432 -d postgres:15 
 
-Важно: .env - твои личные настройки (не в Git), как должен выглядеть файл .evn можно посмотреть в файле .env.exmple
-
-### 3. Запуск PostgreSQL в Docker
-- docker run --name umny_kan_postgres -e POSTGRES_PASSWORD=12345 -e POSTGRES_USER=postgres -e POSTGRES_DB=umny_kan_db -p 5432:5432 -d postgres:15
-
- Требования:
-- Установленный Docker Desktop
-- PostgreSQL 15 (запускается в Docker)
-  
-### 4. Инициализация базы данных (только при первом запуске)
-- docker cp src/db/seed.sql umny_kan_postgres:/seed.sql
+### 2 Инициализация базы данных
+- docker cp backend/src/db/seed.sql umny_kan_postgres:/seed.sql
 - docker exec -it umny_kan_postgres psql -U postgres -d umny_kan_db -c "\encoding UTF8" -f /seed.sql
 
-### 5. Запуск бэкенда
+### 3. Запуск бэкенда
+- cd backend
+- npm install
+- cp .env.example .env
 - npm run start:dev
+- Бэкенд будет доступен на **http://localhost:3000**
 
-### Проверка работоспособности 
-Открой браузер: http://localhost:3000 - должна появиться надпись "Hello World!"
-После инициализации в базе данных будут:
-- 7 таблиц (roles, users, departments, document_types, document_categories, documents, document_routes)
-- 2 роли (Администратор, Пользователь)
-- 7 пользователей (разработчики)
-- 15 документов
-- 17 маршрутов
 
 ### Полезные команды
 - docker ps // Проверить, что контейнер запущен 
@@ -53,38 +35,46 @@ JWT_SECRET=your_secret_key_here //любой секретный ключ
 
 ## Текущий статус бэкенда
 
-### База данных
-- PostgreSQL в Docker, база данных umny_kan_db
-- 7 таблиц, тестовые данные 
-- Пароли хэшированы (bcrypt)
-
-### Инфраструктура
-- TypeORM подключён и настроен 
-- Все 7 сущностей с корректными типами и связями (OneToMany, ManyToOne)
-- Бэкенд запускается без ошибок
-- CORS настроен (фронт может стучаться к бэку)
-- Переменные окружения в .env 
-
-### Модуль Auth
-- POST /auth/login (JWT + bcrypt + валидация)
-- Логирование попыток входа (успешных и неудачных)
-
-### Модуль Dashboard
-- GET /dashboard/data (защищён JWT)
-- Возвращает: totalDocuments, inProgress, pendingCheck, recentDocuments, departmentRouteStatuses
+### Этап 1: 
+- Локально поднятый NestJS-бэкенд
+- Подключённая PostgreSQL-база (Docker)
+- Тестовые данные в базе
+- Два рабочих эндпоинта: POST /auth/login и GET /dashboard/data
+- JWT-токены (настоящие, с истечением срока)
+- bcrypt для хэширования паролей
+- Валидация DTO (class-validator: email, длина пароля)
+- Защита эндпоинта /dashboard/data через JWT
 - Promise.all() для параллельных запросов
-- Логирование запросов дашборда
+- CORS настроен для связи с фронтом
+- Логирование попыток входа и запросов дашборда (московское время, пароль и токен скрыты)
 
-### Логирование
-- Логируются POST /auth/login 
-- Логируются GET /dashboard/data 
-- Московское время 
-- Пароль и токен скрыты
-- logs.json в .gitignore
+### Этап 2:
+- 2 новых эндпоинта: GET /documents, GET /documents/:id
+- 3 справочных эндпоинта: GET /document-types, GET /document-categories, GET /departments
+- 4 новые таблицы: document_sources, document_files, ocr_results, document_classifications
+- Фильтрация по typeId, categoryId, status в GET /documents
+- Пагинация (page, limit) с возвратом total и totalPages
+- Полная информация о документе: файлы, OCR, классификация, маршруты, источник
+- Все новые эндпоинты защищены JWT
+- Обновлён seed.sql: 15+ записей в каждой новой таблице
+- Логирование всех новых эндпоинтов
 
-### API интеграция
-- Написаны API-функции для фронтенда (login, getDashboardData)
-- Axios с перехватчиками для токенов
-- Интеграция с фронтендом завершена
-- Защита маршрутов на фронте
- 
+### Этап 3:
+- AI-модуль: анализ документа через DeepSeek, промпт, парсинг ответа
+- Таблицы: ai_settings, document_ai_results
+- Шифрование API-ключа через AES-256-CBC
+- Мок-режим (AI_MOCK_MODE) для тестирования без ключа
+- Модуль Settings: получение, сохранение и проверка настроек AI, список провайдеров
+- Поиск по документам 
+- aiResult в карточке документа
+- Логирование всех новых эндпоинтов
+
+### Этап 4
+- Загрузка файлов: POST /documents/upload (multipart/form-data, до 20 МБ)
+- Валидация форматов: PDF, DOCX, TXT, XLSX, JPG, PNG, TIFF
+- Извлечение текста: POST /documents/:id/extract-text (pdf-parse, mammoth, xlsx, tesseract.js)
+- Сохранение OCR-результатов в таблицу ocr_results
+- Автоматическая генерация регистрационного номера (ВХ-2026-XXX)
+- Удаление документа: DELETE /documents/:id (удаление из БД и папки uploads)
+- Лимит загрузки до 20 МБ
+- Логирование всех новых эндпоинтов

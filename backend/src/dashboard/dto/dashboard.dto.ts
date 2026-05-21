@@ -1,5 +1,6 @@
 export class RecentDocumentDto {
   id!: number;
+  registrationNumber!: string;
   title!: string;
   status!: string;
   date!: Date;

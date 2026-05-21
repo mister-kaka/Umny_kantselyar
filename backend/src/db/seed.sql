@@ -1,5 +1,7 @@
 -- Удаление старых таблицы (чтобы при повторном запуске не было ошибок)
 
+DROP TABLE IF EXISTS document_ai_results CASCADE;
+DROP TABLE IF EXISTS ai_settings CASCADE;
 DROP TABLE IF EXISTS document_classifications CASCADE;
 DROP TABLE IF EXISTS ocr_results CASCADE;
 DROP TABLE IF EXISTS document_files CASCADE;
@@ -121,6 +123,30 @@ CREATE TABLE document_classifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Таблицы этапа 3
+
+CREATE TABLE ai_settings (
+    id SERIAL PRIMARY KEY,
+    provider_code VARCHAR(50) NOT NULL,
+    model_name VARCHAR(100) NOT NULL,
+    api_key VARCHAR(500) NOT NULL,
+    base_url VARCHAR(500),
+    is_active BOOLEAN DEFAULT TRUE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE document_ai_results (
+    id SERIAL PRIMARY KEY,
+    document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    document_type_suggested VARCHAR(200),
+    category_suggested VARCHAR(200),
+    summary_text TEXT,
+    department_suggested VARCHAR(200),
+    confidence_score DECIMAL(5,2),
+    provider_code VARCHAR(50) NOT NULL,
+    model_name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Тестовые данные
 
@@ -268,3 +294,7 @@ INSERT INTO document_classifications (document_id, type_id, category_id, type_co
 (13, 4, 6, 77.2, 80.5, FALSE),
 (14, 5, 6, 98.5, 97.2, TRUE),
 (15, 6, 6, 85.5, 83.0, TRUE);
+
+-- api_key (пока тестовый бесплатный ключ от OpenRouter)
+INSERT INTO ai_settings (provider_code, model_name, api_key, base_url, is_active) VALUES
+('deepseek', 'deepseek/deepseek-chat', 'd82134df1601e0540ac2687f7b0ca6d4:5e2b45c666275aea6d76fc81c0bf3cb92b2605798c5d26dc6e301910501c4f96f268946f61c112bf494baac5921c4769774e99762ca6cec908c5a4bc2117891c0b30055dd8a3245d1c1d2b813aecd4cc', 'https://openrouter.ai/api/v1', TRUE);

@@ -67,6 +67,7 @@ export class DashboardService {
 
             const recentDocuments = recentDocumentsRaw.map(doc => ({
                 id: doc.id,
+                registrationNumber: doc.registrationNumber,
                 title: doc.title,
                 status: doc.currentStatus,
                 date: doc.receivedDate,
@@ -124,12 +125,12 @@ export class DashboardService {
         });
     }
 
-    private async getRecentDocuments(): Promise<Pick<Document, 'id' | 'title' | 'currentStatus' | 'receivedDate'>[]> {
+    private async getRecentDocuments(): Promise<Pick<Document, 'id' | 'registrationNumber' | 'title' | 'currentStatus' | 'receivedDate'>[]> {
         return this.documentRepository.find({
-            order: { receivedDate: 'DESC' },
+            order: { receivedDate: 'DESC', id: 'DESC' },
             take: 5,
-            select: ['id', 'title', 'currentStatus', 'receivedDate'],
-        }) as Promise<Pick<Document, 'id' | 'title' | 'currentStatus' | 'receivedDate'>[]>;
+            select: ['id', 'registrationNumber', 'title', 'currentStatus', 'receivedDate'],
+        }) as Promise<Pick<Document, 'id' | 'registrationNumber' | 'title' | 'currentStatus' | 'receivedDate'>[]>;
     }
 
     private async getDepartmentRouteStatuses(): Promise<DepartmentRouteRaw[]> {
