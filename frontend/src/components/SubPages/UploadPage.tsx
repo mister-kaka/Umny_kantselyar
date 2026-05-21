@@ -205,7 +205,7 @@ const UploadPage = () => {
                 <>
                   <div className="upload-icon-wrap">
                     <img
-                      src="/DashboardPage_Images/UploadIcon.png"
+                      src="/icons/upload/UploadIcon.png"
                       className="upload-icon-img"
                       alt=""
                       aria-hidden="true"
@@ -220,7 +220,7 @@ const UploadPage = () => {
                 <div className="file-info">
                   <div className="file-info-icon">
                     <img
-                      src="/DashboardPage_Images/UploadIcon.png"
+                      src="/icons/upload/UploadIcon.png"
                       className="upload-icon-img upload-icon-small"
                       alt=""
                       aria-hidden="true"

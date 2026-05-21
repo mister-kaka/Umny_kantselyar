@@ -126,7 +126,7 @@ const DocumentsListPage = () => {
             setFilters(prev => ({ ...prev, typeId: id }));
             setSelectedLabels(prev => ({ ...prev, docType: name }));
           }}
-          icon={<img src="/DashboardPage_Images/DocumentType.png" alt="📄" />}
+          icon={<img src="/icons/filters/Document_type.png" alt="📄" />}
           defaultLabel="Тип документа"
           isOpen={activeFilter === 'docType'}
           onToggle={() => toggleFilter('docType')}
@@ -140,7 +140,7 @@ const DocumentsListPage = () => {
             setFilters(prev => ({ ...prev, categoryId: id }));
             setSelectedLabels(prev => ({ ...prev, category: name }));
           }}
-          icon={<img src="/DashboardPage_Images/Category.png" alt="🗂️" />}
+          icon={<img src="/icons/filters/Category.png" alt="🗂️" />}
           defaultLabel="Категория"
           isOpen={activeFilter === 'category'}
           onToggle={() => toggleFilter('category')}
@@ -154,7 +154,7 @@ const DocumentsListPage = () => {
             setFilters(prev => ({ ...prev, status: ENGStatus }));
             setSelectedLabels(prev => ({ ...prev, status: RUSStatus }));
           }}
-          icon={<img src="/DashboardPage_Images/Status.png" alt="🟢🟡🔴" />}
+          icon={<img src="/icons/filters/Status.png" alt="🟢🟡🔴" />}
           defaultLabel="Статус"
           isOpen={activeFilter === 'status'}
           onToggle={() => toggleFilter('status')}
