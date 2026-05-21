@@ -69,13 +69,19 @@
 }
 
 .card-in-card-blue-cortisol {
-  background-color: var(--color-accent-light) !important;
-  border: 1px solid var(--color-accent);
+  background-color: var(--color-bg-surface) !important;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--color-accent);
   box-shadow: none;
+  transition: 0.15s;
+}
+
+.card-in-card-blue-cortisol:hover {
+  border-left-color: var(--color-accent-hover);
 }
 
 .card-in-card-blue-cortisol .card {
-  background-color: var(--color-accent-light) !important;
+  background-color: transparent !important;
   box-shadow: none;
 }
 
@@ -265,19 +271,6 @@ tbody tr {
   }
 }
 
-@media (max-width: 900px) {
-  .tableAndSubCardsContainer {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .subCards-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-}
-
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0 !important;
@@ -301,6 +294,9 @@ tbody tr {
 
   .main-card h5 {
     font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .Main-cards-image {
@@ -316,49 +312,27 @@ tbody tr {
   .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  .table-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 28px;
+    background: linear-gradient(to right, rgba(255,255,255,0), var(--color-bg-surface, #ffffff));
+    pointer-events: none;
   }
 
   .data-table {
-    min-width: 650px;
+    min-width: 500px;
   }
 
   .subCards-container {
     grid-template-columns: 1fr;
     gap: 12px;
-  }
-}
-
-@media (max-width: 650px) {
-  .Heading-main-text {
-    margin: 10px;
-  }
-
-  .Heading-main-text h2 {
-    font-size: 20px;
-  }
-
-  .Heading-main-text h4 {
-    font-size: 13px;
-  }
-
-  .main-card h1 {
-    font-size: 20px;
-  }
-
-  .main-content {
-    padding: 20px 16px;
-    padding-top: calc(var(--header-height, 64px) + 20px);
-  }
-
-  .data-table {
-    min-width: 580px;
-    font-size: 12px;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: 0 6px;
-    height: 36px;
   }
 }
 
@@ -392,10 +366,9 @@ tbody tr {
   .main-card h5 {
     font-size: 9px;
     margin-top: 2px;
-  }
-
-  .Heading-main-text {
-    margin: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .Heading-main-text h2 {
@@ -407,7 +380,7 @@ tbody tr {
   }
 
   .data-table {
-    min-width: 520px;
+    min-width: 420px;
     font-size: 11px;
   }
 
@@ -420,18 +393,6 @@ tbody tr {
   .status-badge {
     padding: 2px 8px;
     font-size: 10px;
-  }
-
-  .card-in-card-blue-cortisol {
-    padding: 12px;
-  }
-
-  .card-in-card-blue-cortisol h5 {
-    font-size: 13px;
-  }
-
-  .card-in-card-blue-cortisol h6 {
-    font-size: 11px;
   }
 
   .bluesrc {
@@ -447,10 +408,6 @@ tbody tr {
   .main-content {
     padding: 12px;
     padding-top: calc(var(--header-height, 64px) + 16px);
-  }
-
-  .Heading-main-text {
-    margin: 8px;
   }
 
   .Heading-main-text h2 {
@@ -479,7 +436,7 @@ tbody tr {
   }
 
   .data-table {
-    min-width: 460px;
+    min-width: 380px;
     font-size: 10px;
   }
 
@@ -499,10 +456,6 @@ tbody tr {
   .main-content {
     padding: 10px;
     padding-top: calc(var(--header-height, 64px) + 16px);
-  }
-
-  .Heading-main-text {
-    margin: 8px;
   }
 
   .Heading-main-text h2 {
@@ -531,7 +484,7 @@ tbody tr {
   }
 
   .data-table {
-    min-width: 400px;
+    min-width: 340px;
     font-size: 9px;
   }
 
@@ -548,26 +501,6 @@ tbody tr {
 
   .table-title {
     font-size: 14px;
-  }
-}
-
-@media (max-width: 900px) and (orientation: landscape) {
-  .Main-cards-container {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .Main-cards-image {
-    display: block;
-    width: 32px;
-    height: 32px;
-  }
-
-  .main-card h1 {
-    font-size: 24px;
-  }
-
-  .tableAndSubCardsContainer {
-    grid-template-columns: 1fr;
   }
 }
 
