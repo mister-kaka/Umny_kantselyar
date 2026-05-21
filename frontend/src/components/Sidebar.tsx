@@ -9,15 +9,15 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const menuItems = [
-    {path: "/dashboard/main", label: "Главная", icon: "/DashboardPage_Images/MainMenu.jpg", alt: "🏠"},
-    {path: "/dashboard/incoming", label: "Входящие документы", icon: "/DashboardPage_Images/Incoming.jpg", alt: "📥"},
-    {path: "/dashboard/verification", label: "Очередь проверки", icon: "/DashboardPage_Images/Queue.jpg", alt: "🔍"},
-    {path: "/dashboard/routing", label: "Маршрутизация", icon: "/DashboardPage_Images/Routing.jpg", alt: "☑️"},
-    {path: "/dashboard/documents", label: "Архив документов", icon: "/DashboardPage_Images/DocumentType.png", alt: "📄"},
-    {path: "/dashboard/departments", label: "Подразделения", icon: "/DashboardPage_Images/Departments.jpg", alt: "📍"},
-    {path: "/dashboard/analytics", label: "Аналитика", icon: "/DashboardPage_Images/Analytics.jpg", alt: "🏢"},
-    {path: "/dashboard/settings", label: "Настройки", icon: "/DashboardPage_Images/Settings.jpg", alt: "⚙️"},
-    {path: "/dashboard/notifications", label: "Уведомления", icon: "/DashboardPage_Images/Notifications.jpg", alt: "🔔"},
+    {path: "/dashboard/main", label: "Главная", icon: "/icons/sidebar/MainMenu.png", iconActive: "/icons/sidebar/MainMenu_active.png", alt: "🏠"},
+    {path: "/dashboard/incoming", label: "Входящие документы", icon: "/icons/sidebar/Add_document.png", iconActive: "/icons/sidebar/Add_document_active.png", alt: "📥"},
+    {path: "/dashboard/verification", label: "Очередь проверки", icon: "/icons/sidebar/Check.png", iconActive: "/icons/sidebar/Check_active.png", alt: "🔍"},
+    {path: "/dashboard/routing", label: "Маршрутизация", icon: "/icons/sidebar/Route.png", iconActive: "/icons/sidebar/Route_active.png", alt: "☑️"},
+    {path: "/dashboard/documents", label: "Архив документов", icon: "/icons/sidebar/Archive.png", iconActive: "/icons/sidebar/Archive_active.png", alt: "📄"},
+    {path: "/dashboard/departments", label: "Подразделения", icon: "/icons/sidebar/Departments.png", iconActive: "/icons/sidebar/Departments_active.png", alt: "📍"},
+    {path: "/dashboard/analytics", label: "Аналитика", icon: "/icons/sidebar/Analitics.png", iconActive: "/icons/sidebar/Analitics_active.png", alt: "🏢"},
+    {path: "/dashboard/settings", label: "Настройки", icon: "/icons/sidebar/Settings.png", iconActive: "/icons/sidebar/Settings_active.png", alt: "⚙️"},
+    {path: "/dashboard/notifications", label: "Уведомления", icon: "/icons/sidebar/Notifications.png", iconActive: "/icons/sidebar/Notifications_active.png", alt: "🔔"},
   ];
 
   const handleLogout = () => {
@@ -82,8 +82,12 @@ const Sidebar = () => {
                 to={item.path}
                 className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
               >
-                <img src={item.icon} className="Casual-icon" alt={item.alt} />
-                <span className="item-label">{item.label}</span>
+                {({ isActive }) => (
+                  <>
+                    <img src={isActive ? item.iconActive : item.icon} className="Casual-icon" alt={item.alt} />
+                    <span className="item-label">{item.label}</span>
+                  </>
+                )}
               </NavLink>
             ))}
           </div>
@@ -91,7 +95,7 @@ const Sidebar = () => {
 
         <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
           <button onClick={handleLogout} className="sidebar-item">
-            <img src="/DashboardPage_Images/Log_out.jpg" className="Casual-icon" alt="Выход" />
+            <img src="/icons/sidebar/Exit.png" className="Casual-icon" alt="Выход" />
             <span className="item-label">Выход из системы</span>
           </button>
           <h6 className={`version-text ${collapsed ? 'collapsed' : ''}`}>
