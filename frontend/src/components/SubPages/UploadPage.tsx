@@ -26,7 +26,7 @@ const ALLOWED_MIME = [
   "image/tiff",
 ];
 
-const MAX_SIZE_MB = 20;
+const MAX_SIZE_MB = 50;
 
 const STEPS = [
   { label: "Загрузка файла", desc: "Файл сохраняется на сервер" },
