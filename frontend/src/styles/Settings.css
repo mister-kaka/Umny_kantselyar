@@ -112,3 +112,414 @@
   color: var(--text-tertiary);
   font-style: italic;
 }
+@import "./global.css";
+
+/*    Страница настроек    */
+
+/* Вкладки */
+.settings-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.settings-tabs::-webkit-scrollbar {
+  height: 3px;
+}
+
+.settings-option {
+  color: var(--text-secondary);
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.settings-option.active {
+  background-color: var(--color-accent-light);
+  color: var(--color-accent-hover);
+  border-bottom: 3px solid var(--color-accent-hover);
+  transition: background-color 0.2s;
+}
+
+.settings-option:hover:not(.active) {
+  background-color: rgba(129, 216, 208, 0.1);
+  transition: 0.2s;
+}
+
+/* Форма настроек провайдера */
+
+.cuttinPaddin {
+  padding-top: 15px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.settings-form-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.settings-form-label {
+  min-width: 120px;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.settings-form-control {
+  flex: 1;
+  min-width: 200px;
+}
+
+.settings-form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--border-color);
+  background-color: var(--color-bg-page);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: inherit;
+  box-sizing: border-box;
+}
+
+.settings-form-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(129, 216, 208, 0.2);
+}
+
+.settings-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Статус-сообщения */
+.settings-status {
+  padding: 8px 16px;
+  border-radius: var(--radius-button, 8px);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  white-space: normal;
+  word-break: keep-all;
+  flex: 1;
+  min-width: 150px;
+}
+
+.settings-status.success {
+  background-color: rgba(126, 226, 159, 0.12);
+  color: var(--color-status-loaded);
+}
+
+.settings-status.error {
+  background-color: rgba(232, 115, 115, 0.1);
+  color: var(--color-status-rejected);
+}
+
+.settings-status.loading {
+  color: var(--text-tertiary);
+}
+
+.appearance-placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* Планшеты и небольшие ноутбуки (1024px и меньше) */
+@media (max-width: 1024px) {
+  .settings-tabs {
+    gap: 2px;
+  }
+
+  .settings-option {
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+
+  .settings-form {
+    gap: 1.2rem;
+  }
+
+  .settings-actions {
+    gap: 12px;
+  }
+}
+
+/* Планшеты вертикально (768px и меньше) */
+@media (max-width: 768px) {
+  .settings-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    gap: 0;
+  }
+
+  .settings-tabs::-webkit-scrollbar {
+    height: 3px;
+  }
+
+  .settings-option {
+    padding: 10px 16px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .settings-form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .settings-form-label {
+    min-width: auto;
+    font-size: 13px;
+  }
+
+  .settings-form-control {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .settings-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .apply-button {
+    width: 100%;
+    text-align: center;
+    padding: 10px 16px;
+    height: 44px;
+  }
+
+  .settings-status {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Средние мобильные (650px и меньше) */
+@media (max-width: 650px) {
+  .settings-tabs {
+    margin-bottom: 14px;
+  }
+
+  .settings-option {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .settings-form {
+    gap: 1rem;
+  }
+
+  .settings-form-input {
+    padding: 9px 12px;
+    font-size: 14px;
+  }
+
+  .cuttinPaddin {
+    padding-top: 10px;
+  }
+}
+
+/* Мобильные устройства (480px и меньше) */
+@media (max-width: 480px) {
+  .settings-tabs {
+    margin-bottom: 16px;
+    gap: 0;
+  }
+
+  .settings-option {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .settings-option.active {
+    border-bottom-width: 2px;
+  }
+
+  .settings-form {
+    gap: 14px;
+  }
+
+  .settings-form-row {
+    gap: 4px;
+  }
+
+  .settings-form-label {
+    font-size: 12px;
+  }
+
+  .settings-form-input {
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  .apply-button {
+    padding: 10px 14px;
+    font-size: 13px;
+    height: 42px;
+  }
+
+  .settings-status {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .cuttinPaddin {
+    padding-top: 8px;
+  }
+}
+
+/* Маленькие мобильные (375px и меньше) */
+@media (max-width: 375px) {
+  .settings-option {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .settings-form {
+    gap: 12px;
+  }
+
+  .settings-form-label {
+    font-size: 11px;
+  }
+
+  .settings-form-input {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  .apply-button {
+    padding: 8px 12px;
+    font-size: 12px;
+    height: 40px;
+  }
+
+  .settings-status {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
+
+/* Самые маленькие (320px) */
+@media (max-width: 320px) {
+  .settings-option {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .settings-form-label {
+    font-size: 10px;
+  }
+
+  .settings-form-input {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .apply-button {
+    padding: 8px 10px;
+    font-size: 11px;
+    height: 38px;
+  }
+
+  .settings-status {
+    font-size: 10px;
+  }
+}
+
+/* Альбомная ориентация на мобильных */
+@media (max-width: 768px) and (orientation: landscape) {
+  .settings-form-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .settings-form-label {
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+
+  .settings-form-control {
+    flex: 1;
+  }
+
+  .settings-actions {
+    flex-direction: row;
+  }
+
+  .apply-button {
+    flex: 1;
+  }
+}
+
+/* Большие экраны (1400px+) */
+@media (min-width: 1400px) {
+  .settings-form {
+    max-width: 800px;
+  }
+
+  .settings-form-row {
+    gap: 1.5rem;
+  }
+
+  .settings-form-label {
+    min-width: 140px;
+    font-size: 14px;
+  }
+
+  .settings-form-input {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+}
+
+/* Retina-экраны */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .settings-form-input {
+    border-width: 0.5px;
+  }
+
+  .settings-option.active {
+    border-bottom-width: 2.5px;
+  }
+}
+
+/* Touch-состояния для мобильных */
+@media (hover: none) and (pointer: coarse) {
+  .settings-option:active {
+    opacity: 0.7;
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+
+  .apply-button:active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+}
