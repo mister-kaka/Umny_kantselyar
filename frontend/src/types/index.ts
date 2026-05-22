@@ -206,3 +206,14 @@ export interface ExtractTextResponse {
   ocrConfidence: number;
   processedAt: string;
 }
+
+export type FileItem = {
+  id: string;
+  file: File;
+  status: "waiting" | "uploading" | "extracting" | "analyzing" | "done" | "error" | "paused" | "cancelled";
+  selected: boolean;
+  errorMessage?: string;
+  documentId?: number;
+};
+
+export type UploadStep = "idle" | "processing" | "success" | "error";

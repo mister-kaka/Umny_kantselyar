@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
 import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument } from '../services/api';
@@ -10,6 +10,8 @@ import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu
 const DocumentCardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from;
   const [activeTab, setActiveTab] = useState<"overview" | "ai" | "ocr" | "history">("overview");
 
   const [data, setData] = useState<DocumentCardType | null>(null);
@@ -22,6 +24,24 @@ const DocumentCardPage: React.FC = () => {
   const [aiAnalyzed, setAiAnalyzed] = useState(false);
 
   const [copied, setCopied] = useState(false);
+
+  const getBackLabel = (): string => {
+    switch (from) {
+      case 'main': return 'На главную';
+      case 'upload': return 'Назад к загрузке';
+      case 'search': return 'Архив документов';
+      default: return 'Архив документов';
+    }
+  };
+
+  const getBackPath = (): string => {
+    switch (from) {
+      case 'main': return '/dashboard/main';
+      case 'upload': return '/dashboard/incoming';
+      case 'search': return '/dashboard/documents';
+      default: return '/dashboard/documents';
+    }
+  };
 
   useEffect(() => {
     if (!id) {
@@ -111,8 +131,9 @@ const DocumentCardPage: React.FC = () => {
   return (
     <div className="document-page">
       <div className="doc-topbar">
-        <button className="back-to-list-btn" onClick={() => navigate('/dashboard/documents')}>
-          ← Все документы
+        <button className="back-to-list-btn back-to-list-btn--primary" onClick={() => navigate(getBackPath())}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3l-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {getBackLabel()}
         </button>
         <button className="delete-doc-btn" onClick={handleDelete}>
           Удалить документ
@@ -362,6 +383,15 @@ const DocumentCardPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {from !== 'archive' && from !== 'search' && (
+        <div className="doc-bottom-link">
+          <a href="/dashboard/documents" onClick={(e) => { e.preventDefault(); navigate('/dashboard/documents'); }}>
+            В архив документов
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </a>
+        </div>
+      )}
     </div>
   );
 };
