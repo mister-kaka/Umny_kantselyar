@@ -31,7 +31,7 @@ const Header = () => {
       <button className="button-secondary-with-border header-action-btn" title="Сканирование">
         <img src="/icons/header/Scan.png" className="Casual-icon" alt="☐" />
       </button>
-      <button className="button-secondary header-action-btn" title="Уведомления">
+      <button className="button-secondary header-action-btn" onClick={() => navigate('/dashboard/notifications')} title="Уведомления">
         <img src="/icons/header/Notifications.png" className="Casual-icon" alt="🔔" />
       </button>
 
