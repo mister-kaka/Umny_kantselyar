@@ -162,7 +162,7 @@ const MainMenu = () => {
                             {data?.recentDocuments.map((doc) => (
                                 <tr 
                                     key={doc.id} 
-                                    onClick={() => navigate(`/dashboard/documents/${doc.id}`)}
+                                    onClick={() => navigate(`/dashboard/documents/${doc.id}`, { state: { from: 'main' } })}
                                     style={{ cursor: 'pointer' }}
                                 >
                                     <td>{doc.registrationNumber}</td>
