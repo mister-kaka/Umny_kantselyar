@@ -17,12 +17,12 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
 
-  // Запуск камеры
+  // запуск камеры
   const startCamera = useCallback(async () => {
     setError("");
     setIsCameraReady(false);
     
-    // Останавливаем предыдущий поток
+    // останавливает предыдущий поток
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
     }
@@ -30,7 +30,7 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
     try {
       console.log("Запрашиваем доступ к камере...");
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } // использует заднюю камеру на телефонах
+        video: { facingMode: "environment" }
       });
       
       console.log("Доступ к камере получен");
@@ -55,7 +55,6 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
     }
   }, [stream]);
 
-  // Захват кадра
   const capturePhoto = async () => {
     console.log("capturePhoto вызван");
     console.log("videoRef.current:", videoRef.current);
@@ -81,7 +80,6 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      // Устанавливаем размеры canvas равными размеру видео
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       console.log("Размеры canvas:", canvas.width, canvas.height);
@@ -93,11 +91,9 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Не удалось получить контекст canvas");
       
-      // Рисуем текущий кадр на canvas
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       console.log("Кадр отрисован");
       
-      // Конвертируем canvas в Blob
       const blob = await new Promise<Blob | null>((resolve) => {
         canvas.toBlob(resolve, "image/jpeg", 0.9);
       });
@@ -105,41 +101,35 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
       if (!blob) throw new Error("Не удалось создать изображение");
       console.log("Blob создан, размер:", blob.size, "bytes");
       
-      // Создаём File
+      // создаем файл
       const fileName = `scan_${Date.now()}.jpg`;
       const file = new File([blob], fileName, { type: "image/jpeg" });
       console.log("File создан:", file.name, file.size, "bytes");
       
-      // Отправляем на сервер
+
       console.log("Отправка на сервер...");
+      const response = await uploadDocument(file);
+      console.log("Ответ сервера:", response);
       
-      // Найди эту часть в capturePhoto:
-        const response = await uploadDocument(file);
-        console.log("Ответ сервера:", response);
-
-        // Останавливаем камеру
-        if (stream) {
+      if (stream) {
         stream.getTracks().forEach(track => track.stop());
-        }
-
-        // Закрываем модальное окно
-        onClose();
-
-        // Передаём файл в UploadPage через state
-        navigate("/dashboard/incoming", { 
-        state: { 
-            scannedFile: {
-            id: response.id,
-            file: file,
-            name: file.name,
-            size: file.size
-            }
-        } 
-        });
+      }
       
-      // Переходим на страницу загрузки
-      navigate("/dashboard/incoming");
+      onClose();
       
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const fileData = e.target?.result;
+        localStorage.setItem("pending_scan", JSON.stringify({
+          fileName: file.name,
+          fileData: fileData,
+          documentId: response.id
+        }));
+        navigate("/dashboard/incoming");
+      };
+      reader.readAsDataURL(file);
+        
+
     } catch (err) {
       console.error("Ошибка при сканировании:", err);
       setError(err instanceof Error ? err.message : "Не удалось отправить скан");
@@ -148,7 +138,6 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
     }
   };
 
-  // Очистка при размонтировании
   useEffect(() => {
     startCamera();
     
@@ -206,7 +195,7 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
                   Отправка...
                 </>
               ) : (
-                "📷 Сделать снимок"
+                "Сделать снимок"
               )}
             </button>
           </div>
