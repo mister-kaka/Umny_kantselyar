@@ -32,6 +32,9 @@ export class User {
   @Column({ default: 'active', length: 20 })
   status!: string;
 
+  @Column({ name: 'avatar_url', type: 'varchar', length: 500, nullable: true })
+  avatarUrl!: string | null;
+
   @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt!: Date;
 
