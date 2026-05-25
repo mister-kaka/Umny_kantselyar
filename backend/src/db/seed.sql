@@ -1,5 +1,12 @@
 -- Удаление старых таблицы (чтобы при повторном запуске не было ошибок)
 
+DROP TABLE IF EXISTS notifications CASCADE;
+DROP TABLE IF EXISTS audit_log CASCADE;
+DROP TABLE IF EXISTS document_comments CASCADE;
+DROP TABLE IF EXISTS route_templates CASCADE;
+DROP TABLE IF EXISTS login_history CASCADE;
+DROP TABLE IF EXISTS user_interface_settings CASCADE;
+DROP TABLE IF EXISTS user_notification_settings CASCADE;
 DROP TABLE IF EXISTS document_ai_results CASCADE;
 DROP TABLE IF EXISTS ai_settings CASCADE;
 DROP TABLE IF EXISTS document_classifications CASCADE;
@@ -13,7 +20,6 @@ DROP TABLE IF EXISTS document_types CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS departments CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
-
 
 -- Создание таблиц бд
 
@@ -147,6 +153,83 @@ CREATE TABLE document_ai_results (
     model_name VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Таблицы этапа 5
+
+CREATE TABLE user_notification_settings (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    new_document BOOLEAN DEFAULT TRUE,
+    ai_complete BOOLEAN DEFAULT TRUE,
+    extract_error BOOLEAN DEFAULT TRUE,
+    pending_verification BOOLEAN DEFAULT TRUE,
+    routed_to_department BOOLEAN DEFAULT TRUE,
+    low_confidence BOOLEAN DEFAULT FALSE,
+    route_error BOOLEAN DEFAULT TRUE,
+    overdue_verification BOOLEAN DEFAULT FALSE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_interface_settings (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    compact_view BOOLEAN DEFAULT FALSE,
+    show_confidence BOOLEAN DEFAULT TRUE,
+    default_page_limit INTEGER DEFAULT 10,
+    theme VARCHAR(20) DEFAULT 'light',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE login_history (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE route_templates (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    department_ids INTEGER[] NOT NULL DEFAULT '{}',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE document_comments (
+    id SERIAL PRIMARY KEY,
+    document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE audit_log (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    action VARCHAR(100) NOT NULL,
+    document_id INTEGER REFERENCES documents(id) ON DELETE SET NULL,
+    details JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    document_id INTEGER REFERENCES documents(id) ON DELETE SET NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Доработка таблицы documents 
+ALTER TABLE documents 
+    ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS routed_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS current_department_id INTEGER REFERENCES departments(id);
 
 -- Тестовые данные
 
@@ -298,3 +381,81 @@ INSERT INTO document_classifications (document_id, type_id, category_id, type_co
 -- api_key (пока тестовый бесплатный ключ от OpenRouter)
 INSERT INTO ai_settings (provider_code, model_name, api_key, base_url, is_active) VALUES
 ('deepseek', 'deepseek/deepseek-chat', 'd82134df1601e0540ac2687f7b0ca6d4:5e2b45c666275aea6d76fc81c0bf3cb92b2605798c5d26dc6e301910501c4f96f268946f61c112bf494baac5921c4769774e99762ca6cec908c5a4bc2117891c0b30055dd8a3245d1c1d2b813aecd4cc', 'https://openrouter.ai/api/v1', TRUE);
+
+INSERT INTO user_notification_settings (user_id, new_document, ai_complete, extract_error, pending_verification, routed_to_department, low_confidence, route_error, overdue_verification) VALUES
+(1, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+(2, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, FALSE),
+(3, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE),
+(4, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE),
+(5, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+(6, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE),
+(7, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
+
+INSERT INTO user_interface_settings (user_id, compact_view, show_confidence, default_page_limit, theme) VALUES
+(1, FALSE, TRUE, 20, 'light'),
+(2, FALSE, TRUE, 10, 'light'),
+(3, TRUE, FALSE, 10, 'light'),
+(4, FALSE, TRUE, 50, 'dark'),
+(5, FALSE, TRUE, 20, 'light'),
+(6, FALSE, TRUE, 10, 'light'),
+(7, FALSE, TRUE, 20, 'light');
+
+INSERT INTO login_history (user_id, ip_address, user_agent, login_time) VALUES
+(1, '192.168.1.100', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0', '2026-04-15 08:30:00'),
+(1, '192.168.1.100', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0', '2026-04-16 09:15:00'),
+(2, '192.168.1.101', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15', '2026-04-15 08:45:00'),
+(3, '192.168.1.102', 'Mozilla/5.0 (X11; Linux x86_64) Firefox/121.0', '2026-04-15 10:00:00'),
+(1, '10.0.0.1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) Mobile/15E148', '2026-04-17 07:20:00'),
+(5, '192.168.1.105', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edge/120.0.0.0', '2026-04-15 11:30:00'),
+(7, '192.168.1.100', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0', '2026-04-17 08:00:00');
+
+INSERT INTO route_templates (name, description, department_ids, is_active) VALUES
+('Стандартная проверка договора', 'Юридический отдел → Отдел закупок', '{5, 4}', TRUE),
+('Финансовый документ', 'Бухгалтерия', '{3}', TRUE),
+('Техническое обращение', 'Технический отдел', '{2}', TRUE),
+('Кадровый вопрос', 'Отдел кадров', '{6}', TRUE),
+('Административная переписка', 'Управление → Юридический отдел', '{1, 5}', TRUE),
+('Предписание контролирующего органа', 'Юридический отдел → Технический отдел → Управление', '{5, 2, 1}', TRUE);
+
+INSERT INTO document_comments (document_id, user_id, text, created_at) VALUES
+(1, 1, 'Договор требует срочного согласования, поставка уже задерживается.', '2026-04-01 14:00:00'),
+(1, 5, 'Проверил юридическую часть — требуется доработка пункта 4.2.', '2026-04-02 10:30:00'),
+(1, 1, 'Доработал пункт 4.2, отправил контрагенту на согласование.', '2026-04-02 16:00:00'),
+(3, 2, 'Автобус А123ВВ уже третий раз за месяц ломается. Нужна комплексная диагностика.', '2026-04-03 11:00:00'),
+(3, 4, 'Диагностика запланирована на 08.04.2026.', '2026-04-04 09:00:00'),
+(9, 1, 'Предписание ГИБДД — срок до 30.04. Нужно срочно устранить нарушения.', '2026-04-08 14:00:00'),
+(9, 5, 'Готовлю ответ по юридической части. Техотделу — заняться тахографом.', '2026-04-09 10:00:00'),
+(12, 6, 'Запросила расчётный лист за март у бухгалтерии.', '2026-04-09 15:30:00'),
+(12, 3, 'Расчётный лист готов, передала сотруднику.', '2026-04-10 12:00:00');
+
+INSERT INTO audit_log (user_id, action, document_id, details, created_at) VALUES
+(1, 'document_upload', 1, '{"fileName": "dogovor_postavka.pdf", "fileSize": 245760}', '2026-04-01 13:30:00'),
+(1, 'ai_analysis_start', 1, '{"provider": "deepseek", "model": "deepseek/deepseek-chat"}', '2026-04-01 13:35:00'),
+(1, 'ai_analysis_complete', 1, '{"confidence": 0.95}', '2026-04-01 13:37:00'),
+(1, 'document_verify', 1, '{"typeId": 1, "categoryId": 3, "departmentId": 4}', '2026-04-01 14:00:00'),
+(2, 'document_upload', 3, '{"fileName": "zhaloba_avtopark.pdf", "fileSize": 156000}', '2026-04-03 10:00:00'),
+(2, 'ai_analysis_complete', 3, '{"confidence": 0.92}', '2026-04-03 10:03:00'),
+(5, 'document_route', 1, '{"departmentId": 5, "reason": "Юридическая проверка договора"}', '2026-04-02 09:00:00'),
+(7, 'document_delete', 99, '{"reason": "Дубликат документа ВХ-2026-005"}', '2026-04-12 16:00:00'),
+(1, 'settings_update', NULL, '{"section": "ai", "provider": "deepseek"}', '2026-04-15 09:00:00'),
+(3, 'login', NULL, '{"ip": "192.168.1.102"}', '2026-04-15 10:00:00');
+
+INSERT INTO notifications (user_id, type, title, message, document_id, is_read, created_at) VALUES
+(1, 'new_document', 'Новый документ загружен', 'Договор на поставку оборудования (ВХ-2026-001)', 1, TRUE, '2026-04-01 13:30:00'),
+(1, 'ai_complete', 'AI-анализ завершён', 'Документ ВХ-2026-001: Договор / Поставка оборудования / Уверенность 95%', 1, TRUE, '2026-04-01 13:37:00'),
+(1, 'pending_verification', 'Документ требует проверки', 'ВХ-2026-001 ожидает проверки оператором', 1, FALSE, '2026-04-01 13:38:00'),
+(2, 'new_document', 'Новый документ загружен', 'Обращение по технической неисправности (ВХ-2026-003)', 3, FALSE, '2026-04-03 10:00:00'),
+(4, 'new_document', 'Новый документ загружен', 'Уведомление о проверке (ВХ-2026-004)', 4, FALSE, '2026-04-04 09:00:00'),
+(5, 'ai_complete', 'AI-анализ завершён', 'Документ ВХ-2026-013: низкая уверенность (78%)', 13, FALSE, '2026-04-10 11:00:00'),
+(1, 'overdue_verification', 'Просроченная проверка', 'Документ ВХ-2026-009 ожидает проверки более 24 часов', 9, FALSE, '2026-04-10 08:00:00'),
+(7, 'routed_to_department', 'Документ направлен в отдел', 'ВХ-2026-015 направлен в Бухгалтерию', 15, TRUE, '2026-04-11 14:00:00');
+
+-- Обновление документов
+UPDATE documents SET verified_at = '2026-04-01 14:00:00', current_department_id = 4 WHERE id = 1;
+UPDATE documents SET verified_at = '2026-04-03 10:00:00', current_department_id = 2 WHERE id = 3;
+UPDATE documents SET verified_at = '2026-04-05 16:00:00', routed_at = '2026-04-06 10:00:00', current_department_id = 3 WHERE id = 5;
+UPDATE documents SET verified_at = '2026-04-06 15:00:00', routed_at = '2026-04-07 09:00:00', current_department_id = 4 WHERE id = 6;
+UPDATE documents SET verified_at = '2026-04-07 14:00:00', current_department_id = 5 WHERE id = 7;
+UPDATE documents SET verified_at = '2026-04-08 12:00:00', routed_at = '2026-04-09 10:00:00', current_department_id = 5 WHERE id = 9;
+UPDATE documents SET verified_at = '2026-04-09 11:00:00', current_department_id = 6 WHERE id = 12;
+UPDATE documents SET verified_at = '2026-04-10 16:00:00', routed_at = '2026-04-11 14:00:00', current_department_id = 3 WHERE id = 15;
