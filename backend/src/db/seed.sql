@@ -60,6 +60,7 @@ CREATE TABLE users (
     role_id INTEGER REFERENCES roles(id),
     department_id INTEGER REFERENCES departments(id),
     status VARCHAR(20) DEFAULT 'active',
+    avatar_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -74,7 +75,10 @@ CREATE TABLE documents (
     current_status VARCHAR(50) DEFAULT 'in_review',
     confidence_score DECIMAL(5,2),
     created_by INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verified_at TIMESTAMP,
+    routed_at TIMESTAMP,
+    current_department_id INTEGER REFERENCES departments(id)
 );
 
 CREATE TABLE document_routes (
@@ -225,12 +229,6 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Доработка таблицы documents 
-ALTER TABLE documents 
-    ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS routed_at TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS current_department_id INTEGER REFERENCES departments(id);
-
 -- Тестовые данные
 
 INSERT INTO roles (name, code) VALUES 
@@ -273,22 +271,22 @@ INSERT INTO users (full_name, email, password_hash, role_id, department_id, stat
 ('Мотовилова Мария', 'maria.m@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 6, 'active'),
 ('Начинова Мария', 'maria.n@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', 1, 1, 'active');
 
-INSERT INTO documents (registration_number, title, received_date, document_type_id, category_id, sender_name, current_status, confidence_score, created_by) VALUES 
-('ВХ-2026-001', 'Договор на поставку оборудования', '2026-04-01', 1, 3, 'ООО "ТехноПоставка"', 'in_review', 0.95, 1),
-('ВХ-2026-002', 'Письмо о согласовании графика работ', '2026-04-02', 2, 4, 'АО "СтройИнвест"', 'approved', 0.87, 2),
-('ВХ-2026-003', 'Обращение по поводу технической неисправности', '2026-04-03', 3, 2, 'ООО "Автопарк"', 'in_review', 0.92, 3),
-('ВХ-2026-004', 'Уведомление о проверке', '2026-04-04', 4, 5, 'Ространснадзор', 'in_review', 0.78, 4),
-('ВХ-2026-005', 'Счёт на оплату топлива', '2026-04-05', 5, 6, 'ООО "Лукойл"', 'approved', 0.99, 5),
-('ВХ-2026-006', 'Акт приёма-передачи оборудования', '2026-04-06', 6, 3, 'ООО "ТехноПоставка"', 'completed', 0.88, 6),
-('ВХ-2026-007', 'Соглашение о конфиденциальности', '2026-04-07', 7, 5, 'ИП Петров', 'in_review', 0.91, 7),
-('ВХ-2026-008', 'Счёт-фактура за март', '2026-04-07', 8, 6, 'ООО "ЭнергоСбыт"', 'sent', 0.85, 1),
-('ВХ-2026-009', 'Предписание об устранении нарушений', '2026-04-08', 9, 5, 'ГИБДД', 'in_review', 0.94, 2),
-('ВХ-2026-010', 'Договор аренды помещения', '2026-04-08', 1, 5, 'ООО "ТрансСтрой"', 'approved', 0.82, 3),
-('ВХ-2026-011', 'Письмо о продлении гарантии', '2026-04-09', 2, 4, 'ООО "ТехноПоставка"', 'in_review', 0.96, 4),
-('ВХ-2026-012', 'Обращение сотрудника по кадровому вопросу', '2026-04-09', 3, 1, 'Иванова Е.С.', 'in_review', 0.89, 5),
-('ВХ-2026-013', 'Уведомление о повышении цен', '2026-04-10', 4, 6, 'ООО "Поставщик"', 'pending', 0.77, 6),
-('ВХ-2026-014', 'Счёт на оплату услуг связи', '2026-04-10', 5, 6, 'ПАО "Ростелеком"', 'approved', 0.98, 7),
-('ВХ-2026-015', 'Акт сверки взаимных расчётов', '2026-04-11', 6, 6, 'ООО "ТрансЛайн"', 'completed', 0.84, 1);
+INSERT INTO documents (registration_number, title, received_date, document_type_id, category_id, sender_name, current_status, confidence_score, created_by, verified_at, routed_at, current_department_id) VALUES 
+('ВХ-2026-001', 'Договор на поставку оборудования', '2026-04-01', 1, 3, 'ООО "ТехноПоставка"', 'in_review', 0.95, 1, '2026-04-01 14:00:00', NULL, 4),
+('ВХ-2026-002', 'Письмо о согласовании графика работ', '2026-04-02', 2, 4, 'АО "СтройИнвест"', 'approved', 0.87, 2, NULL, NULL, NULL),
+('ВХ-2026-003', 'Обращение по поводу технической неисправности', '2026-04-03', 3, 2, 'ООО "Автопарк"', 'in_review', 0.92, 3, '2026-04-03 10:00:00', NULL, 2),
+('ВХ-2026-004', 'Уведомление о проверке', '2026-04-04', 4, 5, 'Ространснадзор', 'in_review', 0.78, 4, NULL, NULL, NULL),
+('ВХ-2026-005', 'Счёт на оплату топлива', '2026-04-05', 5, 6, 'ООО "Лукойл"', 'approved', 0.99, 5, '2026-04-05 16:00:00', '2026-04-06 10:00:00', 3),
+('ВХ-2026-006', 'Акт приёма-передачи оборудования', '2026-04-06', 6, 3, 'ООО "ТехноПоставка"', 'completed', 0.88, 6, '2026-04-06 15:00:00', '2026-04-07 09:00:00', 4),
+('ВХ-2026-007', 'Соглашение о конфиденциальности', '2026-04-07', 7, 5, 'ИП Петров', 'in_review', 0.91, 7, '2026-04-07 14:00:00', NULL, 5),
+('ВХ-2026-008', 'Счёт-фактура за март', '2026-04-07', 8, 6, 'ООО "ЭнергоСбыт"', 'sent', 0.85, 1, NULL, NULL, NULL),
+('ВХ-2026-009', 'Предписание об устранении нарушений', '2026-04-08', 9, 5, 'ГИБДД', 'in_review', 0.94, 2, '2026-04-08 12:00:00', '2026-04-09 10:00:00', 5),
+('ВХ-2026-010', 'Договор аренды помещения', '2026-04-08', 1, 5, 'ООО "ТрансСтрой"', 'approved', 0.82, 3, NULL, NULL, NULL),
+('ВХ-2026-011', 'Письмо о продлении гарантии', '2026-04-09', 2, 4, 'ООО "ТехноПоставка"', 'in_review', 0.96, 4, NULL, NULL, NULL),
+('ВХ-2026-012', 'Обращение сотрудника по кадровому вопросу', '2026-04-09', 3, 1, 'Иванова Е.С.', 'in_review', 0.89, 5, '2026-04-09 11:00:00', NULL, 6),
+('ВХ-2026-013', 'Уведомление о повышении цен', '2026-04-10', 4, 6, 'ООО "Поставщик"', 'pending', 0.77, 6, NULL, NULL, NULL),
+('ВХ-2026-014', 'Счёт на оплату услуг связи', '2026-04-10', 5, 6, 'ПАО "Ростелеком"', 'approved', 0.98, 7, NULL, NULL, NULL),
+('ВХ-2026-015', 'Акт сверки взаимных расчётов', '2026-04-11', 6, 6, 'ООО "ТрансЛайн"', 'completed', 0.84, 1, '2026-04-10 16:00:00', '2026-04-11 14:00:00', 3);
 
 INSERT INTO document_routes (document_id, department_id, route_status, route_reason) VALUES 
 (1, 4, 'in_progress', 'Договор на поставку - на рассмотрении в отделе закупок'),
@@ -449,13 +447,3 @@ INSERT INTO notifications (user_id, type, title, message, document_id, is_read, 
 (5, 'ai_complete', 'AI-анализ завершён', 'Документ ВХ-2026-013: низкая уверенность (78%)', 13, FALSE, '2026-04-10 11:00:00'),
 (1, 'overdue_verification', 'Просроченная проверка', 'Документ ВХ-2026-009 ожидает проверки более 24 часов', 9, FALSE, '2026-04-10 08:00:00'),
 (7, 'routed_to_department', 'Документ направлен в отдел', 'ВХ-2026-015 направлен в Бухгалтерию', 15, TRUE, '2026-04-11 14:00:00');
-
--- Обновление документов
-UPDATE documents SET verified_at = '2026-04-01 14:00:00', current_department_id = 4 WHERE id = 1;
-UPDATE documents SET verified_at = '2026-04-03 10:00:00', current_department_id = 2 WHERE id = 3;
-UPDATE documents SET verified_at = '2026-04-05 16:00:00', routed_at = '2026-04-06 10:00:00', current_department_id = 3 WHERE id = 5;
-UPDATE documents SET verified_at = '2026-04-06 15:00:00', routed_at = '2026-04-07 09:00:00', current_department_id = 4 WHERE id = 6;
-UPDATE documents SET verified_at = '2026-04-07 14:00:00', current_department_id = 5 WHERE id = 7;
-UPDATE documents SET verified_at = '2026-04-08 12:00:00', routed_at = '2026-04-09 10:00:00', current_department_id = 5 WHERE id = 9;
-UPDATE documents SET verified_at = '2026-04-09 11:00:00', current_department_id = 6 WHERE id = 12;
-UPDATE documents SET verified_at = '2026-04-10 16:00:00', routed_at = '2026-04-11 14:00:00', current_department_id = 3 WHERE id = 15;
