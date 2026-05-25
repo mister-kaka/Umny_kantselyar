@@ -18,6 +18,18 @@ export class GetDocumentsDto {
     status?: string;
 
     @IsOptional()
+    @IsString()
+    dateFrom?: string;
+
+    @IsOptional()
+    @IsString()
+    dateTo?: string;
+
+    @IsOptional()
+    @IsString()
+    searchQuery?: string;
+
+    @IsOptional()
     @Type(() => Number)
     @IsInt()
     @Min(1)

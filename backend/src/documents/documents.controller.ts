@@ -27,6 +27,12 @@ export class DocumentsController {
     }
 
     @UseGuards(AuthGuard('jwt'))
+    @Get('search/ai')
+    async searchAi(@Query('q') q: string): Promise<DocumentsListResponseDto> {
+        return this.documentsService.searchAi(q);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
     @Get('search')
     async searchDocuments(@Query('q') q: string): Promise<DocumentListItemDto[]> {
         return this.documentsService.search(q);
