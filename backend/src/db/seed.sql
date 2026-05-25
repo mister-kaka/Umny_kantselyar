@@ -21,7 +21,9 @@ DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS departments CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 
--- Создание таблиц бд
+-- расширния
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Таблицы этапа 1
 
@@ -78,7 +80,8 @@ CREATE TABLE documents (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     verified_at TIMESTAMP,
     routed_at TIMESTAMP,
-    current_department_id INTEGER REFERENCES departments(id)
+    current_department_id INTEGER REFERENCES departments(id),
+    search_vector tsvector
 );
 
 CREATE TABLE document_routes (
@@ -119,7 +122,8 @@ CREATE TABLE ocr_results (
     normalized_text TEXT,
     language VARCHAR(10) DEFAULT 'ru',
     ocr_confidence DECIMAL(5,2),
-    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    search_vector tsvector
 );
 
 CREATE TABLE document_classifications (
@@ -229,7 +233,50 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Тестовые данные
+-- индексы
+
+CREATE INDEX IF NOT EXISTS idx_ocr_text_trgm ON ocr_results USING gin (normalized_text gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_ai_summary_trgm ON document_ai_results USING gin (summary_text gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_docs_title_trgm ON documents USING gin (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_docs_sender_trgm ON documents USING gin (sender_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_documents_search_vector ON documents USING GIN(search_vector);
+CREATE INDEX IF NOT EXISTS idx_ocr_search_vector ON ocr_results USING GIN(search_vector);
+
+-- функции и тригерры
+
+CREATE OR REPLACE FUNCTION update_document_search_vector()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector := to_tsvector('russian',
+        coalesce(NEW.title, '') || ' ' ||
+        coalesce(NEW.sender_name, '') || ' ' ||
+        coalesce(NEW.registration_number, '')
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_ocr_search_vector()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector := to_tsvector('russian',
+        coalesce(NEW.normalized_text, '')
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_documents_search_vector ON documents;
+CREATE TRIGGER trg_documents_search_vector
+    BEFORE INSERT OR UPDATE ON documents
+    FOR EACH ROW EXECUTE FUNCTION update_document_search_vector();
+
+DROP TRIGGER IF EXISTS trg_ocr_search_vector ON ocr_results;
+CREATE TRIGGER trg_ocr_search_vector
+    BEFORE INSERT OR UPDATE ON ocr_results
+    FOR EACH ROW EXECUTE FUNCTION update_ocr_search_vector();
+
+-- тестовые данные
 
 INSERT INTO roles (name, code) VALUES 
 ('Администратор', 'admin'),
