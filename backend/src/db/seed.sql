@@ -436,7 +436,7 @@ INSERT INTO audit_log (user_id, action, document_id, details, created_at) VALUES
 (2, 'document_upload', 3, '{"fileName": "zhaloba_avtopark.pdf", "fileSize": 156000}', '2026-04-03 10:00:00'),
 (2, 'ai_analysis_complete', 3, '{"confidence": 0.92}', '2026-04-03 10:03:00'),
 (5, 'document_route', 1, '{"departmentId": 5, "reason": "Юридическая проверка договора"}', '2026-04-02 09:00:00'),
-(7, 'document_delete', 99, '{"reason": "Дубликат документа ВХ-2026-005"}', '2026-04-12 16:00:00'),
+(7, 'document_delete', NULL, '{"reason": "Дубликат документа ВХ-2026-005"}', '2026-04-12 16:00:00'),
 (1, 'settings_update', NULL, '{"section": "ai", "provider": "deepseek"}', '2026-04-15 09:00:00'),
 (3, 'login', NULL, '{"ip": "192.168.1.102"}', '2026-04-15 10:00:00');
 
