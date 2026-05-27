@@ -2,7 +2,25 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings, AiProvider,  UpdateAiSettings, DocumentAiResult, DocumentListItem  } from '../types';
+import { Department, AiSettings, AiProvider,  UpdateAiSettings, DocumentAiResult, DocumentListItem } from '../types';
+import {
+  VerifyDocumentData,
+  RouteDocumentData,
+  RoutingDocument,
+  UpdateRouteStatusData,
+  UpdateDocumentData,
+  Profile,
+  UpdateProfileData,
+  NotificationSettings,
+  InterfaceSettings,
+  Session,
+  LoginHistoryItem,
+  AuditLogItem,
+  Comment,
+  ExportFilters,
+  UnreadCount,
+  AppNotification
+} from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -151,4 +169,236 @@ export const getDocumentAiResult = async (id: number): Promise<DocumentAiResult 
 export const testAiConnection = async (data: UpdateAiSettings): Promise<{ status: string; message: string }> => {
   const res = await api.post<{ status: string; message: string }>('/settings/ai/test-connection', data);
   return res.data;
+};
+
+export const verifyDocument = async (id: number, data: VerifyDocumentData): Promise<void> => {
+  try {
+    await api.put(`/documents/${id}/verify`, data);
+  } catch (error) {
+    console.error('Ошибка верификации документа', error);
+    throw error;
+  }
+};
+
+export const routeDocument = async (id: number, data: RouteDocumentData): Promise<void> => {
+  try {
+    await api.post(`/documents/${id}/route`, data);
+  } catch (error) {
+    console.error('Ошибка маршрутизации документа', error);
+    throw error;
+  }
+};
+
+export const getRoutingDocuments = async (departmentId?: number): Promise<RoutingDocument[]> => {
+  try {
+    const params = departmentId ? { departmentId } : {};
+    const response = await api.get<RoutingDocument[]>('/documents/routing', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения документов в маршрутизации', error);
+    throw error;
+  }
+};
+
+export const updateRouteStatus = async (routeId: number, data: UpdateRouteStatusData): Promise<void> => {
+  try {
+    await api.put(`/document-routes/${routeId}/status`, data);
+  } catch (error) {
+    console.error('Ошибка обновления статуса маршрута', error);
+    throw error;
+  }
+};
+
+export const updateDocument = async (id: number, data: UpdateDocumentData): Promise<void> => {
+  try {
+    await api.put(`/documents/${id}`, data);
+  } catch (error) {
+    console.error('Ошибка обновления документа', error);
+    throw error;
+  }
+};
+
+export const getProfile = async (): Promise<Profile> => {
+  try {
+    const response = await api.get<Profile>('/auth/profile');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения профиля', error);
+    throw error;
+  }
+};
+
+export const updateProfile = async (data: UpdateProfileData): Promise<Profile> => {
+  try {
+    const response = await api.put<Profile>('/auth/profile', data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка обновления профиля', error);
+    throw error;
+  }
+};
+
+export const uploadAvatar = async (file: File): Promise<{ avatarUrl: string }> => {
+  try {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await api.post<{ avatarUrl: string }>('/auth/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка загрузки аватара', error);
+    throw error;
+  }
+};
+
+export const getNotificationSettings = async (): Promise<NotificationSettings> => {
+  try {
+    const response = await api.get<NotificationSettings>('/settings/notifications');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения настроек уведомлений', error);
+    throw error;
+  }
+};
+
+export const updateNotificationSettings = async (data: NotificationSettings): Promise<NotificationSettings> => {
+  try {
+    const response = await api.put<NotificationSettings>('/settings/notifications', data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка обновления настроек уведомлений', error);
+    throw error;
+  }
+};
+
+export const getInterfaceSettings = async (): Promise<InterfaceSettings> => {
+  try {
+    const response = await api.get<InterfaceSettings>('/settings/interface');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения настроек интерфейса', error);
+    throw error;
+  }
+};
+
+export const updateInterfaceSettings = async (data: InterfaceSettings): Promise<InterfaceSettings> => {
+  try {
+    const response = await api.put<InterfaceSettings>('/settings/interface', data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка обновления настроек интерфейса', error);
+    throw error;
+  }
+};
+
+export const getSessions = async (): Promise<Session[]> => {
+  try {
+    const response = await api.get<Session[]>('/settings/security/sessions');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения сессий', error);
+    throw error;
+  }
+};
+
+export const getLoginHistory = async (): Promise<LoginHistoryItem[]> => {
+  try {
+    const response = await api.get<LoginHistoryItem[]>('/settings/security/login-history');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения истории входов', error);
+    throw error;
+  }
+};
+
+export const logoutAll = async (): Promise<void> => {
+  try {
+    await api.post('/settings/security/logout-all');
+  } catch (error) {
+    console.error('Ошибка выхода со всех устройств', error);
+    throw error;
+  }
+};
+
+export const getAuditLog = async (): Promise<AuditLogItem[]> => {
+  try {
+    const response = await api.get<AuditLogItem[]>('/settings/security/audit-log');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения журнала действий', error);
+    throw error;
+  }
+};
+
+export const getComments = async (documentId: number): Promise<Comment[]> => {
+  try {
+    const response = await api.get<Comment[]>(`/documents/${documentId}/comments`);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения комментариев', error);
+    throw error;
+  }
+};
+
+export const addComment = async (documentId: number, text: string): Promise<Comment> => {
+  try {
+    const response = await api.post<Comment>(`/documents/${documentId}/comments`, { text });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка добавления комментария', error);
+    throw error;
+  }
+};
+
+export const exportDocuments = async (filters?: ExportFilters): Promise<Blob> => {
+  try {
+    const response = await api.get<Blob>('/documents/export', {
+      params: filters,
+      responseType: 'blob',
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка экспорта документов', error);
+    throw error;
+  }
+};
+
+export const getNotifications = async (page?: number, limit?: number): Promise<AppNotification[]> => {
+  try {
+    const params = page !== undefined ? { page, limit: limit || 20 } : {};
+    const response = await api.get<AppNotification[]>('/notifications', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения уведомлений', error);
+    throw error;
+  }
+};
+
+export const getUnreadCount = async (): Promise<UnreadCount> => {
+  try {
+    const response = await api.get<UnreadCount>('/notifications/unread-count');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения количества непрочитанных уведомлений', error);
+    throw error;
+  }
+};
+
+export const markAsRead = async (notificationId: number): Promise<void> => {
+  try {
+    await api.patch(`/notifications/${notificationId}/read`);
+  } catch (error) {
+    console.error('Ошибка отметки уведомления как прочитанного', error);
+    throw error;
+  }
+};
+
+export const markAllAsRead = async (): Promise<void> => {
+  try {
+    await api.post('/notifications/mark-all-read');
+  } catch (error) {
+    console.error('Ошибка отметки всех уведомлений как прочитанных', error);
+    throw error;
+  }
 };

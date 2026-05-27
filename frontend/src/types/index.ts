@@ -187,3 +187,129 @@ export interface DocumentAiResult {
   modelName: string;
   createdAt: string;
 }
+
+export interface VerifyDocumentData {
+  typeId: number;
+  categoryId: number;
+  departmentId: number;
+  status: string;
+  comment?: string;
+}
+
+export interface RouteDocumentData {
+  departmentId: number;
+  templateId?: number;
+  comment?: string;
+}
+
+export interface RoutingDocument {
+  id: number;
+  registrationNumber: string;
+  title: string;
+  currentDepartment: string;
+  suggestedDepartment: string;
+  routeStatus: string;
+}
+
+export interface UpdateRouteStatusData {
+  status: 'delivered' | 'read' | 'rejected';
+  comment?: string;
+}
+
+export interface UpdateDocumentData {
+  title?: string;
+  senderName?: string;
+  documentTypeId?: number;
+  categoryId?: number;
+}
+
+export interface Profile {
+  id: number;
+  name: string;
+  email: string;
+  department?: {
+    id: number;
+    name: string;
+  };
+  role?: {
+    id: number;
+    name: string;
+    code: string;
+  };
+  avatarUrl?: string;
+}
+
+export interface UpdateProfileData {
+  name?: string;
+  email?: string;
+}
+
+export interface NotificationSettings {
+  newDocument: boolean;
+  aiComplete: boolean;
+  extractError: boolean;
+  pendingVerification: boolean;
+  routedToDepartment: boolean;
+}
+
+export interface InterfaceSettings {
+  compactView: boolean;
+  showConfidence: boolean;
+  defaultPageLimit: number;
+  theme: 'light' | 'dark';
+}
+
+export interface Session {
+  id: string;
+  userAgent: string;
+  ipAddress: string;
+  lastActiveAt: string;
+  isCurrent: boolean;
+}
+
+export interface LoginHistoryItem {
+  id: number;
+  ipAddress: string;
+  userAgent: string;
+  loginTime: string;
+}
+
+export interface AuditLogItem {
+  id: number;
+  userId: number;
+  userName: string;
+  action: string;
+  documentId?: number;
+  details: string;
+  createdAt: string;
+}
+
+export interface Comment {
+  id: number;
+  userId: number;
+  userName: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface ExportFilters {
+  typeId?: number;
+  categoryId?: number;
+  status?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface AppNotification {
+  id: number;
+  type: 'new_document' | 'ai_complete' | 'extract_error' | 'pending_verification' | 'routed_to_department';
+  title: string;
+  message: string;
+  documentId?: number;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface UnreadCount {
+  count: number;
+}
