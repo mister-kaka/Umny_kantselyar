@@ -39,19 +39,6 @@ export class DocumentsController {
     }
 
     @UseGuards(AuthGuard('jwt'))
-    @Get(':id')
-    async getDocumentById(@Param('id', ParseIntPipe) id: number): Promise<DocumentCardDto> {
-        return this.documentsService.findOne(id);
-    }
-
-    @UseGuards(AuthGuard('jwt'))
-    @Delete(':id')
-    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
-        await this.documentsService.delete(id);
-        return { message: 'Документ удалён' };
-    }
-
-    @UseGuards(AuthGuard('jwt'))
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
     async uploadDocument(
@@ -62,6 +49,25 @@ export class DocumentsController {
             throw new HttpException('Файл обязателен', 400);
         }
         return this.documentsService.uploadDocument(file, req.user.userId);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post('generate-embeddings')
+    async generateEmbeddings(): Promise<{ message: string; count: number }> {
+        return this.documentsService.generateEmbeddings();
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get(':id')
+    async getDocumentById(@Param('id', ParseIntPipe) id: number): Promise<DocumentCardDto> {
+        return this.documentsService.findOne(id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete(':id')
+    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+        await this.documentsService.delete(id);
+        return { message: 'Документ удалён' };
     }
 
     @UseGuards(AuthGuard('jwt'))
