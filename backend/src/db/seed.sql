@@ -1,5 +1,7 @@
 -- Удаление старых таблицы (чтобы при повторном запуске не было ошибок)
 
+DROP TABLE IF EXISTS search_log CASCADE;
+DROP TABLE IF EXISTS search_synonyms CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS audit_log CASCADE;
 DROP TABLE IF EXISTS document_comments CASCADE;
@@ -24,6 +26,7 @@ DROP TABLE IF EXISTS roles CASCADE;
 -- расширния
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Таблицы этапа 1
 
@@ -70,7 +73,8 @@ CREATE TABLE documents (
     id SERIAL PRIMARY KEY,
     registration_number VARCHAR(50) UNIQUE NOT NULL,
     title VARCHAR(255) NOT NULL,
-    received_date DATE NOT NULL,
+    received_date DATE,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     document_type_id INTEGER REFERENCES document_types(id),
     category_id INTEGER REFERENCES document_categories(id),
     sender_name VARCHAR(200) NOT NULL,
@@ -81,7 +85,8 @@ CREATE TABLE documents (
     verified_at TIMESTAMP,
     routed_at TIMESTAMP,
     current_department_id INTEGER REFERENCES departments(id),
-    search_vector tsvector
+    search_vector tsvector,
+    embedding vector(1536)
 );
 
 CREATE TABLE document_routes (
@@ -123,7 +128,8 @@ CREATE TABLE ocr_results (
     language VARCHAR(10) DEFAULT 'ru',
     ocr_confidence DECIMAL(5,2),
     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    search_vector tsvector
+    search_vector tsvector,
+    embedding vector(1536)
 );
 
 CREATE TABLE document_classifications (
@@ -159,7 +165,12 @@ CREATE TABLE document_ai_results (
     confidence_score DECIMAL(5,2),
     provider_code VARCHAR(50) NOT NULL,
     model_name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    embedding vector(1536),
+    extracted_date DATE,
+    extracted_amount DECIMAL(15,2),
+    extracted_counterparty VARCHAR(200),
+    key_phrases TEXT[]
 );
 
 -- Таблицы этапа 5
@@ -233,14 +244,43 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE search_synonyms (
+    id SERIAL PRIMARY KEY,
+    term VARCHAR(100) NOT NULL UNIQUE,
+    synonyms TEXT[] NOT NULL,
+    created_by VARCHAR(20) DEFAULT 'manual',
+    usage_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE search_log (
+    id SERIAL PRIMARY KEY,
+    query TEXT NOT NULL,
+    results_count INTEGER NOT NULL DEFAULT 0,
+    clicked_document_id INTEGER REFERENCES documents(id) ON DELETE SET NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    source VARCHAR(20) DEFAULT 'fast',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- индексы
+
+CREATE INDEX IF NOT EXISTS idx_search_log_created_at ON search_log (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_search_log_user_id ON search_log (user_id);
 
 CREATE INDEX IF NOT EXISTS idx_ocr_text_trgm ON ocr_results USING gin (normalized_text gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_ai_summary_trgm ON document_ai_results USING gin (summary_text gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_docs_title_trgm ON documents USING gin (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_docs_sender_trgm ON documents USING gin (sender_name gin_trgm_ops);
+
 CREATE INDEX IF NOT EXISTS idx_documents_search_vector ON documents USING GIN(search_vector);
 CREATE INDEX IF NOT EXISTS idx_ocr_search_vector ON ocr_results USING GIN(search_vector);
+
+CREATE INDEX IF NOT EXISTS idx_documents_embedding ON documents USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_ocr_embedding ON ocr_results USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_ai_results_embedding ON document_ai_results USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+
+CREATE INDEX IF NOT EXISTS idx_search_synonyms_term ON search_synonyms (term);
 
 -- функции и тригерры
 
@@ -251,6 +291,8 @@ BEGIN
         coalesce(NEW.title, '') || ' ' ||
         coalesce(NEW.sender_name, '') || ' ' ||
         coalesce(NEW.registration_number, '')
+    ) || to_tsvector('simple',
+        coalesce(NEW.title, '')
     );
     RETURN NEW;
 END;
@@ -494,3 +536,131 @@ INSERT INTO notifications (user_id, type, title, message, document_id, is_read, 
 (5, 'ai_complete', 'AI-анализ завершён', 'Документ ВХ-2026-013: низкая уверенность (78%)', 13, FALSE, '2026-04-10 11:00:00'),
 (1, 'overdue_verification', 'Просроченная проверка', 'Документ ВХ-2026-009 ожидает проверки более 24 часов', 9, FALSE, '2026-04-10 08:00:00'),
 (7, 'routed_to_department', 'Документ направлен в отдел', 'ВХ-2026-015 направлен в Бухгалтерию', 15, TRUE, '2026-04-11 14:00:00');
+
+-- синонимы для поиска
+
+-- Аббревиатуры госорганов
+INSERT INTO search_synonyms (term, synonyms) VALUES
+('гибдд', ARRAY['госавтоинспекция', 'гаи', 'дорожная инспекция', 'госавтонадзор']),
+('мчс', ARRAY['министерство чрезвычайных ситуаций', 'пожарная служба', 'пожарные']),
+('фнс', ARRAY['налоговая', 'федеральная налоговая служба', 'ифнс', 'налоговая инспекция']),
+('роспотребнадзор', ARRAY['санэпидемстанция', 'сэс', 'потребнадзор']),
+('ростехнадзор', ARRAY['технадзор', 'технический надзор']),
+('мвд', ARRAY['полиция', 'министерство внутренних дел', 'увд', 'отдел полиции']),
+('фас', ARRAY['антимонопольная служба', 'антимонопольный комитет']),
+('фсс', ARRAY['фонд социального страхования', 'соцстрах']),
+('пфр', ARRAY['пенсионный фонд', 'сфр', 'социальный фонд']),
+('фтс', ARRAY['таможня', 'таможенная служба', 'федеральная таможенная служба']),
+('роскомнадзор', ARRAY['ркн', 'надзор за связью']);
+
+-- Профессиональный сленг
+INSERT INTO search_synonyms (term, synonyms) VALUES
+('первичка', ARRAY['первичный документ', 'акт', 'накладная', 'счёт-фактура', 'квитанция', 'ордер']),
+('счф', ARRAY['счёт-фактура', 'счет-фактура', 'налоговый документ']),
+('платёжка', ARRAY['платёжное поручение', 'платёж', 'оплата', 'квитанция об оплате']),
+('акт сверки', ARRAY['сверка', 'взаимозачёт', 'сальдо', 'акт взаимных расчётов']),
+('закрывашка', ARRAY['закрывающий документ', 'акт', 'закрытие', 'завершающий акт']),
+('допник', ARRAY['дополнительное соглашение', 'доп соглашение', 'приложение к договору']),
+('спецификация', ARRAY['спека', 'приложение', 'перечень', 'спецификация к договору']),
+('просрочка', ARRAY['просроченный', 'просрочка платежа', 'задолженность', 'долг']),
+('дебиторка', ARRAY['дебиторская задолженность', 'дебитор', 'должник']),
+('кредиторка', ARRAY['кредиторская задолженность', 'кредитор', 'долг перед']),
+('аванс', ARRAY['предоплата', 'предварительная оплата', 'задаток']),
+('тендер', ARRAY['конкурс', 'аукцион', 'закупка', 'торги', 'госзакупка']),
+('техзадание', ARRAY['тз', 'техническое задание', 'задание', 'спецификация требований']);
+
+-- Профессиональные сокращения и аббревиатуры
+INSERT INTO search_synonyms (term, synonyms) VALUES
+('дтп', ARRAY['авария', 'дорожно-транспортное происшествие', 'столкновение', 'происшествие', 'наезд']),
+('осаго', ARRAY['страховка', 'автогражданка', 'страхование', 'полис']),
+('каско', ARRAY['страховка', 'страхование', 'полис']),
+('ндс', ARRAY['налог', 'налог на добавленную стоимость']),
+('кпп', ARRAY['код причины постановки', 'реквизиты']),
+('инн', ARRAY['идентификационный номер', 'реквизиты']),
+('бик', ARRAY['банковский идентификационный код', 'реквизиты']),
+('снилс', ARRAY['страховой номер', 'пенсионный']),
+('то', ARRAY['техосмотр', 'технический осмотр', 'диагностика']),
+('гсм', ARRAY['горюче-смазочные материалы', 'топливо', 'бензин', 'дизель']),
+('дс', ARRAY['дополнительное соглашение', 'допник']),
+('тз', ARRAY['техническое задание', 'техзадание']),
+('кп', ARRAY['коммерческое предложение', 'оферта']),
+('коап', ARRAY['административный кодекс', 'штраф']),
+('пдд', ARRAY['правила дорожного движения', 'нарушение']),
+('ж/д', ARRAY['железная дорога', 'жд', 'ржд']),
+('мкад', ARRAY['московская кольцевая', 'кольцевая дорога']),
+('метро', ARRAY['метрополитен', 'подземка', 'станция']),
+('электродепо', ARRAY['депо', 'отстойник', 'ремонтное депо']);
+
+-- Типы документов с латинскими версиями
+INSERT INTO search_synonyms (term, synonyms) VALUES
+('жалоба', ARRAY['заявление', 'обращение', 'претензия', 'рекламация']),
+('zhaloba', ARRAY['жалоба', 'заявление', 'обращение', 'претензия']),
+('договор', ARRAY['контракт', 'соглашение', 'contract', 'agreement', 'договор подряда', 'договор поставки', 'договор аренды']),
+('dogovor', ARRAY['договор', 'контракт', 'соглашение', 'contract', 'agreement']),
+('акт', ARRAY['акт приёма', 'акт сдачи', 'акт выполненных работ', 'акт приёма-передачи', 'акт сверки']),
+('akt', ARRAY['акт', 'act']),
+('счёт', ARRAY['счет', 'инвойс', 'invoice', 'счёт на оплату', 'квитанция', 'счёт-фактура']),
+('schet', ARRAY['счёт', 'счет', 'invoice', 'квитанция']),
+('письмо', ARRAY['послание', 'корреспонденция', 'уведомление', 'извещение', 'letter']),
+('pisemo', ARRAY['письмо', 'letter', 'корреспонденция']),
+('претензия', ARRAY['жалоба', 'рекламация', 'требование', 'complaint']),
+('заявка', ARRAY['заявление', 'обращение', 'запрос', 'request', 'application', 'ходатайство']),
+('приказ', ARRAY['распоряжение', 'указ', 'постановление', 'order', 'директива']),
+('prikaz', ARRAY['приказ', 'order', 'распоряжение']),
+('протокол', ARRAY['протокол совещания', 'протокол собрания', 'протокол заседания', 'акт']),
+('protokol', ARRAY['протокол', 'protocol']),
+('доверенность', ARRAY['доверенность на подписание', 'доверенность на получение', 'power of attorney', 'полномочия']),
+('инструкция', ARRAY['руководство', 'регламент', 'правила', 'instruction', 'manual', 'положение']),
+('instrukciya', ARRAY['инструкция', 'instruction', 'руководство']);
+
+-- Категории
+INSERT INTO search_synonyms (term, synonyms) VALUES
+('бухгалтерия', ARRAY['финансы', 'бухучёт', 'учёт', 'финансовый отдел', 'казначейство']),
+('finansy', ARRAY['финансы', 'бухгалтерия', 'finance', 'accounting']),
+('кадры', ARRAY['отдел кадров', 'персонал', 'hr', 'human resources', 'сотрудники']),
+('kadry', ARRAY['кадры', 'персонал', 'hr', 'human resources']),
+('логистика', ARRAY['перевозки', 'транспорт', 'доставка', 'груз', 'маршрут']),
+('юридический', ARRAY['юрист', 'правовой', 'legal', 'law', 'законодательство']),
+('yuridicheskiy', ARRAY['юридический', 'legal', 'law', 'правовой']),
+('технический', ARRAY['техотдел', 'техподдержка', 'обслуживание', 'ремонт', 'technical']),
+('tekhnicheskiy', ARRAY['технический', 'technical', 'техотдел']),
+('безопасность', ARRAY['охрана', 'служба безопасности', 'security', 'защита']),
+('bezopasnost', ARRAY['безопасность', 'security', 'safety', 'охрана']),
+('закупки', ARRAY['снабжение', 'поставки', 'procurement', 'закуп', 'тендер']),
+('zakupki', ARRAY['закупки', 'procurement', 'purchasing', 'снабжение']);
+
+-- Транспортная специфика с латинскими версиями
+INSERT INTO search_synonyms (term, synonyms) VALUES
+('электричка', ARRAY['электропоезд', 'пригородный поезд', 'пригородный состав', 'рельсовый автобус']),
+('автобус', ARRAY['автотранспорт', 'bus', 'пассажирский транспорт', 'маршрутка']),
+('avtobus', ARRAY['автобус', 'bus', 'автотранспорт']),
+('маршрут', ARRAY['путь', 'направление', 'рейс', 'route', 'линия']),
+('водитель', ARRAY['шофёр', 'driver', 'персонал', 'сотрудник']),
+('транспорт', ARRAY['автомобиль', 'машина', 'vehicle', 'car', 'грузовик']),
+('transport', ARRAY['транспорт', 'перевозки', 'transportation']),
+('топливо', ARRAY['бензин', 'дизель', 'гсм', 'горючее', 'fuel', 'заправка']),
+('ремонт', ARRAY['починка', 'восстановление', 'обслуживание', 'repair', 'fix']),
+('remont', ARRAY['ремонт', 'repair', 'починка', 'обслуживание']),
+('запчасти', ARRAY['детали', 'комплектующие', 'parts', 'spare parts', 'автозапчасти']),
+('техосмотр', ARRAY['то', 'технический осмотр', 'диагностика', 'проверка']),
+('страховка', ARRAY['осаго', 'каско', 'страхование', 'insurance', 'полис']),
+('тариф', ARRAY['цена', 'стоимость', 'расценка', 'прайс', 'ставка']),
+('путевой лист', ARRAY['путевка', 'маршрутный лист', 'задание водителю']),
+('пассажир', ARRAY['гражданин', 'пассажирский', 'passenger']),
+('passazhir', ARRAY['пассажир', 'гражданин', 'passenger']),
+('поставка', ARRAY['снабжение', 'доставка', 'supply', 'delivery']),
+('postavka', ARRAY['поставка', 'снабжение', 'supply', 'delivery']),
+('оплата', ARRAY['платёж', 'payment', 'оплатить']),
+('oplata', ARRAY['оплата', 'платёж', 'payment']),
+('записка', ARRAY['служебная записка', 'докладная', 'пояснительная']),
+('zapiska', ARRAY['записка', 'служебная записка', 'note']),
+('запрос', ARRAY['обращение', 'требование', 'request', 'заявка']),
+('zapros', ARRAY['запрос', 'обращение', 'request']);
+
+-- Статусы
+INSERT INTO search_synonyms (term, synonyms) VALUES
+('одобрен', ARRAY['согласован', 'утверждён', 'подписан', 'approved', 'принят']),
+('отклонён', ARRAY['отказ', 'rejected', 'не принят', 'возврат']),
+('в работе', ARRAY['обрабатывается', 'на исполнении', 'в процессе', 'in progress']),
+('завершён', ARRAY['закрыт', 'выполнен', 'готов', 'completed', 'done']),
+('просрочен', ARRAY['просрочка', 'истёк срок', 'overdue', 'expired']);
