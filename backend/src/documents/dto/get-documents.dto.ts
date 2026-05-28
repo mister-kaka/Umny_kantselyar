@@ -1,4 +1,4 @@
-import { IsOptional, IsInt, IsString, Min } from 'class-validator';
+import { IsOptional, IsInt, IsString, IsBoolean, IsIn, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class GetDocumentsDto {
@@ -25,9 +25,28 @@ export class GetDocumentsDto {
     @IsString()
     dateTo?: string;
 
+    @IsOptional() 
+    @IsString() 
+    @IsIn(['document', 'upload']) 
+    dateField?: 'document' | 'upload';
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    departmentId?: number;
+
     @IsOptional()
     @IsString()
     searchQuery?: string;
+
+    @IsOptional()
+    @IsString()
+    senderQuery?: string;
+
+    @IsOptional()
+    @Type(() => Boolean)
+    @IsBoolean()
+    useSemanticSearch?: boolean;
 
     @IsOptional()
     @Type(() => Number)
