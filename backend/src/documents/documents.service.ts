@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import * as fs from 'fs';
@@ -41,9 +41,7 @@ export class DocumentsService {
         private readonly logger: AppLoggerService,
     ) {}
 
-    // ========================================================================
-    // GET /documents — список документов с фильтрацией и поиском
-    // ========================================================================
+    // GET /documents - список документов с гибридным поиском
     async findAll(filters: GetDocumentsDto): Promise<DocumentsListResponseDto> {
         try {
             const page = filters.page ?? 1;
@@ -59,76 +57,199 @@ export class DocumentsService {
                     'route',
                     'route.id = (SELECT dr.id FROM document_routes dr WHERE dr.document_id = doc.id ORDER BY dr.routed_at DESC LIMIT 1)'
                 )
-                .leftJoinAndSelect('route.department', 'department');
+                .leftJoinAndSelect('route.department', 'department')
+                .leftJoin('doc.files', 'file')
+                .leftJoin('doc.currentDepartment', 'currentDept')
+                .leftJoin('doc.sources', 'source')
+                .leftJoin('doc.comments', 'comment')
+                .leftJoin('doc.ocrResult', 'ocr_rank');
 
-            if (filters.typeId) {
-                query.andWhere('doc.documentTypeId = :typeId', { typeId: filters.typeId });
-            }
-            if (filters.categoryId) {
-                query.andWhere('doc.categoryId = :categoryId', { categoryId: filters.categoryId });
-            }
-            if (filters.status) {
-                query.andWhere('doc.currentStatus = :status', { status: filters.status });
-            }
+            if (filters.typeId) query.andWhere('doc.documentTypeId = :typeId', { typeId: filters.typeId });
+            if (filters.categoryId) query.andWhere('doc.categoryId = :categoryId', { categoryId: filters.categoryId });
+            if (filters.status) query.andWhere('doc.currentStatus = :status', { status: filters.status });
+
+            // Фильтрация по датам: выбор поля для фильтрации
+            const dateField = filters.dateField || 'document';
+
             if (filters.dateFrom) {
-                query.andWhere('doc.receivedDate >= :dateFrom', { dateFrom: filters.dateFrom });
+                if (dateField === 'upload') {
+                    query.andWhere('doc.uploadedAt >= :dateFrom', { dateFrom: filters.dateFrom + ' 00:00:00' });
+                } else {
+                    query.andWhere('doc.receivedDate >= :dateFrom', { dateFrom: filters.dateFrom });
+                }
             }
             if (filters.dateTo) {
-                query.andWhere('doc.receivedDate <= :dateTo', { dateTo: filters.dateTo });
+                if (dateField === 'upload') {
+                    query.andWhere('doc.uploadedAt <= :dateTo', { dateTo: filters.dateTo + ' 23:59:59' });
+                } else {
+                    query.andWhere('doc.receivedDate <= :dateTo', { dateTo: filters.dateTo });
+                }
             }
 
-            // Полнотекстовый поиск через tsvector — ищет по заголовку, отправителю, OCR и AI-сводке
-            // Морфология работает автоматически: "договоры" найдёт "договор"
+            if (filters.departmentId) {
+                query.andWhere(`(
+                    currentDept.id = :deptId 
+                    OR EXISTS (
+                        SELECT 1 FROM document_routes dr_dept 
+                        WHERE dr_dept.document_id = doc.id 
+                        AND dr_dept.department_id = :deptId
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM document_ai_results ai_dept 
+                        WHERE ai_dept.document_id = doc.id 
+                        AND ai_dept.department_suggested IS NOT NULL
+                        AND ai_dept.department_suggested ILIKE '%' || (SELECT name FROM departments WHERE id = :deptId) || '%'
+                    )
+                )`, { deptId: filters.departmentId });
+            }
+
+            if (filters.senderQuery) {
+                const senderPattern = `%${filters.senderQuery.replace(/'/g, "''")}%`;
+                query.andWhere(
+                    '(doc.senderName ILIKE :senderPattern OR source.organization_name ILIKE :senderPattern OR source.sender_name ILIKE :senderPattern)',
+                    { senderPattern }
+                );
+            }
+
+            let hasSearch = false;
+            let ftsWords = '';
+            let exactPhrase = '';
+
             if (filters.searchQuery) {
-                const words = filters.searchQuery
-                    .trim()
+                exactPhrase = filters.searchQuery.trim();
+                ftsWords = exactPhrase
+                    .replace(/[:&|!()]/g, ' ')
                     .split(/\s+/)
                     .filter(w => w.length > 0)
                     .map(w => w + ':*')
-                    .join(' & ');
+                    .join(' | ');
 
-                if (words.length > 0) {
-                    const tsQuery = `(
-                        doc.search_vector @@ to_tsquery('russian', :words)
+                if (ftsWords.length > 0) {
+                    hasSearch = true;
+
+                    query.andWhere(`(
+                        doc.search_vector @@ to_tsquery('russian', :ftsWords)
+                        OR doc.title ILIKE :exactPhrase
+                        OR doc.senderName ILIKE :exactPhrase
+                        OR doc.registrationNumber ILIKE :likeQuery
+                        OR file.fileName ILIKE :exactPhrase
+                        OR source.organization_name ILIKE :exactPhrase
+                        OR source.sender_name ILIKE :exactPhrase
+                        OR comment.text ILIKE :exactPhrase
+                        OR currentDept.name ILIKE :likeQuery
+                        OR department.name ILIKE :likeQuery
                         OR EXISTS (
                             SELECT 1 FROM ocr_results ocr
                             WHERE ocr.document_id = doc.id
-                            AND ocr.search_vector @@ to_tsquery('russian', :words)
+                            AND (ocr.search_vector @@ to_tsquery('russian', :ftsWords) OR ocr.normalized_text ILIKE :exactPhrase)
                         )
                         OR EXISTS (
                             SELECT 1 FROM document_ai_results ai
                             WHERE ai.document_id = doc.id
-                            AND to_tsvector('russian', coalesce(ai.summary_text, '')) @@ to_tsquery('russian', :words)
+                            AND to_tsvector('russian', coalesce(ai.summary_text, '')) @@ to_tsquery('russian', :ftsWords)
                         )
-                        OR doc.title ILIKE :likeQuery
-                        OR doc.senderName ILIKE :likeQuery
-                        OR doc.registrationNumber ILIKE :likeQuery
-                        OR EXISTS (
-                            SELECT 1 FROM ocr_results ocr2
-                            WHERE ocr2.document_id = doc.id
-                            AND ocr2.normalized_text ILIKE :likeQuery
-                        )
-                    )`;
-                    
-                    query.andWhere(tsQuery, { 
-                        words,
-                        likeQuery: `%${filters.searchQuery.trim()}%`
-                    });
+                    )`, { ftsWords, exactPhrase: `%${exactPhrase}%`, likeQuery: `%${exactPhrase}%` });
                 }
             }
 
-            const [documents, total] = await query
-                .orderBy('doc.receivedDate', 'DESC')
-                .addOrderBy('doc.id', 'DESC')
-                .skip(skip)
-                .take(limit)
-                .getManyAndCount();
+            if (hasSearch) {
+                const senderBoost = filters.senderQuery
+                    ? `+ CASE WHEN doc.senderName ILIKE '%${filters.senderQuery.replace(/'/g, "''")}%' THEN 200 ELSE 0 END`
+                    : `+ CASE WHEN doc.senderName ILIKE :exactPhrase THEN 30 ELSE 0 END`;
+
+                query.addSelect(`
+                    CASE WHEN doc.registrationNumber ILIKE :exactPhrase THEN 100 ELSE 0 END
+                    + CASE WHEN doc.title ILIKE :exactPhrase THEN 50 ELSE 0 END
+                    ${senderBoost}
+                    + CASE WHEN file.fileName ILIKE :exactPhrase THEN 20 ELSE 0 END
+                    + CASE WHEN source.organization_name ILIKE :exactPhrase THEN 10 ELSE 0 END
+                    + CASE WHEN source.sender_name ILIKE :exactPhrase THEN 10 ELSE 0 END
+                `, 'boost_score');
+
+                query.addSelect(`
+                    ts_rank(doc.search_vector, to_tsquery('russian', :ftsWords)) 
+                    + COALESCE(ts_rank(ocr_rank.search_vector, to_tsquery('russian', :ftsWords)), 0)
+                `, 'fts_rank');
+
+                query.orderBy('boost_score', 'DESC');
+                query.addOrderBy('fts_rank', 'DESC');
+                query.addOrderBy('doc.receivedDate', 'DESC');
+            } else {
+                query.orderBy('doc.receivedDate', 'DESC');
+            }
+            query.addOrderBy('doc.id', 'DESC');
+
+            let [documents, total] = await query.skip(skip).take(limit).getManyAndCount();
+
+            if (total === 0 && filters.searchQuery) {
+                const fallbackQuery = this.documentRepository
+                    .createQueryBuilder('doc')
+                    .leftJoinAndSelect('doc.documentType', 'documentType')
+                    .leftJoinAndSelect('doc.category', 'category')
+                    .leftJoinAndSelect(
+                        'doc.documentRoutes', 'route',
+                        'route.id = (SELECT dr.id FROM document_routes dr WHERE dr.document_id = doc.id ORDER BY dr.routed_at DESC LIMIT 1)'
+                    )
+                    .leftJoinAndSelect('route.department', 'department')
+                    .leftJoin('doc.currentDepartment', 'currentDept');
+
+                if (filters.typeId) fallbackQuery.andWhere('doc.documentTypeId = :typeId', { typeId: filters.typeId });
+                if (filters.categoryId) fallbackQuery.andWhere('doc.categoryId = :categoryId', { categoryId: filters.categoryId });
+                if (filters.status) fallbackQuery.andWhere('doc.currentStatus = :status', { status: filters.status });
+                if (filters.dateFrom) {
+                    if (dateField === 'upload') {
+                        fallbackQuery.andWhere('doc.uploadedAt >= :dateFrom', { dateFrom: filters.dateFrom + ' 00:00:00' });
+                    } else {
+                        fallbackQuery.andWhere('doc.receivedDate >= :dateFrom', { dateFrom: filters.dateFrom });
+                    }
+                }
+                if (filters.dateTo) {
+                    if (dateField === 'upload') {
+                        fallbackQuery.andWhere('doc.uploadedAt <= :dateTo', { dateTo: filters.dateTo + ' 23:59:59' });
+                    } else {
+                        fallbackQuery.andWhere('doc.receivedDate <= :dateTo', { dateTo: filters.dateTo });
+                    }
+                }
+                if (filters.departmentId) {
+                    fallbackQuery.andWhere(`(
+                        currentDept.id = :deptId 
+                        OR EXISTS (
+                            SELECT 1 FROM document_routes dr_dept 
+                            WHERE dr_dept.document_id = doc.id 
+                            AND dr_dept.department_id = :deptId
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM document_ai_results ai_dept 
+                            WHERE ai_dept.document_id = doc.id 
+                            AND ai_dept.department_suggested IS NOT NULL
+                            AND ai_dept.department_suggested ILIKE '%' || (SELECT name FROM departments WHERE id = :deptId) || '%'
+                        )
+                    )`, { deptId: filters.departmentId });
+                }
+                if (filters.senderQuery) {
+                    fallbackQuery.andWhere('doc.senderName ILIKE :senderPattern', {
+                        senderPattern: `%${filters.senderQuery.replace(/'/g, "''")}%`
+                    });
+                }
+
+                fallbackQuery.andWhere(
+                    '(similarity(doc.title, :rawQuery) > 0.2 OR similarity(currentDept.name, :rawQuery) > 0.2)',
+                    { rawQuery: filters.searchQuery }
+                );
+                fallbackQuery.addSelect('similarity(doc.title, :rawQuery)', 'trgm_score');
+                fallbackQuery.orderBy('trgm_score', 'DESC');
+                fallbackQuery.addOrderBy('doc.receivedDate', 'DESC');
+
+                [documents, total] = await fallbackQuery.skip(skip).take(limit).getManyAndCount();
+            }
+
+            if (total === 0 && filters.searchQuery && filters.useSemanticSearch !== false) {
+                [documents, total] = await this.semanticSearch(filters, skip, limit);
+            }
 
             const items: DocumentListItemDto[] = documents.map(doc => ({
-                id: doc.id,
-                registrationNumber: doc.registrationNumber,
-                title: doc.title,
-                senderName: doc.senderName,
+                id: doc.id, registrationNumber: doc.registrationNumber,
+                title: doc.title, senderName: doc.senderName,
                 receivedDate: doc.receivedDate,
                 documentType: doc.documentType?.name ?? 'Не указан',
                 category: doc.category?.name ?? null,
@@ -136,13 +257,13 @@ export class DocumentsService {
                 department: doc.documentRoutes?.[0]?.department?.name ?? null,
             }));
 
+            if (filters.searchQuery) {
+                await this.logSearch(filters.searchQuery, total, 'fast');
+            }
+
             await this.logger.log({
-                module: 'Documents',
-                type: 'GET',
-                url: '/documents',
-                action: 'получение списка документов',
-                status: 'success',
-                statusCode: 200,
+                module: 'Documents', type: 'GET', url: '/documents',
+                action: 'получение списка документов', status: 'success', statusCode: 200,
                 message: `Найдено документов: ${total}`,
             });
 
@@ -152,12 +273,8 @@ export class DocumentsService {
             const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'GET',
-                url: '/documents',
-                action: 'получение списка документов',
-                status: 'error',
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                module: 'Documents', type: 'GET', url: '/documents',
+                action: 'получение списка документов', status: 'error', statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: errorMessage,
             });
 
@@ -168,49 +285,30 @@ export class DocumentsService {
         }
     }
 
-    // ========================================================================
-    // GET /documents/:id — карточка документа
-    // ========================================================================
+    // GET /documents/:id - карточка документа
     async findOne(id: number): Promise<DocumentCardDto> {
         try {
             const document = await this.documentRepository.findOne({
                 where: { id },
                 relations: [
-                    'documentType',
-                    'category',
-                    'creator',
-                    'files',
-                    'ocrResult',
-                    'classifications',
-                    'classifications.documentType',
-                    'classifications.documentCategory',
-                    'documentRoutes',
-                    'documentRoutes.department',
-                    'sources',
-                    'aiResults'
+                    'documentType', 'category', 'creator', 'files',
+                    'ocrResult', 'classifications', 'classifications.documentType',
+                    'classifications.documentCategory', 'documentRoutes',
+                    'documentRoutes.department', 'sources', 'aiResults'
                 ],
             });
 
             if (!document) {
                 await this.logger.log({
-                    module: 'Documents',
-                    type: 'GET',
-                    url: `/documents/${id}`,
-                    action: 'получение карточки документа',
-                    status: 'error',
-                    statusCode: 404,
+                    module: 'Documents', type: 'GET', url: `/documents/${id}`,
+                    action: 'получение карточки документа', status: 'error', statusCode: 404,
                     message: `Документ с id ${id} не найден`,
                 });
                 throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
             }
 
-            document.classifications?.sort((a, b) =>
-                b.createdAt.getTime() - a.createdAt.getTime()
-            );
-
-            document.aiResults?.sort((a, b) =>
-                b.createdAt.getTime() - a.createdAt.getTime()
-            );
+            document.classifications?.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+            document.aiResults?.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
             const result: DocumentCardDto = {
                 id: document.id,
@@ -218,59 +316,44 @@ export class DocumentsService {
                 title: document.title,
                 senderName: document.senderName,
                 receivedDate: document.receivedDate,
+                uploadedAt: document.uploadedAt,
                 currentStatus: document.currentStatus,
-                confidenceScore: document.confidenceScore
-                    ? Number(document.confidenceScore)
-                    : null,
+                confidenceScore: document.confidenceScore ? Number(document.confidenceScore) : null,
                 documentType: document.documentType?.name || null,
                 category: document.category?.name || null,
                 createdBy: document.creator?.fullName || 'Неизвестно',
                 createdAt: document.createdAt,
                 files: document.files?.map(f => ({
-                    id: f.id,
-                    fileName: f.fileName,
-                    fileType: f.fileType,
-                    filePath: f.filePath,
-                    fileSize: f.fileSize,
-                    uploadedAt: f.uploadedAt,
+                    id: f.id, fileName: f.fileName, fileType: f.fileType,
+                    filePath: f.filePath, fileSize: f.fileSize, uploadedAt: f.uploadedAt,
                 })) || [],
                 ocrResult: document.ocrResult ? {
                     id: document.ocrResult.id,
                     rawText: document.ocrResult.rawText,
                     normalizedText: document.ocrResult.normalizedText,
                     language: document.ocrResult.language,
-                    ocrConfidence: document.ocrResult.ocrConfidence
-                        ? Number(document.ocrResult.ocrConfidence)
-                        : null,
+                    ocrConfidence: document.ocrResult.ocrConfidence ? Number(document.ocrResult.ocrConfidence) : null,
                     processedAt: document.ocrResult.processedAt,
                 } : null,
                 classification: document.classifications?.[0] ? {
                     id: document.classifications[0].id,
                     type: document.classifications[0].documentType?.name || null,
                     category: document.classifications[0].documentCategory?.name || null,
-                    typeConfidence: document.classifications[0].typeConfidence
-                        ? Number(document.classifications[0].typeConfidence)
-                        : null,
-                    categoryConfidence: document.classifications[0].categoryConfidence
-                        ? Number(document.classifications[0].categoryConfidence)
-                        : null,
+                    typeConfidence: document.classifications[0].typeConfidence ? Number(document.classifications[0].typeConfidence) : null,
+                    categoryConfidence: document.classifications[0].categoryConfidence ? Number(document.classifications[0].categoryConfidence) : null,
                     isVerified: document.classifications[0].isVerified,
                     createdAt: document.classifications[0].createdAt,
                 } : null,
                 routes: document.documentRoutes?.map(r => ({
                     departmentName: r.department?.name || 'Не указан',
-                    routeStatus: r.routeStatus,
-                    routeReason: r.routeReason,
-                    routedAt: r.routedAt,
+                    routeStatus: r.routeStatus, routeReason: r.routeReason, routedAt: r.routedAt,
                 })) || [],
-
                 source: document.sources?.[0] ? {
                     sourceType: document.sources[0].sourceType,
                     organizationName: document.sources[0].organizationName,
                     senderName: document.sources[0].senderName,
                     contactInfo: document.sources[0].contactInfo,
                 } : null,
-
                 aiResult: document.aiResults?.[0] ? {
                     id: document.aiResults[0].id,
                     documentId: document.aiResults[0].documentId,
@@ -278,22 +361,20 @@ export class DocumentsService {
                     categorySuggested: document.aiResults[0].categorySuggested,
                     summaryText: document.aiResults[0].summaryText,
                     departmentSuggested: document.aiResults[0].departmentSuggested,
-                    confidenceScore: document.aiResults[0].confidenceScore
-                        ? Number(document.aiResults[0].confidenceScore)
-                        : null,
+                    confidenceScore: document.aiResults[0].confidenceScore ? Number(document.aiResults[0].confidenceScore) : null,
                     providerCode: document.aiResults[0].providerCode,
                     modelName: document.aiResults[0].modelName,
                     createdAt: document.aiResults[0].createdAt,
+                    extractedDate: document.aiResults[0].extractedDate,
+                    extractedAmount: document.aiResults[0].extractedAmount ? Number(document.aiResults[0].extractedAmount) : null,
+                    extractedCounterparty: document.aiResults[0].extractedCounterparty,
+                    keyPhrases: document.aiResults[0].keyPhrases,
                 } : null,
             };
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'GET',
-                url: `/documents/${id}`,
-                action: 'получение карточки документа',
-                status: 'success',
-                statusCode: 200,
+                module: 'Documents', type: 'GET', url: `/documents/${id}`,
+                action: 'получение карточки документа', status: 'success', statusCode: 200,
                 message: 'Документ получен',
             });
 
@@ -303,12 +384,8 @@ export class DocumentsService {
             if (error instanceof HttpException) throw error;
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'GET',
-                url: `/documents/${id}`,
-                action: 'получение карточки документа',
-                status: 'error',
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                module: 'Documents', type: 'GET', url: `/documents/${id}`,
+                action: 'получение карточки документа', status: 'error', statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: error instanceof Error ? error.message : 'Ошибка сервера',
             });
 
@@ -319,60 +396,82 @@ export class DocumentsService {
         }
     }
 
-    // ========================================================================
-    // GET /documents/search?q=... — быстрый поиск по документам (без AI)
-    // ========================================================================
+    // GET /documents/search?q=... - быстрый поиск
     async search(q: string): Promise<DocumentListItemDto[]> {
         try {
             if (!q || q.trim().length === 0) {
                 throw new HttpException('Параметр поиска "q" обязателен', HttpStatus.BAD_REQUEST);
             }
 
-            // Разбиваем на слова, убираем короткие, добавляем префиксный поиск
-            const words = q
-                .trim()
+            const exactPhrase = q.trim();
+            const ftsWords = exactPhrase
+                .replace(/[:&|!()]/g, ' ')
                 .split(/\s+/)
                 .filter(w => w.length > 0)
                 .map(w => w + ':*')
-                .join(' & ');
+                .join(' | ');
 
             const query = this.documentRepository
                 .createQueryBuilder('doc')
                 .leftJoinAndSelect('doc.documentType', 'documentType')
                 .leftJoinAndSelect('doc.category', 'category')
                 .leftJoinAndSelect(
-                    'doc.documentRoutes',
-                    'route',
+                    'doc.documentRoutes', 'route',
                     'route.id = (SELECT dr.id FROM document_routes dr WHERE dr.document_id = doc.id ORDER BY dr.routed_at DESC LIMIT 1)'
                 )
-                .leftJoinAndSelect('route.department', 'department');
+                .leftJoinAndSelect('route.department', 'department')
+                .leftJoin('doc.files', 'file')
+                .leftJoin('doc.currentDepartment', 'currentDept')
+                .leftJoin('doc.sources', 'source')
+                .leftJoin('doc.comments', 'comment')
+                .leftJoin('doc.ocrResult', 'ocr_rank');
 
-            if (words.length > 0) {
+            if (ftsWords.length > 0) {
                 query.andWhere(`(
-                    doc.search_vector @@ to_tsquery('russian', :words)
+                    doc.search_vector @@ to_tsquery('russian', :ftsWords)
+                    OR doc.title ILIKE :exactPhrase
+                    OR doc.senderName ILIKE :exactPhrase
+                    OR doc.registrationNumber ILIKE :likeQuery
+                    OR file.fileName ILIKE :exactPhrase
+                    OR source.organization_name ILIKE :exactPhrase
+                    OR source.sender_name ILIKE :exactPhrase
+                    OR comment.text ILIKE :exactPhrase
+                    OR currentDept.name ILIKE :likeQuery
                     OR EXISTS (
                         SELECT 1 FROM ocr_results ocr
                         WHERE ocr.document_id = doc.id
-                        AND ocr.search_vector @@ to_tsquery('russian', :words)
+                        AND (ocr.search_vector @@ to_tsquery('russian', :ftsWords) OR ocr.normalized_text ILIKE :exactPhrase)
                     )
                     OR EXISTS (
                         SELECT 1 FROM document_ai_results ai
                         WHERE ai.document_id = doc.id
-                        AND to_tsvector('russian', coalesce(ai.summary_text, '')) @@ to_tsquery('russian', :words)
+                        AND to_tsvector('russian', coalesce(ai.summary_text, '')) @@ to_tsquery('russian', :ftsWords)
                     )
-                )`, { words });
+                )`, { ftsWords, exactPhrase: `%${exactPhrase}%`, likeQuery: `%${exactPhrase}%` });
+
+                query.addSelect(`
+                    CASE WHEN doc.registrationNumber ILIKE :exactPhrase THEN 100 ELSE 0 END
+                    + CASE WHEN doc.title ILIKE :exactPhrase THEN 50 ELSE 0 END
+                    + CASE WHEN doc.senderName ILIKE :exactPhrase THEN 30 ELSE 0 END
+                `, 'boost_score');
+
+                query.addSelect(`
+                    ts_rank(doc.search_vector, to_tsquery('russian', :ftsWords)) 
+                    + COALESCE(ts_rank(ocr_rank.search_vector, to_tsquery('russian', :ftsWords)), 0)
+                `, 'fts_rank');
+
+                query.orderBy('boost_score', 'DESC');
+                query.addOrderBy('fts_rank', 'DESC');
+                query.addOrderBy('doc.receivedDate', 'DESC');
+            } else {
+                query.orderBy('doc.receivedDate', 'DESC');
             }
 
-            const documents = await query
-                .orderBy('doc.receivedDate', 'DESC')
-                .take(10)
-                .getMany();
+            const documents = await query.take(10).getMany();
 
             const items: DocumentListItemDto[] = documents.map(doc => ({
-                id: doc.id,
-                registrationNumber: doc.registrationNumber,
-                title: doc.title,
-                senderName: doc.senderName,
+                id: doc.id, registrationNumber: doc.registrationNumber,
+                title: doc.title, senderName: doc.senderName,
                 receivedDate: doc.receivedDate,
                 documentType: doc.documentType?.name ?? 'Не указан',
                 category: doc.category?.name ?? null,
@@ -381,12 +480,8 @@ export class DocumentsService {
             }));
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'GET',
-                url: `/documents/search?q=${encodeURIComponent(q)}`,
-                action: 'поиск документов',
-                status: 'success',
-                statusCode: 200,
+                module: 'Documents', type: 'GET', url: `/documents/search?q=${encodeURIComponent(q)}`,
+                action: 'поиск документов', status: 'success', statusCode: 200,
                 message: `Найдено документов: ${items.length}`,
             });
 
@@ -398,12 +493,8 @@ export class DocumentsService {
             const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'GET',
-                url: '/documents/search',
-                action: 'поиск документов',
-                status: 'error',
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                module: 'Documents', type: 'GET', url: '/documents/search',
+                action: 'поиск документов', status: 'error', statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: errorMessage,
             });
 
@@ -414,71 +505,218 @@ export class DocumentsService {
         }
     }
 
-    // ========================================================================
-    // GET /documents/search/ai?q=... — умный поиск через AI
-    // ========================================================================
+    // GET /documents/search/ai?q=... - умный поиск через AI (в 5 шагов)
     async searchAi(q: string): Promise<DocumentsListResponseDto> {
         try {
-            if (!q || q.trim().length < 3) {
-                throw new HttpException(
-                    'Введите хотя бы 3 символа для умного поиска',
-                    HttpStatus.BAD_REQUEST,
-                );
+            if (!q || q.trim().length < 1) {
+                throw new HttpException('Введите поисковый запрос', HttpStatus.BAD_REQUEST);
             }
 
-            // Рег. номер — сразу в обычный поиск без AI
-            if (/^[А-Яа-яA-Za-z]+-\d+-\d+$/i.test(q.trim())) {
-                return this.findAll({ searchQuery: q.trim(), page: 1, limit: 20 });
+            const looksLikeFileName = /^[a-zA-Z0-9_\.-]+$/.test(q.trim()) && (q.includes('.') || q.length > 5);
+            const fixedQuery = looksLikeFileName ? q.trim() : this.fixKeyboardLayout(q.trim());
+
+            if (/^[А-Яа-яA-Za-z]+-\d+-\d+$/i.test(fixedQuery)) {
+                return this.findAll({ searchQuery: fixedQuery, page: 1, limit: 20 });
             }
 
-            // Предобработка запроса до отправки в AI:
-            // - исправление раскладки клавиатуры (латиница → кириллица)
-            // - удаление стоп-слов ("найди", "покажи", "все")
-            // - нормализация пробелов
-            const cleanQuery = this.preprocessQuery(q);
+            const cleanQuery = this.preprocessQuery(fixedQuery);
 
-            // Короткий запрос (1-2 слова) — обычный поиск без AI
-            if (cleanQuery.split(/\s+/).filter(w => w.length > 0).length < 3) {
-                return this.findAll({ searchQuery: cleanQuery, page: 1, limit: 20 });
+            if (cleanQuery.trim().length < 2) {
+                return this.findAll({ page: 1, limit: 50 });
             }
 
-            const aiFilters = await this.parseSearchQueryWithAi(cleanQuery, q);
-
-            const filters: GetDocumentsDto = {
-                typeId: aiFilters.typeId ?? undefined,
-                categoryId: aiFilters.categoryId ?? undefined,
-                status: aiFilters.status ?? undefined,
-                dateFrom: aiFilters.dateFrom ?? undefined,
-                dateTo: aiFilters.dateTo ?? undefined,
-                searchQuery: aiFilters.searchQuery ?? undefined,
-                page: 1,
-                limit: 20,
+            const departmentKeywords: Record<string, string[]> = {
+                'Технический отдел': ['технический', 'техотдел', 'тех отдел'],
+                'Бухгалтерия': ['бухгалтерия', 'бухгалтерии', 'бухучёт', 'финансовый отдел', 'финансы'],
+                'Юридический отдел': ['юридический', 'юротдел', 'юр отдел', 'юрист'],
+                'Отдел закупок': ['закупки', 'закупок', 'снабжение', 'тендер'],
+                'Отдел кадров': ['кадры', 'кадров', 'персонал'],
+                'Управление': ['управление', 'администрация'],
             };
 
-            const result = await this.findAll(filters);
+            let detectedDepartmentId: number | null = null;
+            const queryLower = cleanQuery.toLowerCase();
 
-            await this.logger.log({
-                module: 'Documents',
-                type: 'GET',
-                url: `/documents/search/ai?q=${encodeURIComponent(q)}`,
-                action: 'умный поиск через AI',
-                status: 'success',
-                statusCode: 200,
-                message: `Запрос: "${q}". Найдено: ${result.total}. Фильтры: ${JSON.stringify(aiFilters)}`,
+            for (const [deptName, keywords] of Object.entries(departmentKeywords)) {
+                if (keywords.some(kw => queryLower.includes(kw))) {
+                    const deptResult = await this.documentRepository.manager.query(
+                        `SELECT id FROM departments WHERE name ILIKE $1 LIMIT 1`,
+                        [`%${deptName}%`]
+                    );
+                    if (deptResult.length > 0) {
+                        detectedDepartmentId = deptResult[0].id;
+                        break;
+                    }
+                }
+            }
+
+            if (detectedDepartmentId) {
+                await this.logger.log({
+                    module: 'Documents', type: 'GET', url: `/documents/search/ai?q=${encodeURIComponent(q)}`,
+                    action: 'умный поиск — быстрый поиск по отделу', status: 'success', statusCode: 200,
+                    message: `Отдел: ${detectedDepartmentId}`,
+                });
+                return this.findAll({
+                    departmentId: detectedDepartmentId,
+                    searchQuery: cleanQuery,
+                    page: 1, limit: 50,
+                });
+            }
+
+            const expandedQuery = await this.expandWithSynonyms(cleanQuery);
+
+            // шаг 1: Точное совпадение фразы
+            const isExactQuery = fixedQuery.includes(':') || fixedQuery.includes('"') || looksLikeFileName;
+
+            if (isExactQuery) {
+                const exactCheck = await this.documentRepository
+                    .createQueryBuilder('doc_exact')
+                    .select('doc_exact.id', 'id')
+                    .leftJoin('doc_exact.ocrResult', 'ocr_phrase')
+                    .leftJoin('doc_exact.files', 'file_exact')
+                    .where(`(
+                        ocr_phrase.normalized_text ILIKE :exactFull 
+                        OR doc_exact.title ILIKE :exactFull 
+                        OR file_exact.fileName ILIKE :exactFull
+                    )`, { exactFull: `%${fixedQuery}%` });
+
+                const exactResults = await exactCheck.getRawMany();
+                const exactIds = exactResults.map((r: any) => r.id);
+
+                if (exactIds.length > 0) {
+                    const step1Result = await this.findAll({
+                        searchQuery: fixedQuery,
+                        page: 1, limit: 50,
+                    });
+                    step1Result.items = step1Result.items.filter(item => exactIds.includes(item.id));
+                    step1Result.total = step1Result.items.length;
+                    step1Result.totalPages = Math.ceil(step1Result.total / step1Result.limit);
+
+                    await this.logger.log({
+                        module: 'Documents', type: 'GET', url: `/documents/search/ai?q=${encodeURIComponent(q)}`,
+                        action: 'умный поиск — шаг 1 (точное совпадение)', status: 'success', statusCode: 200,
+                        message: `Найдено: ${step1Result.total}`,
+                    });
+                    return step1Result;
+                }
+            }
+
+            // шаг 2: Поиск по корням слов (падежи и окончания)
+            const searchWords = cleanQuery.split(/\s+/).filter(w => w.length > 0);
+            if (searchWords.length >= 2) {
+                const rootConditions = searchWords.map((_, i) => {
+                    const root = searchWords[i].length >= 4
+                        ? searchWords[i].substring(0, searchWords[i].length - 2)
+                        : searchWords[i];
+                    return `(
+                        doc_exact.title ILIKE '%${root}%'
+                        OR doc_exact.senderName ILIKE '%${root}%'
+                        OR EXISTS (
+                            SELECT 1 FROM ocr_results ocr_e
+                            WHERE ocr_e.document_id = doc_exact.id
+                            AND ocr_e.normalized_text ILIKE '%${root}%'
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM document_files file_e
+                            WHERE file_e.document_id = doc_exact.id
+                            AND file_e.file_name ILIKE '%${root}%'
+                        )
+                    )`;
+                }).join(' AND ');
+
+                const step2Query = this.documentRepository
+                    .createQueryBuilder('doc_exact')
+                    .select('doc_exact.id', 'id')
+                    .where(`(${rootConditions})`);
+
+                const step2Results = await step2Query.getRawMany();
+                const step2Ids = step2Results.map((r: any) => r.id);
+
+                if (step2Ids.length > 0) {
+                    const step2Result = await this.findAll({
+                        searchQuery: cleanQuery,
+                        page: 1, limit: 50,
+                    });
+                    step2Result.items = step2Result.items.filter(item => step2Ids.includes(item.id));
+                    step2Result.total = step2Result.items.length;
+                    step2Result.totalPages = Math.ceil(step2Result.total / step2Result.limit);
+
+                    await this.logger.log({
+                        module: 'Documents', type: 'GET', url: `/documents/search/ai?q=${encodeURIComponent(q)}`,
+                        action: 'умный поиск — шаг 2 (корни слов)', status: 'success', statusCode: 200,
+                        message: `Найдено: ${step2Result.total}`,
+                    });
+                    return step2Result;
+                }
+            }
+
+            // шаг 3: AI-фильтры
+            let aiFilters = await this.parseSearchQueryWithAi(cleanQuery, fixedQuery);
+
+            if (!aiFilters.typeId && !aiFilters.categoryId && !aiFilters.status && !aiFilters.senderQuery && !aiFilters.departmentId) {
+                aiFilters = this.fallbackParse(cleanQuery);
+            }
+
+            const hasFilters = aiFilters.typeId || aiFilters.categoryId || aiFilters.status ||
+                aiFilters.senderQuery || aiFilters.dateFrom || aiFilters.dateTo || aiFilters.departmentId;
+
+            if (hasFilters) {
+                const step3Result = await this.findAll({
+                    typeId: aiFilters.typeId ?? undefined,
+                    categoryId: aiFilters.categoryId ?? undefined,
+                    status: aiFilters.status ?? undefined,
+                    dateFrom: aiFilters.dateFrom ?? undefined,
+                    dateTo: aiFilters.dateTo ?? undefined,
+                    departmentId: aiFilters.departmentId ?? undefined,
+                    senderQuery: aiFilters.senderQuery ?? undefined,
+                    page: 1, limit: 50, useSemanticSearch: true,
+                });
+
+                if (step3Result.total > 0) {
+                    await this.logger.log({
+                        module: 'Documents', type: 'GET', url: `/documents/search/ai?q=${encodeURIComponent(q)}`,
+                        action: 'умный поиск — шаг 3 (AI-фильтры)', status: 'success', statusCode: 200,
+                        message: `Найдено: ${step3Result.total}. Фильтры: ${JSON.stringify(aiFilters)}`,
+                    });
+                    return step3Result;
+                }
+            }
+
+            // шаг 4: Широкий поиск через FTS
+            const step4Result = await this.findAll({
+                searchQuery: expandedQuery,
+                page: 1, limit: 50, useSemanticSearch: true,
             });
 
-            return result;
+            if (step4Result.total > 0) {
+                await this.logger.log({
+                    module: 'Documents', type: 'GET', url: `/documents/search/ai?q=${encodeURIComponent(q)}`,
+                    action: 'умный поиск — шаг 4 (широкий FTS)', status: 'success', statusCode: 200,
+                    message: `Найдено: ${step4Result.total}`,
+                });
+                return step4Result;
+            }
+
+            // шаг 5: Нечёткий поиск через триграммы
+            const step5Result = await this.findAll({
+                searchQuery: expandedQuery,
+                page: 1, limit: 50, useSemanticSearch: false,
+            });
+
+            await this.logger.log({
+                module: 'Documents', type: 'GET', url: `/documents/search/ai?q=${encodeURIComponent(q)}`,
+                action: 'умный поиск — шаг 5 (триграммы)', status: 'success', statusCode: 200,
+                message: `Найдено: ${step5Result.total}`,
+            });
+
+            return step5Result;
 
         } catch (error) {
             if (error instanceof HttpException) throw error;
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'GET',
-                url: '/documents/search/ai',
-                action: 'умный поиск через AI',
-                status: 'error',
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                module: 'Documents', type: 'GET', url: '/documents/search/ai',
+                action: 'умный поиск через AI', status: 'error', statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: error instanceof Error ? error.message : 'Ошибка сервера',
             });
 
@@ -492,9 +730,7 @@ export class DocumentsService {
     // DELETE /documents/:id - удаление документа
     async delete(id: number): Promise<void> {
         try {
-            const document = await this.documentRepository.findOne({
-                where: { id },
-            });
+            const document = await this.documentRepository.findOne({ where: { id } });
 
             if (!document) {
                 throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
@@ -508,12 +744,8 @@ export class DocumentsService {
             await this.documentRepository.remove(document);
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'DELETE',
-                url: `/documents/${id}`,
-                action: 'удаление документа',
-                status: 'success',
-                statusCode: 200,
+                module: 'Documents', type: 'DELETE', url: `/documents/${id}`,
+                action: 'удаление документа', status: 'success', statusCode: 200,
                 message: `Документ ${document.registrationNumber} удалён`,
             });
 
@@ -523,12 +755,8 @@ export class DocumentsService {
             const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'DELETE',
-                url: `/documents/${id}`,
-                action: 'удаление документа',
-                status: 'error',
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                module: 'Documents', type: 'DELETE', url: `/documents/${id}`,
+                action: 'удаление документа', status: 'error', statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: errorMessage,
             });
 
@@ -540,10 +768,7 @@ export class DocumentsService {
     }
 
     // POST /documents/upload - загрузка файла и создание документа
-    async uploadDocument(
-        file: Express.Multer.File,
-        createdBy: number,
-    ): Promise<UploadDocumentResponseDto> {
+    async uploadDocument(file: Express.Multer.File, createdBy: number): Promise<UploadDocumentResponseDto> {
         try {
             const fileExtension = file.originalname.split('.').pop()?.toLowerCase() || '';
             if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
@@ -566,7 +791,6 @@ export class DocumentsService {
             const document = this.documentRepository.create({
                 registrationNumber,
                 title: safeFileName,
-                receivedDate: new Date(),
                 senderName: 'Загружен через сканирование',
                 currentStatus: 'in_review',
                 createdBy,
@@ -592,12 +816,8 @@ export class DocumentsService {
             await this.documentFileRepository.save(fileRecord);
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'POST',
-                url: '/documents/upload',
-                action: 'загрузка документа',
-                status: 'success',
-                statusCode: 201,
+                module: 'Documents', type: 'POST', url: '/documents/upload',
+                action: 'загрузка документа', status: 'success', statusCode: 201,
                 message: `Документ ${registrationNumber} создан`,
             });
 
@@ -616,12 +836,8 @@ export class DocumentsService {
             const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'POST',
-                url: '/documents/upload',
-                action: 'загрузка документа',
-                status: 'error',
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                module: 'Documents', type: 'POST', url: '/documents/upload',
+                action: 'загрузка документа', status: 'error', statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: errorMessage,
             });
 
@@ -635,10 +851,7 @@ export class DocumentsService {
     // POST /documents/:id/extract-text - извлечение текста из файла
     async extractText(id: number): Promise<ExtractTextResponseDto> {
         try {
-            const document = await this.documentRepository.findOne({
-                where: { id },
-                relations: ['files', 'ocrResult'],
-            });
+            const document = await this.documentRepository.findOne({ where: { id }, relations: ['files', 'ocrResult'] });
 
             if (!document) {
                 throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
@@ -699,13 +912,20 @@ export class DocumentsService {
             ocrResult.processedAt = new Date();
             await this.ocrResultRepository.save(ocrResult);
 
+            try {
+                const embedding = await this.getEmbedding(
+                    `Название: ${document.title}. Содержание: ${extractedText.trim().substring(0, 7000)}`
+                );
+                if (embedding) {
+                    const vectorStr = `[${embedding.join(',')}]`;
+                    await this.documentRepository.createQueryBuilder().update(Document)
+                        .set({ embedding: () => `'${vectorStr}'::vector` }).where('id = :id', { id }).execute();
+                }
+            } catch (e) { }
+
             await this.logger.log({
-                module: 'Documents',
-                type: 'POST',
-                url: `/documents/${id}/extract-text`,
-                action: 'извлечение текста',
-                status: 'success',
-                statusCode: 200,
+                module: 'Documents', type: 'POST', url: `/documents/${id}/extract-text`,
+                action: 'извлечение текста', status: 'success', statusCode: 200,
                 message: `Текст извлечён, символов: ${extractedText.length}`,
             });
 
@@ -726,12 +946,8 @@ export class DocumentsService {
             const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
 
             await this.logger.log({
-                module: 'Documents',
-                type: 'POST',
-                url: `/documents/${id}/extract-text`,
-                action: 'извлечение текста',
-                status: 'error',
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                module: 'Documents', type: 'POST', url: `/documents/${id}/extract-text`,
+                action: 'извлечение текста', status: 'error', statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: errorMessage,
             });
 
@@ -742,65 +958,75 @@ export class DocumentsService {
         }
     }
 
-    // ========================================================================
-    // ПРИВАТНЫЕ МЕТОДЫ
-    // ========================================================================
-
-    // Предобработка поискового запроса до отправки в AI
-    // Правила: исправление раскладки клавиатуры, удаление стоп-слов, нормализация
-    private preprocessQuery(raw: string): string {
-        let q = raw.trim();
-
-        // 1. Исправление неверной раскладки клавиатуры (латиница → кириллица)
-        q = this.fixKeyboardLayout(q);
-
-        // 2. Удаление стоп-слов (правила 13, 16)
-        const stopWords = /\b(найди|покажи|все|документы|где|какие|есть|мне|нужны|хочу|дай|выведи|список|открой|ищи|ищу|посмотри|там|типа|вроде|этот|эта|это|который)\b/gi;
-        q = q.replace(stopWords, '');
-
-        // 3. Удаление эмодзи
-        q = q.replace(/[\u{1F600}-\u{1F6FF}]/gu, '');
-
-        // 4. Нормализация пробелов
-        q = q.replace(/\s+/g, ' ').trim();
-
-        // Если после чистки почти ничего не осталось — возвращаем оригинал
-        return q.length >= 3 ? q : raw.trim();
+    // POST /documents/generate-embeddings - генерация векторов
+    async generateEmbeddings(): Promise<{ message: string; count: number }> {
+        const documents = await this.documentRepository.find({
+            where: { embedding: IsNull() }, relations: ['ocrResult'],
+        });
+        let count = 0;
+        for (const doc of documents) {
+            const text = doc.ocrResult?.normalizedText || doc.title;
+            const embedding = await this.getEmbedding(
+                `Название: ${doc.title}. Содержание: ${text.substring(0, 7000)}`
+            );
+            if (embedding) {
+                const vectorStr = `[${embedding.join(',')}]`;
+                await this.documentRepository.createQueryBuilder().update(Document)
+                    .set({ embedding: () => `'${vectorStr}'::vector` }).where('id = :id', { id: doc.id }).execute();
+                count++;
+            }
+        }
+        return { message: `Сгенерировано embeddings: ${count} из ${documents.length}`, count };
     }
 
-    // Исправление неверной раскладки клавиатуры
+    private preprocessQuery(raw: string): string {
+        let q = raw.trim();
+        q = q.replace(/\b(найди|покажи|все|документы|где|какие|есть|мне|нужны|хочу|дай|выведи|список|открой|ищи|ищу|посмотри|там|типа|вроде|этот|эта|это|который)\b/gi, '');
+        q = q.replace(/[\u{1F600}-\u{1F6FF}]/gu, '').replace(/\s+/g, ' ').trim();
+        return q.length >= 1 ? q : raw.trim();
+    }
+
     private fixKeyboardLayout(text: string): string {
-        const latinChars = text.match(/[a-zA-Z]/g);
-        const cyrillicChars = text.match(/[а-яА-ЯёЁ]/g);
-
-        // Если в тексте много латиницы и почти нет кириллицы — похоже на неверную раскладку
-        if (latinChars && latinChars.length > text.length * 0.5 && (!cyrillicChars || cyrillicChars.length < text.length * 0.2)) {
+        if (/^[a-zA-Z]+$/.test(text) || (/[a-zA-Z]/.test(text) && text.length <= 20)) {
             const layoutMap: Record<string, string> = {
-                'a': 'ф', 'b': 'и', 'c': 'с', 'd': 'в', 'e': 'у', 'f': 'а',
-                'g': 'п', 'h': 'р', 'i': 'ш', 'j': 'о', 'k': 'л', 'l': 'д',
-                'm': 'ь', 'n': 'т', 'o': 'щ', 'p': 'з', 'q': 'й', 'r': 'к',
-                's': 'ы', 't': 'е', 'u': 'г', 'v': 'м', 'w': 'ц', 'x': 'ч',
-                'y': 'н', 'z': 'я',
-                'A': 'Ф', 'B': 'И', 'C': 'С', 'D': 'В', 'E': 'У', 'F': 'А',
-                'G': 'П', 'H': 'Р', 'I': 'Ш', 'J': 'О', 'K': 'Л', 'L': 'Д',
-                'M': 'Ь', 'N': 'Т', 'O': 'Щ', 'P': 'З', 'Q': 'Й', 'R': 'К',
-                'S': 'Ы', 'T': 'Е', 'U': 'Г', 'V': 'М', 'W': 'Ц', 'X': 'Ч',
-                'Y': 'Н', 'Z': 'Я',
-                '[': 'х', '{': 'Х', ']': 'ъ', '}': 'Ъ', ';': 'ж', ':': 'Ж',
-                "'": 'э', '"': 'Э', ',': 'б', '<': 'Б', '.': 'ю', '>': 'Ю',
-                '/': '.', '?': ',', '`': 'ё', '~': 'Ё'
+                'a': 'ф', 'b': 'и', 'c': 'с', 'd': 'в', 'e': 'у', 'f': 'а', 'g': 'п', 'h': 'р', 'i': 'ш',
+                'j': 'о', 'k': 'л', 'l': 'д', 'm': 'ь', 'n': 'т', 'o': 'щ', 'p': 'з', 'q': 'й', 'r': 'к',
+                's': 'ы', 't': 'е', 'u': 'г', 'v': 'м', 'w': 'ц', 'x': 'ч', 'y': 'н', 'z': 'я',
+                '[': 'х', ']': 'ъ', ';': 'ж', "'": 'э', ',': 'б', '.': 'ю', '/': '.', '`': 'ё',
             };
-            return text.split('').map(ch => layoutMap[ch] || ch).join('');
+            const converted = text.split('').map(ch => layoutMap[ch.toLowerCase()] || ch).join('');
+            if (/[а-яё]/.test(converted)) {
+                return converted;
+            }
         }
-
         return text;
     }
 
-    // Получение справочников для промпта
-    private async getTypesAndCategoriesForPrompt(): Promise<{
-        types: string;
-        categories: string;
-    }> {
+    private async expandWithSynonyms(query: string): Promise<string> {
+        try {
+            const words = query.trim().split(/\s+/);
+            const expanded: string[] = [];
+            for (const word of words) {
+                expanded.push(word);
+                const result = await this.documentRepository.manager.query(`
+                    SELECT synonyms FROM search_synonyms 
+                    WHERE $1 ILIKE term || '%' 
+                       OR term ILIKE $1 || '%'
+                       OR EXISTS (
+                           SELECT 1 FROM unnest(synonyms) s 
+                           WHERE $1 ILIKE s || '%' OR s ILIKE $1 || '%'
+                       )
+                    LIMIT 1
+                `, [word.toLowerCase()]);
+                if (result.length > 0) {
+                    expanded.push(...result[0].synonyms);
+                }
+            }
+            return [...new Set(expanded)].join(' ');
+        } catch { return query; }
+    }
+
+    private async getTypesAndCategoriesForPrompt(): Promise<{ types: string; categories: string; departments: string }> {
         const types = await this.documentRepository.manager
             .createQueryBuilder()
             .select('dt.id', 'id')
@@ -815,72 +1041,62 @@ export class DocumentsService {
             .from('document_categories', 'dc')
             .getRawMany();
 
-        const typesStr = types.map((t: any) => `${t.id} - ${t.name}`).join(', ');
-        const categoriesStr = categories.map((c: any) => `${c.id} - ${c.name}`).join(', ');
+        const departments = await this.documentRepository.manager
+            .createQueryBuilder()
+            .select('d.id', 'id')
+            .addSelect('d.name', 'name')
+            .from('departments', 'd')
+            .getRawMany();
 
-        return { types: typesStr, categories: categoriesStr };
+        return {
+            types: types.map((t: any) => `${t.id} - ${t.name}`).join(', '),
+            categories: categories.map((c: any) => `${c.id} - ${c.name}`).join(', '),
+            departments: departments.map((d: any) => `${d.id} - ${d.name}`).join(', '),
+        };
     }
 
-    // Разбор запроса через AI — извлечение фильтров и нормализация searchQuery
-    // AI делает только семантику: фильтры, даты, опечатки, сленг, аббревиатуры
-    // Морфологию и поиск по тексту делает PostgreSQL через tsvector
     private async parseSearchQueryWithAi(cleanQuery: string, originalQuery: string): Promise<{
-        typeId: number | null;
-        categoryId: number | null;
-        status: string | null;
-        dateFrom: string | null;
-        dateTo: string | null;
-        searchQuery: string | null;
+        typeId: number | null; categoryId: number | null; status: string | null;
+        dateFrom: string | null; dateTo: string | null; departmentId: number | null;
+        searchQuery: string | null; senderQuery: string | null;
     }> {
         try {
-            const settings = await this.aiSettingRepository.findOne({
-                where: { isActive: true },
-            });
-
-            if (!settings) {
-                return this.fallbackParse(cleanQuery);
-            }
+            const settings = await this.aiSettingRepository.findOne({ where: { isActive: true } });
+            if (!settings) return this.fallbackParse(cleanQuery);
 
             let apiKey: string;
-            try {
-                apiKey = decrypt(settings.apiKey);
-            } catch {
-                return this.fallbackParse(cleanQuery);
-            }
+            try { apiKey = decrypt(settings.apiKey); } catch { return this.fallbackParse(cleanQuery); }
 
-            const { types, categories } = await this.getTypesAndCategoriesForPrompt();
-            const today = new Date().toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
+            const { types, categories, departments } = await this.getTypesAndCategoriesForPrompt();
+            const today = new Date().toISOString().split('T')[0];
 
-            // Промпт разбит на два чётких блока — фильтры и ключевые слова
-            // Правила сведены к минимуму для стабильности модели
-            const prompt = `Ты — поисковый ассистент. Переведи запрос в JSON.
+            const prompt = `Ты - поисковый ассистент. Переведи запрос в JSON.
 
 Сегодня: ${today}
 
 СПРАВОЧНИКИ:
 Типы: ${types}
 Категории: ${categories}
+Отделы: ${departments}
 Статусы: in_review, approved, completed, sent, pending, pending_verification, routed
 
 ЗАПРОС: "${cleanQuery}"
 
 ОТВЕТЬ СТРОГО JSON:
-{"typeId":null,"categoryId":null,"status":null,"dateFrom":null,"dateTo":null,"searchQuery":"ключевые слова"}
+{"typeId":null,"categoryId":null,"status":null,"dateFrom":null,"dateTo":null,"departmentId":null,"searchQuery":"ключевые слова","senderQuery":"отправитель или null"}
 
 ПРАВИЛА:
-- typeId/categoryId/status — ставь значение ТОЛЬКО если пользователь ЯВНО ограничивает словами "только", "лишь", "исключительно". Иначе null.
-- dateFrom/dateTo в формате YYYY-MM-DD. "за неделю" = последние 7 дней, "за месяц" = 30 дней, "в апреле" = весь апрель.
-- searchQuery — ВСЕГДА заполняй. Исправляй опечатки. Переводи сленг ("первичка"→"первичный документ"). Расшифровывай аббревиатуры ("МЧС"→"мчс министерство"). Оставляй имена, рег.номера, цифры. Убирай предлоги и союзы. Английские слова переводи на русский.`;
-
-            await this.logger.log({
-                module: 'AI',
-                type: 'POST',
-                url: '/documents/search/ai',
-                action: 'запрос к AI для поиска',
-                status: 'success',
-                statusCode: 200,
-                message: `Поисковый запрос: "${originalQuery}" → "${cleanQuery}"`,
-            });
+1. searchQuery - ВСЕГДА заполняй. Слова пиши ЦЕЛИКОМ. Исправляй опечатки. Переводи сленг. Расшифровывай аббревиатуры. Английские слова переводи и добавляй оба варианта.
+2. senderQuery - название организации или ФИО отправителя, если пользователь явно его указал (например: "от Лукойла" - "Лукойл"). Иначе null.
+3. ДАТЫ в формате YYYY-MM-DD: "за апрель" - с 1 по 30 апреля. "за неделю" - последние 7 дней.
+4. typeId/categoryId/status/departmentId = определяй если пользователь упоминает в запросе.
+   Примеры:
+   - "счета от лукойл" - typeId: 5, senderQuery: "лукойл"
+   - "договоры с ТехноПоставкой" - typeId: 1, senderQuery: "ТехноПоставка"
+   - "документы бухгалтерии" - departmentId: 3
+   - "завершённые" - status: "completed"
+   - "просто договоры" - typeId: 1
+   Если не уверен - ставь null.`;
 
             const url = `${settings.baseUrl}/chat/completions`;
 
@@ -890,7 +1106,7 @@ export class DocumentsService {
                     messages: [
                         {
                             role: 'system',
-                            content: 'Ты — поисковый ассистент. Отвечай строго в формате JSON без лишнего текста.',
+                            content: 'Ты - поисковый ассистент. Отвечай строго в формате JSON без лишнего текста.',
                         },
                         { role: 'user', content: prompt },
                     ],
@@ -907,40 +1123,18 @@ export class DocumentsService {
             );
 
             const content = response.data.choices?.[0]?.message?.content;
-            if (!content) {
-                return this.fallbackParse(cleanQuery);
-            }
+            if (!content) return this.fallbackParse(cleanQuery);
 
-            // Безопасный парсинг — модель иногда оборачивает JSON в ```json ... ```
             let parsed: any;
             try {
-                const cleanContent = content
-                    .replace(/```json/g, '')
-                    .replace(/```/g, '')
-                    .trim();
-                parsed = JSON.parse(cleanContent);
+                parsed = JSON.parse(content.replace(/```json/g, '').replace(/```/g, '').trim());
             } catch {
-                await this.logger.log({
-                    module: 'AI',
-                    type: 'POST',
-                    url: '/documents/search/ai',
-                    action: 'парсинг ответа AI',
-                    status: 'error',
-                    statusCode: 500,
-                    message: `Невалидный JSON от AI, используем fallback. Ответ: ${content}`,
-                });
                 return this.fallbackParse(cleanQuery);
             }
 
-            await this.logger.log({
-                module: 'AI',
-                type: 'POST',
-                url: '/documents/search/ai',
-                action: 'ответ от AI для поиска',
-                status: 'success',
-                statusCode: 200,
-                message: `Фильтры: ${JSON.stringify(parsed)}`,
-            });
+            if (parsed.searchQuery && parsed.searchQuery !== cleanQuery) {
+                await this.saveNewSynonyms(cleanQuery, parsed.searchQuery);
+            }
 
             return {
                 typeId: typeof parsed.typeId === 'number' ? parsed.typeId : null,
@@ -948,9 +1142,11 @@ export class DocumentsService {
                 status: typeof parsed.status === 'string' ? parsed.status : null,
                 dateFrom: typeof parsed.dateFrom === 'string' ? parsed.dateFrom : null,
                 dateTo: typeof parsed.dateTo === 'string' ? parsed.dateTo : null,
+                departmentId: typeof parsed.departmentId === 'number' ? parsed.departmentId : null,
                 searchQuery: typeof parsed.searchQuery === 'string' && parsed.searchQuery.length > 0
                     ? parsed.searchQuery
                     : cleanQuery,
+                senderQuery: typeof parsed.senderQuery === 'string' ? parsed.senderQuery : null,
             };
 
         } catch {
@@ -958,14 +1154,39 @@ export class DocumentsService {
         }
     }
 
-    // Fallback-разбор без AI — по ключевым словам
+    private async saveNewSynonyms(original: string, normalized: string): Promise<void> {
+        try {
+            const stopWords = new Set([
+                'и', 'в', 'на', 'с', 'по', 'к', 'от', 'для', 'без', 'до', 'из', 'за', 'об',
+                'это', 'как', 'что', 'не', 'он', 'она', 'они', 'мы', 'вы', 'ты', 'я',
+            ]);
+
+            const origWords = original.toLowerCase()
+                .split(/\s+/)
+                .filter(w => w.length > 2 && !stopWords.has(w));
+
+            const normWords = normalized.toLowerCase()
+                .split(/\s+/)
+                .filter(w => w.length > 2 && !stopWords.has(w));
+
+            for (let i = 0; i < Math.min(origWords.length, normWords.length); i++) {
+                if (origWords[i] !== normWords[i]) {
+                    await this.documentRepository.manager.query(`
+                        INSERT INTO search_synonyms (term, synonyms, created_by)
+                        VALUES ($1, ARRAY[$2], 'ai')
+                        ON CONFLICT (term) DO UPDATE
+                        SET synonyms = array_append(search_synonyms.synonyms, $2),
+                            usage_count = search_synonyms.usage_count + 1
+                    `, [origWords[i], normWords[i]]);
+                }
+            }
+        } catch {}
+    }
+
     private fallbackParse(q: string): {
-        typeId: number | null;
-        categoryId: number | null;
-        status: string | null;
-        dateFrom: string | null;
-        dateTo: string | null;
-        searchQuery: string | null;
+        typeId: number | null; categoryId: number | null; status: string | null;
+        dateFrom: string | null; dateTo: string | null; departmentId: number | null;
+        searchQuery: string | null; senderQuery: string | null;
     } {
         const query = q.toLowerCase();
 
@@ -978,7 +1199,7 @@ export class DocumentsService {
         const categoryMap: Record<string, number> = {
             'кадр': 1, 'техническ': 2, 'обслуживан': 2, 'поставк': 3,
             'оборудован': 3, 'административ': 4, 'переписк': 4,
-            'юридическ': 5, 'финанс': 6, 'оплат': 6,
+            'юридическ': 5, 'финанс': 6, 'оплат': 6, 'бухгалтер': 6,
         };
 
         const statusMap: Record<string, string> = {
@@ -987,18 +1208,31 @@ export class DocumentsService {
             'отправлен': 'sent', 'маршрут': 'routed', 'ожида': 'pending',
         };
 
+        const departmentMap: Record<string, number> = {
+            'бухгалтер': 3, 'финанс': 3,
+            'техническ': 2, 'техотдел': 2,
+            'юридическ': 5, 'юротдел': 5, 'правов': 5,
+            'закуп': 4, 'снабжен': 4, 'тендер': 4,
+            'кадр': 6, 'персонал': 6,
+            'управлен': 1, 'администрац': 1,
+        };
+
         let typeId: number | null = null;
         let categoryId: number | null = null;
         let status: string | null = null;
+        let departmentId: number | null = null;
 
-        for (const [key, value] of Object.entries(typeMap)) {
-            if (query.includes(key)) { typeId = value; break; }
+        for (const [k, v] of Object.entries(typeMap)) {
+            if (query.includes(k)) { typeId = v; break; }
         }
-        for (const [key, value] of Object.entries(categoryMap)) {
-            if (query.includes(key)) { categoryId = value; break; }
+        for (const [k, v] of Object.entries(categoryMap)) {
+            if (query.includes(k)) { categoryId = v; break; }
         }
-        for (const [key, value] of Object.entries(statusMap)) {
-            if (query.includes(key)) { status = value; break; }
+        for (const [k, v] of Object.entries(statusMap)) {
+            if (query.includes(k)) { status = v; break; }
+        }
+        for (const [k, v] of Object.entries(departmentMap)) {
+            if (query.includes(k)) { departmentId = v; break; }
         }
 
         return {
@@ -1007,7 +1241,83 @@ export class DocumentsService {
             status,
             dateFrom: null,
             dateTo: null,
+            departmentId,
             searchQuery: q.length > 0 ? q : null,
+            senderQuery: null,
         };
+    }
+
+    private async semanticSearch(
+        filters: GetDocumentsDto,
+        skip: number,
+        limit: number,
+    ): Promise<[Document[], number]> {
+        try {
+            const queryEmbedding = await this.getEmbedding(filters.searchQuery!);
+            if (!queryEmbedding) return [[], 0];
+
+            const vectorStr = `[${queryEmbedding.join(',')}]`;
+
+            const vectorQuery = this.documentRepository
+                .createQueryBuilder('doc')
+                .leftJoinAndSelect('doc.documentType', 'documentType')
+                .leftJoinAndSelect('doc.category', 'category')
+                .leftJoinAndSelect(
+                    'doc.documentRoutes', 'route',
+                    'route.id = (SELECT dr.id FROM document_routes dr WHERE dr.document_id = doc.id ORDER BY dr.routed_at DESC LIMIT 1)'
+                )
+                .leftJoinAndSelect('route.department', 'department')
+                .where('doc.embedding IS NOT NULL')
+                .orderBy(`doc.embedding <=> '${vectorStr}'::vector`, 'ASC');
+
+            if (filters.typeId) vectorQuery.andWhere('doc.documentTypeId = :typeId', { typeId: filters.typeId });
+            if (filters.categoryId) vectorQuery.andWhere('doc.categoryId = :categoryId', { categoryId: filters.categoryId });
+            if (filters.status) vectorQuery.andWhere('doc.currentStatus = :status', { status: filters.status });
+            if (filters.dateFrom) vectorQuery.andWhere('doc.receivedDate >= :dateFrom', { dateFrom: filters.dateFrom });
+            if (filters.dateTo) vectorQuery.andWhere('doc.receivedDate <= :dateTo', { dateTo: filters.dateTo });
+
+            return await vectorQuery.skip(skip).take(limit).getManyAndCount();
+        } catch {
+            return [[], 0];
+        }
+    }
+
+    async getEmbedding(text: string): Promise<number[] | null> {
+        try {
+            const settings = await this.aiSettingRepository.findOne({ where: { isActive: true } });
+            if (!settings) return null;
+
+            let apiKey: string;
+            try { apiKey = decrypt(settings.apiKey); } catch { return null; }
+
+            const truncatedText = text.substring(0, 8000);
+            const url = `${settings.baseUrl}/embeddings`;
+
+            const response = await firstValueFrom(
+                this.httpService.post(url, {
+                    model: 'openai/text-embedding-3-small',
+                    input: truncatedText,
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 15000,
+                }),
+            );
+
+            return response.data?.data?.[0]?.embedding || null;
+        } catch {
+            return null;
+        }
+    }
+
+    private async logSearch(query: string, resultsCount: number, source: string): Promise<void> {
+        try {
+            await this.documentRepository.manager.query(
+                `INSERT INTO search_log (query, results_count, source) VALUES ($1, $2, $3)`,
+                [query, resultsCount, source]
+            );
+        } catch { }
     }
 }
