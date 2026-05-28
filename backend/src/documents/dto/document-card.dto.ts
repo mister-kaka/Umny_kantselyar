@@ -47,7 +47,8 @@ export class DocumentCardDto {
     registrationNumber!: string;
     title!: string;
     senderName!: string;
-    receivedDate!: Date;
+    receivedDate!: Date | null;
+    uploadedAt?: Date | null;
     currentStatus!: string;
     confidenceScore!: number | null;
   

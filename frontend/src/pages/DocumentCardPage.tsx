@@ -88,7 +88,9 @@ const DocumentCardPage: React.FC = () => {
       const result = await getDocumentAiResult(Number(id));
       setAiResult(result);
       setAiAnalyzed(true);
-      setData(prev => prev ? { ...prev, aiResult: result } : prev);
+      // Обновляем данные карточки после AI-анализа (отправитель, дата, тип, категория, уверенность)
+      const updatedData = await getDocumentById(Number(id));
+      setData(updatedData);
     } catch {
       setAiError('Не удалось выполнить анализ документа');
     } finally {
@@ -125,7 +127,15 @@ const DocumentCardPage: React.FC = () => {
     return "confidence-low";
   };
 
-  const overallConfidence = (data.confidenceScore || 0) * 100;
+  const getConfidenceClassFromDecimal = (score: number | null): string => {
+    if (score == null) return "confidence-low";
+    const percent = score * 100;
+    if (percent >= 90) return "confidence-high";
+    if (percent >= 70) return "confidence-medium";
+    return "confidence-low";
+  };
+
+  const overallConfidence = data.confidenceScore != null ? data.confidenceScore * 100 : 0;
   const hasOcrText = !!data.ocrResult?.rawText;
 
   return (
@@ -157,8 +167,8 @@ const DocumentCardPage: React.FC = () => {
         </div>
         <div className="doc-info-divider" />
         <div className="doc-info-item">
-          <span className="doc-info-label">Дата поступления</span>
-          <span className="doc-info-value">{new Date(data.receivedDate).toLocaleDateString('ru-RU')}</span>
+          <span className="doc-info-label">Дата документа</span>
+          <span className="doc-info-value">{data.receivedDate ? new Date(data.receivedDate).toLocaleDateString('ru-RU') : '-'}</span>
         </div>
         <div className="doc-info-divider" />
         <div className="doc-info-item">
@@ -201,7 +211,7 @@ const DocumentCardPage: React.FC = () => {
                   <div className="info-row"><span>Рег. номер</span><strong>{data.registrationNumber}</strong></div>
                   <div className="info-row"><span>Название файла</span><strong>{data.title}</strong></div>
                   <div className="info-row"><span>Отправитель</span><strong>{data.senderName}</strong></div>
-                  <div className="info-row"><span>Дата поступления</span><strong>{new Date(data.receivedDate).toLocaleDateString('ru-RU')}</strong></div>
+                  <div className="info-row"><span>Дата документа</span><strong>{data.receivedDate ? new Date(data.receivedDate).toLocaleDateString('ru-RU') : '-'}</strong></div>
                   <div className="info-row"><span>Тип документа</span><strong>{data.documentType ?? '-'}</strong></div>
                   <div className="info-row"><span>Категория</span><strong>{data.category ?? '-'}</strong></div>
                   <div className="info-row"><span>Внёс в систему</span><strong>{data.createdBy}</strong></div>
@@ -217,14 +227,14 @@ const DocumentCardPage: React.FC = () => {
                     <span className="classif-label">Тип документа</span>
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.type || '-'}</span>
-                      <span className={`confidence-chip ${getConfidenceClass(data.classification?.typeConfidence || 0)}`}>{data.classification?.typeConfidence || 0}%</span>
+                      <span className={`confidence-chip ${getConfidenceClassFromDecimal(data.classification?.typeConfidence ?? null)}`}>{data.classification?.typeConfidence ?? 0}%</span>
                     </div>
                   </div>
                   <div className="classif-item">
                     <span className="classif-label">Категория</span>
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.category || '-'}</span>
-                      <span className={`confidence-chip ${getConfidenceClass(data.classification?.categoryConfidence || 0)}`}>{data.classification?.categoryConfidence || 0}%</span>
+                      <span className={`confidence-chip ${getConfidenceClassFromDecimal(data.classification?.categoryConfidence ?? null)}`}>{data.classification?.categoryConfidence ?? 0}%</span>
                     </div>
                   </div>
                 </div>
@@ -265,7 +275,7 @@ const DocumentCardPage: React.FC = () => {
                 <div className="percentage-legend">
                   <div className="legend-item">
                     <span className="legend-dot" />
-                    <span className="legend-text"><strong>Уверенность:</strong> общая оценка достоверности документа</span>
+                    <span className="legend-text"><strong>Общая уверенность:</strong> средневзвешенная оценка (OCR 20% + AI 80%)</span>
                   </div>
                   <div className="legend-item">
                     <span className="legend-dot" />
@@ -273,7 +283,7 @@ const DocumentCardPage: React.FC = () => {
                   </div>
                   <div className="legend-item">
                     <span className="legend-dot" />
-                    <span className="legend-text"><strong>Точность:</strong> качество извлечения текста из файла</span>
+                    <span className="legend-text"><strong>Точность OCR:</strong> качество извлечения текста из файла</span>
                   </div>
                 </div>
               </Card>
@@ -324,13 +334,37 @@ const DocumentCardPage: React.FC = () => {
                   <div className="ai-result-card">
                     <div className="ai-result-card-label">Уверенность модели</div>
                     <div className="ai-result-card-value">
-                      <span className={`confidence-chip ${getConfidenceClass(aiResult.confidenceScore || 0)}`}>{aiResult.confidenceScore || 0}%</span>
+                      <span className={`confidence-chip ${getConfidenceClassFromDecimal(aiResult.confidenceScore ?? null)}`}>{aiResult.confidenceScore ?? 0}%</span>
                     </div>
                   </div>
+                  {aiResult.extractedDate && (
+                    <div className="ai-result-card">
+                      <div className="ai-result-card-label">Дата в документе</div>
+                      <div className="ai-result-card-value">{new Date(aiResult.extractedDate).toLocaleDateString('ru-RU')}</div>
+                    </div>
+                  )}
+                  {aiResult.extractedCounterparty && (
+                    <div className="ai-result-card">
+                      <div className="ai-result-card-label">Контрагент</div>
+                      <div className="ai-result-card-value">{aiResult.extractedCounterparty}</div>
+                    </div>
+                  )}
+                  {aiResult.extractedAmount != null && (
+                    <div className="ai-result-card">
+                      <div className="ai-result-card-label">Сумма</div>
+                      <div className="ai-result-card-value">{aiResult.extractedAmount.toLocaleString('ru-RU')} ₽</div>
+                    </div>
+                  )}
                   <div className="ai-result-card ai-result-card--wide">
                     <div className="ai-result-card-label">Краткая сводка</div>
                     <div className="ai-result-card-value">{aiResult.summaryText || '-'}</div>
                   </div>
+                  {aiResult.keyPhrases && aiResult.keyPhrases.length > 0 && (
+                    <div className="ai-result-card ai-result-card--wide">
+                      <div className="ai-result-card-label">Ключевые фразы</div>
+                      <div className="ai-result-card-value">{aiResult.keyPhrases.join(', ')}</div>
+                    </div>
+                  )}
                   <div className="ai-result-card ai-result-card--wide">
                     <div className="ai-result-card-label">Использованная модель</div>
                     <div className="ai-result-card-value ai-result-card-value--muted">{aiResult.modelName || '-'}</div>

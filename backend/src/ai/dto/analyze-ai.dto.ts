@@ -9,4 +9,8 @@ export class AnalyzeAiResponseDto {
     providerCode!: string;
     modelName!: string;
     createdAt!: Date;
+    extractedDate?: Date | null;
+    extractedAmount?: number | null;
+    extractedCounterparty?: string | null;
+    keyPhrases?: string[] | null;
 }
