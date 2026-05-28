@@ -46,6 +46,7 @@ export interface DocumentListItem {
   category: string;
   currentStatus: string;
   department: string;
+  isExactMatch?: boolean;
 }
 
 export interface DocumentSource {
@@ -100,6 +101,10 @@ export interface DocumentAiResult {
     providerCode: string;
     modelName: string;
     createdAt: string;
+    extractedDate?: string | null;
+    extractedAmount?: number | null;
+    extractedCounterparty?: string | null;
+    keyPhrases?: string[] | null;
 }
 
 export interface DocumentCard {
