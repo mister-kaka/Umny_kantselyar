@@ -71,7 +71,6 @@ export class DocumentsService {
             if (filters.categoryId) query.andWhere('doc.categoryId = :categoryId', { categoryId: filters.categoryId });
             if (filters.status) query.andWhere('doc.currentStatus = :status', { status: filters.status });
 
-            // Фильтрация по датам: выбор поля для фильтрации
             const dateField = filters.dateField || 'document';
 
             if (filters.dateFrom) {
@@ -178,7 +177,7 @@ export class DocumentsService {
                 query.addOrderBy('fts_rank', 'DESC');
                 query.addOrderBy('doc.receivedDate', 'DESC');
             } else {
-                query.orderBy('doc.receivedDate', 'DESC');
+                query.orderBy('doc.id', 'DESC');
             }
             query.addOrderBy('doc.id', 'DESC');
 
@@ -240,7 +239,7 @@ export class DocumentsService {
                     { rawQuery: filters.searchQuery }
                 );
                 fallbackQuery.addSelect('similarity(doc.title, :rawQuery)', 'trgm_score');
-                fallbackQuery.orderBy('trgm_score', 'DESC');
+                fallbackQuery.orderBy('doc.id', 'DESC');
                 fallbackQuery.addOrderBy('doc.receivedDate', 'DESC');
 
                 [documents, total] = await fallbackQuery.skip(skip).take(limit).getManyAndCount();
@@ -254,6 +253,7 @@ export class DocumentsService {
                 id: doc.id, registrationNumber: doc.registrationNumber,
                 title: doc.title, senderName: doc.senderName,
                 receivedDate: doc.receivedDate,
+                uploadedAt: doc.uploadedAt,
                 documentType: doc.documentType?.name ?? 'Не указан',
                 category: doc.category?.name ?? null,
                 currentStatus: doc.currentStatus,
@@ -478,6 +478,7 @@ export class DocumentsService {
                 id: doc.id, registrationNumber: doc.registrationNumber,
                 title: doc.title, senderName: doc.senderName,
                 receivedDate: doc.receivedDate,
+                uploadedAt: doc.uploadedAt,
                 documentType: doc.documentType?.name ?? 'Не указан',
                 category: doc.category?.name ?? null,
                 currentStatus: doc.currentStatus,

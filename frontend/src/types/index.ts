@@ -42,6 +42,7 @@ export interface DocumentListItem {
   title: string;
   senderName: string;
   receivedDate: string;
+  uploadedAt?: string;
   documentType: string;
   category: string;
   currentStatus: string;
@@ -139,6 +140,7 @@ export interface DocumentsFilters {
   status?: string;
   dateFrom?: string;
   dateTo?: string;
+  dateField?: string;
   page?: number;
   limit?: number;
 }
