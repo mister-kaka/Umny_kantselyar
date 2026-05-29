@@ -1,7 +1,6 @@
 // backend/src/image-processor/image-processor.service.ts
 import { Injectable } from '@nestjs/common';
 import sharp from 'sharp';
-import * as fs from 'fs';
 import * as path from 'path';
 import { AppLoggerService } from '../logger/app-logger.service';
 
@@ -21,9 +20,6 @@ export class ImageProcessorService {
                 .resize(2500, 3500, { fit: 'inside', withoutEnlargement: true })
                 .grayscale()
                 .normalize()
-                .median(2)
-                .sharpen()
-                .threshold(128)
                 .toFile(outputPath);
 
             await this.logger.log({
@@ -47,15 +43,8 @@ export class ImageProcessorService {
                 statusCode: 500,
                 message: error instanceof Error ? error.message : 'Ошибка обработки',
             });
+
             return inputPath;
         }
-    }
-
-    cleanup(processedPath: string): void {
-        try {
-            if (fs.existsSync(processedPath) && processedPath.includes('_processed')) {
-                fs.unlinkSync(processedPath);
-            }
-        } catch {}
     }
 }
