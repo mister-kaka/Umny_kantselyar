@@ -13,11 +13,11 @@ const Pagination: React.FC<PaginationProps> = ({ page, totalPages, onPageChange 
 
   return (
     <div className='paginationWrapper'>
-      <button disabled={page <= 1} onClick={() => onPageChange(page - 1)} className='apply-button'>
+      <button disabled={page <= 1} onClick={() => onPageChange(page - 1)} className='apply-button apply-button-cuttin'>
         ← Назад
       </button>
       <span>Страница {page} из {totalPages}</span>
-      <button disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} className='apply-button'>
+      <button disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} className='apply-button apply-button-cuttin'>
         Вперёд →
       </button>
     </div>

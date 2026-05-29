@@ -122,7 +122,7 @@
 }
 
 /*    отдельные стили для кнопки даты    */
-/* .date-filter-dropdown {
+.date-filter-dropdown {
   position: relative;
   display: inline-block;
 }
@@ -141,13 +141,13 @@
   border-radius: var(--radius-button);
   border: 1px solid var(--border-color);
   background: var(--color-bg-page);
-} */
+}
 
 /*      пагинация      */
 
 .paginationWrapper{
     display: flex;
-    align-content: top;
+    align-items: center;
     gap: 1rem;
 }
 
@@ -169,6 +169,16 @@
 .apply-button:disabled{
   background-color: transparent;
   color: var(--color-accent-hover);
+  cursor: default;
+}
+
+.UltimatePaginationWrapper{
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.apply-button-cuttin{
+  height: 35px;
 }
 
 /*    кнопка сброса фильтров   */
