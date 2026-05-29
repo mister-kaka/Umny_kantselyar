@@ -9,6 +9,7 @@ import { Document } from '../entities/document.entity';
 import { DocumentRoute } from '../entities/document-route.entity';
 import { DocumentFile } from '../entities/document-file.entity';
 import { OcrResult } from '../entities/ocr-result.entity';
+import { DocumentSource } from '../entities/document-source.entity';
 import { AiSetting } from '../entities/ai-setting.entity';
 import { GetDocumentsDto } from './dto/get-documents.dto';
 import { DocumentsListResponseDto, DocumentListItemDto } from './dto/document-list.dto';
@@ -35,6 +36,8 @@ export class DocumentsService {
         private documentFileRepository: Repository<DocumentFile>,
         @InjectRepository(OcrResult)
         private ocrResultRepository: Repository<OcrResult>,
+        @InjectRepository(DocumentSource)
+        private documentSourceRepository: Repository<DocumentSource>,
         @InjectRepository(AiSetting)
         private aiSettingRepository: Repository<AiSetting>,
         private readonly httpService: HttpService,
@@ -294,7 +297,8 @@ export class DocumentsService {
                     'documentType', 'category', 'creator', 'files',
                     'ocrResult', 'classifications', 'classifications.documentType',
                     'classifications.documentCategory', 'documentRoutes',
-                    'documentRoutes.department', 'sources', 'aiResults'
+                    'documentRoutes.department', 'sources', 'aiResults', 
+                    'currentDepartment',
                 ],
             });
 
@@ -323,6 +327,7 @@ export class DocumentsService {
                 category: document.category?.name || null,
                 createdBy: document.creator?.fullName || 'Неизвестно',
                 createdAt: document.createdAt,
+                currentDepartment: document.currentDepartment?.name || null,
                 files: document.files?.map(f => ({
                     id: f.id, fileName: f.fileName, fileType: f.fileType,
                     filePath: f.filePath, fileSize: f.fileSize, uploadedAt: f.uploadedAt,
@@ -812,8 +817,17 @@ export class DocumentsService {
                 filePath: `/uploads/documents/${savedDocument.id}/${safeFileName}`,
                 fileSize: file.size,
             });
-
             await this.documentFileRepository.save(fileRecord);
+
+            const sourceRecord = this.documentSourceRepository.create({
+                documentId: savedDocument.id,
+                sourceType: 'scan',
+                organizationName: null,
+                senderName: 'Загружен через сканирование',
+                contactInfo: null,
+            });
+            await this.documentSourceRepository.save(sourceRecord);
+
 
             await this.logger.log({
                 module: 'Documents', type: 'POST', url: '/documents/upload',
