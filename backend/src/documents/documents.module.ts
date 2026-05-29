@@ -7,6 +7,7 @@ import { Document } from '../entities/document.entity';
 import { DocumentRoute } from '../entities/document-route.entity';
 import { DocumentFile } from '../entities/document-file.entity';
 import { OcrResult } from '../entities/ocr-result.entity';
+import { DocumentSource } from '../entities/document-source.entity';
 import { AiSetting } from '../entities/ai-setting.entity';
 
 @Module({
@@ -16,6 +17,7 @@ import { AiSetting } from '../entities/ai-setting.entity';
             DocumentRoute,
             DocumentFile,
             OcrResult,
+            DocumentSource,
             AiSetting,
         ]),
         HttpModule,

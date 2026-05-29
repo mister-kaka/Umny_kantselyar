@@ -16,7 +16,10 @@ export const statusMap: Record<string, string> = {
     'approved': 'Одобрено',
     'in_review': 'На рассмотрении',
     'sent': 'Отправлено',
-    'rejected': 'Отклонено'
+    'rejected': 'Отклонено', 
+    'pending_verification': 'Ожидает проверки',
+    'routed': 'Направлен в отдел',
+    'verified': 'Проверено',
 };
 
 export const translateStatus = (status: string): string => {
@@ -27,13 +30,16 @@ export const getStatusColor = (status: string): string => {
     switch (status) {
         case 'completed':
         case 'approved':
+        case 'verified':
             return 'status-loaded';
         case 'in_review':
             return 'status-data-refinement';
         case 'pending':
+        case 'pending_verification':
             return 'status-clarify';
         case 'in_progress':
         case 'sent':
+        case 'routed':
             return 'status-assigned';
         case 'rejected':
             return 'status-rejected';

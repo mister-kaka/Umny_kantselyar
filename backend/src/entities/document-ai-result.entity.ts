@@ -48,6 +48,18 @@ export class DocumentAiResult {
     @Column({ name: 'key_phrases', type: 'text', array: true, nullable: true })
     keyPhrases!: string[] | null;
 
+    @Column({ name: 'source_type_suggested', type: 'varchar', length: 50, nullable: true })
+    sourceTypeSuggested!: string | null;
+
+    @Column({ name: 'source_organization_suggested', type: 'varchar', length: 200, nullable: true })
+    sourceOrganizationSuggested!: string | null;
+
+    @Column({ name: 'source_sender_suggested', type: 'varchar', length: 200, nullable: true })
+    sourceSenderSuggested!: string | null;
+
+    @Column({ name: 'source_contact_suggested', type: 'varchar', length: 500, nullable: true })
+    sourceContactSuggested!: string | null;
+
     @ManyToOne(() => Document, (document) => document.aiResults)
     @JoinColumn({ name: 'document_id' })
     document!: Document;
