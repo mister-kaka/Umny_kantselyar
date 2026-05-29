@@ -1,3 +1,4 @@
+// backend/src/ai/ai.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
@@ -10,6 +11,7 @@ import { DocumentType } from '../entities/document-type.entity';
 import { DocumentCategory } from '../entities/document-category.entity';
 import { Department } from '../entities/department.entity';
 import { DocumentClassification } from '../entities/document-classification.entity';
+import { DocumentSource } from '../entities/document-source.entity';
 
 @Module({
     imports: [
@@ -21,6 +23,7 @@ import { DocumentClassification } from '../entities/document-classification.enti
             DocumentCategory,
             Department,
             DocumentClassification,
+            DocumentSource,
         ]),
         HttpModule,
     ],
