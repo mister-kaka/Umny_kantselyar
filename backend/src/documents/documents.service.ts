@@ -978,7 +978,7 @@ export class DocumentsService {
         }
     }
 
-        // PUT /documents/:id/verify - подтверждение оператором
+    // PUT /documents/:id/verify - подтверждение оператором
     async verifyDocument(id: number, dto: VerifyDocumentDto): Promise<{ message: string }> {
         try {
             const document = await this.documentRepository.findOne({ where: { id } });
@@ -989,6 +989,8 @@ export class DocumentsService {
             if (dto.typeId) document.documentTypeId = dto.typeId;
             if (dto.categoryId) document.categoryId = dto.categoryId;
             if (dto.departmentId) document.currentDepartmentId = dto.departmentId;
+            if (dto.receivedDate) document.receivedDate = new Date(dto.receivedDate);
+            if (dto.senderName) document.senderName = dto.senderName;
 
             document.currentStatus = 'verified';
             document.verifiedAt = new Date();

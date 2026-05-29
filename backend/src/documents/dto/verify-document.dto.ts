@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsDateString } from 'class-validator';
 
 export class VerifyDocumentDto {
     @IsNumber()
@@ -12,6 +12,14 @@ export class VerifyDocumentDto {
     @IsNumber()
     @IsOptional()
     departmentId?: number;
+
+    @IsDateString()
+    @IsOptional()
+    receivedDate?: string;
+
+    @IsString()
+    @IsOptional()
+    senderName?: string;
 
     @IsString()
     @IsOptional()
