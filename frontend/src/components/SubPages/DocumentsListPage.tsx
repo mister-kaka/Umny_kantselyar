@@ -12,6 +12,7 @@ import { translateStatus, statusMap, getStatusColor } from "./MainMenu";
 import { DateFilterDropdown } from "../DropdownButton";
 import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
+import Tooltip from "../Tooltip";
 
 const DocumentsListPage = () => {
   const navigate = useNavigate();
@@ -137,7 +138,6 @@ const DocumentsListPage = () => {
       });
       setData(response);
 
-      // Если страница пустая, но не первая — возвращаемся на первую
       if (response.items.length === 0 && page > 1) {
         setPage(1);
       }
@@ -230,7 +230,7 @@ const DocumentsListPage = () => {
           defaultLabel="Статус"
           isOpen={activeFilter === 'status'}
           onToggle={() => toggleFilter('status')}/>
-        <span title="Количество документов на странице">
+        <Tooltip text="Количество документов на странице">
           <DropdownButton
             options={['5', '10', '20', '50']}
             selectedLabel={String(Plimit)}
@@ -241,7 +241,7 @@ const DocumentsListPage = () => {
             defaultLabel="10"
             isOpen={activeFilter === 'limitSelector'}
             onToggle={() => toggleFilter('limitSelector')}/>
-        </span>
+        </Tooltip>
         <button
           className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
           disabled={!hasActiveFilters}
