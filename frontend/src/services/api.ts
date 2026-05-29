@@ -218,3 +218,12 @@ export const extractText = async (
   }
 };
 
+export const createDocumentType = async (name: string): Promise<DocumentType> => {
+    const res = await api.post<DocumentType>('/document-types', { name });
+    return res.data;
+};
+
+export const createDocumentCategory = async (name: string): Promise<DocumentCategory> => {
+    const res = await api.post<DocumentCategory>('/document-categories', { name });
+    return res.data;
+};
