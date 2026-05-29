@@ -105,6 +105,10 @@ export interface DocumentAiResult {
     extractedAmount?: number | null;
     extractedCounterparty?: string | null;
     keyPhrases?: string[] | null;
+    sourceTypeSuggested?: string | null;
+    sourceOrganizationSuggested?: string | null;
+    sourceSenderSuggested?: string | null;
+    sourceContactSuggested?: string | null;
 }
 
 export interface DocumentCard {
@@ -125,6 +129,8 @@ export interface DocumentCard {
     routes: DocumentRoute[];
     source: DocumentSource | null;  
     aiResult: DocumentAiResult | null;
+    uploadedAt?: string | null;
+    currentDepartment?: string | null;
 }
 
 export interface DocumentsFilters {
