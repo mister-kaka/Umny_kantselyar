@@ -161,7 +161,7 @@ const MainMenu = () => {
                                 <th>Рег. номер</th>
                                 <th>Название файла</th>
                                 <th>Статус</th>
-                                <th>Дата</th>
+                                <th>Дата загрузки</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -178,7 +178,7 @@ const MainMenu = () => {
                                             {translateStatus(doc.status)}
                                         </span>
                                     </td>
-                                    <td>{formatDate(String(doc.date))}</td>
+                                    <td>{formatDate(String(doc.uploadedAt || doc.date))}</td>
                                 </tr>
                             ))}
                         </tbody>

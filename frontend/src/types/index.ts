@@ -8,6 +8,7 @@ export interface RecentDocument {
   title: string;
   status: string;
   date: string;
+  uploadedAt?: string;
 }
 
 export interface DepartmentRouteStatus {
