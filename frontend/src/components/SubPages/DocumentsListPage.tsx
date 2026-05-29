@@ -51,7 +51,7 @@ const DocumentsListPage = () => {
   const hasActiveFilters = !!(filters.typeId || filters.categoryId || filters.status || dateFilter.from || dateFilter.to);
 
   const handleRowClick = (id: number) => {
-    navigate(`/dashboard/documents/${id}`);
+    navigate(`/dashboard/documents/${id}`, { state: { from: 'archive' } });
   };
 
   useEffect(() => {

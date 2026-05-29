@@ -3,11 +3,11 @@ export class DocumentListItemDto {
     registrationNumber!: string;
     title!: string;
     senderName!: string;
-    receivedDate!: Date;
+    receivedDate!: Date | null;
     documentType!: string;      
     category!: string | null;  
     currentStatus!: string;
-    department!: string | null; 
+    department!: string | null;
 }
 
 export class DocumentsListResponseDto {

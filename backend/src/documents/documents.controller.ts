@@ -27,22 +27,15 @@ export class DocumentsController {
     }
 
     @UseGuards(AuthGuard('jwt'))
+    @Get('search/ai')
+    async searchAi(@Query('q') q: string): Promise<DocumentsListResponseDto> {
+        return this.documentsService.searchAi(q);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
     @Get('search')
     async searchDocuments(@Query('q') q: string): Promise<DocumentListItemDto[]> {
         return this.documentsService.search(q);
-    }
-
-    @UseGuards(AuthGuard('jwt'))
-    @Get(':id')
-    async getDocumentById(@Param('id', ParseIntPipe) id: number): Promise<DocumentCardDto> {
-        return this.documentsService.findOne(id);
-    }
-
-    @UseGuards(AuthGuard('jwt'))
-    @Delete(':id')
-    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
-        await this.documentsService.delete(id);
-        return { message: 'Документ удалён' };
     }
 
     @UseGuards(AuthGuard('jwt'))
@@ -56,6 +49,25 @@ export class DocumentsController {
             throw new HttpException('Файл обязателен', 400);
         }
         return this.documentsService.uploadDocument(file, req.user.userId);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post('generate-embeddings')
+    async generateEmbeddings(): Promise<{ message: string; count: number }> {
+        return this.documentsService.generateEmbeddings();
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get(':id')
+    async getDocumentById(@Param('id', ParseIntPipe) id: number): Promise<DocumentCardDto> {
+        return this.documentsService.findOne(id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete(':id')
+    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+        await this.documentsService.delete(id);
+        return { message: 'Документ удалён' };
     }
 
     @UseGuards(AuthGuard('jwt'))

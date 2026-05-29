@@ -73,13 +73,13 @@ const Search: React.FC = () => {
   const handleSelect = (id: number) => {
     setIsOpen(false);
     setQuery('');
-    navigate(`/dashboard/documents/${id}`);
+    navigate(`/dashboard/documents/${id}`, { state: { from: 'search' } });
   };
 
 const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
   if (e.key === 'Enter' && query.trim()) {
     if (results.length > 0) {
-      navigate(`/dashboard/documents/${results[0].id}`);
+      navigate(`/dashboard/documents/${results[0].id}`, { state: { from: 'search' } });
       setIsOpen(false);
     }
   }
@@ -93,7 +93,7 @@ const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     <div ref={containerRef} className="Search-dropdown">
       <div className="Search">
         <span className="Search-icon">
-          <img src="/DashboardPage_Images/Search.jpg" alt="🔍" className="Search-icon" />
+          <img src="/icons/header/Search.png" alt="🔍" className="Search-icon" />
         </span>
         <input
           ref={inputRef}

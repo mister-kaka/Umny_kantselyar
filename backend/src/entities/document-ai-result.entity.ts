@@ -33,6 +33,21 @@ export class DocumentAiResult {
     @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     createdAt!: Date;
 
+    @Column({ type: 'vector', nullable: true })
+    embedding!: number[];
+
+    @Column({ name: 'extracted_date', type: 'date', nullable: true })
+    extractedDate!: Date | null;
+
+    @Column({ name: 'extracted_amount', type: 'decimal', precision: 15, scale: 2, nullable: true })
+    extractedAmount!: number | null;
+
+    @Column({ name: 'extracted_counterparty', type: 'varchar', length: 200, nullable: true })
+    extractedCounterparty!: string | null;
+
+    @Column({ name: 'key_phrases', type: 'text', array: true, nullable: true })
+    keyPhrases!: string[] | null;
+
     @ManyToOne(() => Document, (document) => document.aiResults)
     @JoinColumn({ name: 'document_id' })
     document!: Document;

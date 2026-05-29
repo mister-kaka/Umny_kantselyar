@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { DocumentRoute } from './document-route.entity';
+import { Document } from './document.entity';
 import { User } from './user.entity';
 
 @Entity('departments')
@@ -21,4 +22,13 @@ export class Department {
 
   @OneToMany(() => User, (user) => user.department)
   users!: User[];
+
+  @OneToMany(() => DocumentRoute, (documentRoute) => documentRoute.department)
+  currentDocuments!: Document[];
+
+  @OneToMany(() => Document, (document) => document.currentDepartment)
+  documents!: Document[];
+
+  @OneToMany(() => User, (user) => user.department)
+  departmentUsers!: User[];
 }

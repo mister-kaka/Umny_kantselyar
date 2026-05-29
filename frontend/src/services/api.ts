@@ -2,8 +2,7 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings, AiProvider,  UpdateAiSettings, DocumentAiResult, DocumentListItem, UploadResponse,
-ExtractTextResponse } from '../types';
+import { Department, AiSettings, AiProvider, UpdateAiSettings, DocumentAiResult, DocumentListItem, UploadResponse, ExtractTextResponse, AiSearchResponse } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -58,6 +57,8 @@ export const getDocuments = async (filters?: {
   typeId?: number;
   categoryId?: number;
   status?: string;
+  dateFrom?: string;   
+  dateTo?: string; 
   page?: number;
   limit?: number;
 }): Promise<DocumentsListResponse> => {
@@ -138,6 +139,14 @@ export const searchDocuments = async (query: string): Promise<DocumentListItem[]
   return res.data;
 };
 
+export const searchAi = async (q: string): Promise<AiSearchResponse> => {
+  const response = await api.get<AiSearchResponse>('/documents/search/ai', { 
+    params: { q } 
+  });
+  
+  return response.data;
+};
+
 export const analyzeDocument = async (id: number): Promise<DocumentAiResult> => {
    const res = await api.post<DocumentAiResult>(`/documents/${id}/analyze-ai`);
    return res.data;
@@ -197,3 +206,4 @@ export const extractText = async (
     throw error;
   }
 };
+
