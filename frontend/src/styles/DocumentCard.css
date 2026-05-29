@@ -359,10 +359,9 @@
   font-weight: 500;
   color: var(--text-primary, #000000);
   word-break: break-word;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 200px;
+  overflow: visible;
+  white-space: normal;
+  max-width: none;
 }
 
 .doc-info-divider {
