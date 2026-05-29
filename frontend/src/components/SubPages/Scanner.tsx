@@ -12,39 +12,45 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
 
-  // запуск камеры
+  const stopCamera = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+      videoRef.current.load();
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      streamRef.current = null;
+    }
+  }, []);
+
   const startCamera = useCallback(async () => {
     setError("");
     setIsCameraReady(false);
-    
-    // останавливает предыдущий поток
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
+
+    stopCamera();
 
     try {
-      console.log("Запрашиваем доступ к камере...");
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" }
       });
-      
-      console.log("Доступ к камере получен");
-      setStream(mediaStream);
-      
+
+      streamRef.current = mediaStream;
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.onloadedmetadata = () => {
-          console.log("Видео готово");
           setIsCameraReady(true);
         };
       }
     } catch (err) {
-      console.error("Ошибка доступа к камере:", err);
       if ((err as Error).name === "NotAllowedError") {
         setError("Доступ к камере запрещён. Разрешите доступ в настройках браузера.");
       } else if ((err as Error).name === "NotFoundError") {
@@ -53,22 +59,20 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
         setError("Не удалось получить доступ к камере.");
       }
     }
-  }, [stream]);
+  }, [stopCamera]);
+
+  const handleClose = useCallback(() => {
+    stopCamera();
+    onClose();
+  }, [stopCamera, onClose]);
 
   const capturePhoto = async () => {
-    console.log("capturePhoto вызван");
-    console.log("videoRef.current:", videoRef.current);
-    console.log("canvasRef.current:", canvasRef.current);
-    console.log("isCameraReady:", isCameraReady);
-    
     if (!videoRef.current || !canvasRef.current) {
-      console.error("video или canvas не найден");
       setError("Ошибка: не удалось получить видео");
       return;
     }
-    
+
     if (!isCameraReady) {
-      console.error("Камера не готова");
       setError("Камера ещё не готова, подождите");
       return;
     }
@@ -79,44 +83,35 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
     try {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      console.log("Размеры canvas:", canvas.width, canvas.height);
-      
+
       if (canvas.width === 0 || canvas.height === 0) {
         throw new Error("Некорректный размер видео");
       }
 
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Не удалось получить контекст canvas");
-      
+
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      console.log("Кадр отрисован");
-      
+
       const blob = await new Promise<Blob | null>((resolve) => {
         canvas.toBlob(resolve, "image/jpeg", 0.9);
       });
-      
-      if (!blob) throw new Error("Не удалось создать изображение");
-      console.log("Blob создан, размер:", blob.size, "bytes");
-      
-      // создаем файл
-      const fileName = `scan_${Date.now()}.jpg`;
-      const file = new File([blob], fileName, { type: "image/jpeg" });
-      console.log("File создан:", file.name, file.size, "bytes");
-      
 
-      console.log("Отправка на сервер...");
+      if (!blob) throw new Error("Не удалось создать изображение");
+
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const fileName = `Scan_${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.jpg`;
+      const file = new File([blob], fileName, { type: "image/jpeg" });
+
       const response = await uploadDocument(file);
-      console.log("Ответ сервера:", response);
-      
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      
+
+      stopCamera();
       onClose();
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const fileData = e.target?.result;
@@ -128,10 +123,8 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
         navigate("/dashboard/incoming");
       };
       reader.readAsDataURL(file);
-        
 
     } catch (err) {
-      console.error("Ошибка при сканировании:", err);
       setError(err instanceof Error ? err.message : "Не удалось отправить скан");
     } finally {
       setLoading(false);
@@ -140,20 +133,17 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
 
   useEffect(() => {
     startCamera();
-    
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
     };
-  }, []);
+  }, [startCamera, stopCamera]);
 
   return (
-    <div className="scanner-overlay" onClick={onClose}>
+    <div className="scanner-overlay" onClick={handleClose}>
       <div className="scanner-modal" onClick={(e) => e.stopPropagation()}>
         <div className="scanner-header">
           <h2 className="scanner-title">Сканирование документа</h2>
-          <button className="scanner-close-btn" onClick={onClose}>
+          <button className="scanner-close-btn" onClick={handleClose}>
             ✕
           </button>
         </div>
@@ -174,7 +164,7 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
               className="scanner-video"
             />
             <canvas ref={canvasRef} style={{ display: "none" }} />
-            
+
             {!isCameraReady && !error && (
               <div className="scanner-loading">
                 <div className="scanner-spinner" />
@@ -184,8 +174,8 @@ const Scanner: React.FC<ScannerProps> = ({ onClose }) => {
           </div>
 
           <div className="scanner-actions">
-            <button 
-              className="scanner-capture-btn" 
+            <button
+              className="scanner-capture-btn"
               onClick={capturePhoto}
               disabled={loading || !isCameraReady}
             >
