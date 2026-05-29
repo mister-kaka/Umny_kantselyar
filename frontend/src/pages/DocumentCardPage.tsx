@@ -6,6 +6,30 @@ import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument }
 import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult } from '../types/';
 import Card from '../components/Card';
 import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu';
+import * as mammoth from 'mammoth';
+import * as XLSX from 'xlsx';
+
+type PreviewData = {
+  fileName: string;
+  content: string;
+  isImage?: boolean;
+  isPdf?: boolean;
+  isTable?: boolean;
+};
+
+const getPreviewTypeFromExt = (fileName: string): 'image' | 'pdf' | 'text' | 'docx' | 'xlsx' | 'none' => {
+  const ext = fileName.split('.').pop()?.toLowerCase() || '';
+  if (['jpg', 'jpeg', 'png', 'tiff', 'tif'].includes(ext)) return 'image';
+  if (ext === 'pdf') return 'pdf';
+  if (ext === 'txt') return 'text';
+  if (ext === 'docx') return 'docx';
+  if (ext === 'xlsx') return 'xlsx';
+  return 'none';
+};
+
+const canPreviewFromExt = (fileName: string): boolean => {
+  return getPreviewTypeFromExt(fileName) !== 'none';
+};
 
 const DocumentCardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +48,7 @@ const DocumentCardPage: React.FC = () => {
   const [aiAnalyzed, setAiAnalyzed] = useState(false);
 
   const [copied, setCopied] = useState(false);
+  const [preview, setPreview] = useState<PreviewData | null>(null);
 
   const getBackLabel = (): string => {
     switch (from) {
@@ -88,7 +113,6 @@ const DocumentCardPage: React.FC = () => {
       const result = await getDocumentAiResult(Number(id));
       setAiResult(result);
       setAiAnalyzed(true);
-      // Обновляем данные карточки после AI-анализа (отправитель, дата, тип, категория, уверенность)
       const updatedData = await getDocumentById(Number(id));
       setData(updatedData);
     } catch {
@@ -117,9 +141,58 @@ const DocumentCardPage: React.FC = () => {
     });
   };
 
+  const handlePreviewFile = async (file: DocumentFile) => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const fileUrl = `${apiUrl}${file.filePath}`;
+    const type = getPreviewTypeFromExt(file.fileName);
+
+    if (type === 'image') {
+      setPreview({ fileName: file.fileName, content: fileUrl, isImage: true });
+      return;
+    }
+    if (type === 'pdf') {
+      setPreview({ fileName: file.fileName, content: fileUrl, isPdf: true });
+      return;
+    }
+    try {
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error('Ошибка загрузки');
+      if (type === 'text') {
+        const text = await response.text();
+        setPreview({ fileName: file.fileName, content: text });
+        return;
+      }
+      if (type === 'docx') {
+        const buffer = await response.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+        setPreview({ fileName: file.fileName, content: result.value || 'Не удалось извлечь текст' });
+        return;
+      }
+      if (type === 'xlsx') {
+        const buffer = await response.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: 'array' });
+        let text = '';
+        wb.SheetNames.forEach(sn => {
+          text += `=== ${sn} ===\n` + XLSX.utils.sheet_to_csv(wb.Sheets[sn]) + '\n\n';
+        });
+        setPreview({ fileName: file.fileName, content: text || 'Не удалось извлечь данные', isTable: true });
+        return;
+      }
+    } catch {
+      setPreview({ fileName: file.fileName, content: 'Не удалось загрузить файл для предпросмотра' });
+    }
+  };
+
+  const closePreview = () => setPreview(null);
+
   if (loading) return <div className="doc-loading">Загрузка документа...</div>;
   if (error) return <div className="doc-error">{error}</div>;
   if (!data) return <div className="doc-error">Документ не найден</div>;
+
+  const normalizePercent = (value: number | null | undefined): number => {
+    if (value == null) return 0;
+    return value > 1 ? Math.round(value) : Math.round(value * 100);
+  };
 
   const getConfidenceClass = (percent: number): string => {
     if (percent >= 90) return "confidence-high";
@@ -127,16 +200,16 @@ const DocumentCardPage: React.FC = () => {
     return "confidence-low";
   };
 
-  const getConfidenceClassFromDecimal = (score: number | null): string => {
-    if (score == null) return "confidence-low";
-    const percent = score * 100;
-    if (percent >= 90) return "confidence-high";
-    if (percent >= 70) return "confidence-medium";
-    return "confidence-low";
-  };
-
-  const overallConfidence = data.confidenceScore != null ? data.confidenceScore * 100 : 0;
+  const overallConfidence = normalizePercent(data.confidenceScore);
   const hasOcrText = !!data.ocrResult?.rawText;
+
+  const currentDepartmentLabel = data.currentDepartment
+    || data.routes?.[0]?.departmentName
+    || 'Не назначен';
+
+  const suggestedDepartment = aiResult?.departmentSuggested || null;
+
+  const mainFile = data.files?.[0];
 
   return (
     <div className="document-page">
@@ -145,9 +218,6 @@ const DocumentCardPage: React.FC = () => {
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3l-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           {getBackLabel()}
         </button>
-        <button className="delete-doc-btn" onClick={handleDelete}>
-          Удалить документ
-        </button>
       </div>
 
       <div className="doc-header">
@@ -155,30 +225,45 @@ const DocumentCardPage: React.FC = () => {
           <h1 className="doc-title">Карточка документа</h1>
           <span className="doc-number">{data.registrationNumber}</span>
         </div>
-        <div className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}>
-          Уверенность: {overallConfidence.toFixed(0)}%
+        <div className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}
+          data-tooltip="Общая уверенность: OCR (качество распознавания) × 20% + AI-анализ × 80%">
+          Уверенность: {overallConfidence}% <span className="confidence-info-symbol">ⓘ</span>
         </div>
       </div>
 
       <div className="doc-info-panel">
         <div className="doc-info-item">
           <span className="doc-info-label">Название файла</span>
-          <span className="doc-info-value">{data.title}</span>
+          <span className="doc-info-value" title={data.title}>
+            {data.title}
+            {mainFile && canPreviewFromExt(mainFile.fileName) && (
+              <button className="doc-preview-btn" onClick={() => handlePreviewFile(mainFile)} title="Предпросмотр">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 8s3-5 6-5 6 5 6 5-3 5-6 5-6-5-6-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3"/>
+                </svg>
+              </button>
+            )}
+          </span>
         </div>
         <div className="doc-info-divider" />
         <div className="doc-info-item">
           <span className="doc-info-label">Дата документа</span>
-          <span className="doc-info-value">{data.receivedDate ? new Date(data.receivedDate).toLocaleDateString('ru-RU') : '-'}</span>
+          <span className="doc-info-value has-tooltip"
+            data-tooltip="Дата из текста самого документа, извлечена AI. Может отличаться от даты загрузки в систему.">
+            {data.receivedDate ? new Date(data.receivedDate).toLocaleDateString('ru-RU') : 'Не указана'}
+            <span className="confidence-info-symbol">ⓘ</span>
+          </span>
+        </div>
+        <div className="doc-info-divider" />
+        <div className="doc-info-item">
+          <span className="doc-info-label">Дата загрузки</span>
+          <span className="doc-info-value">{data.uploadedAt ? new Date(data.uploadedAt).toLocaleDateString('ru-RU') : '-'}</span>
         </div>
         <div className="doc-info-divider" />
         <div className="doc-info-item">
           <span className="doc-info-label">Отправитель</span>
           <span className="doc-info-value">{data.senderName}</span>
-        </div>
-        <div className="doc-info-divider" />
-        <div className="doc-info-item">
-          <span className="doc-info-label">Тип документа</span>
-          <span className="doc-info-value">{data.documentType ?? '-'}</span>
         </div>
         <div className="doc-info-divider" />
         <div className="doc-info-item">
@@ -190,7 +275,7 @@ const DocumentCardPage: React.FC = () => {
         <div className="doc-info-divider" />
         <div className="doc-info-item">
           <span className="doc-info-label">Текущий отдел</span>
-          <span className="doc-info-value">{data.routes?.[0]?.departmentName ?? 'Не назначен'}</span>
+          <span className="doc-info-value">{currentDepartmentLabel}</span>
         </div>
       </div>
 
@@ -209,14 +294,10 @@ const DocumentCardPage: React.FC = () => {
                 <h3 className="card-section-title">Общая информация</h3>
                 <div className="info-block">
                   <div className="info-row"><span>Рег. номер</span><strong>{data.registrationNumber}</strong></div>
-                  <div className="info-row"><span>Название файла</span><strong>{data.title}</strong></div>
-                  <div className="info-row"><span>Отправитель</span><strong>{data.senderName}</strong></div>
-                  <div className="info-row"><span>Дата документа</span><strong>{data.receivedDate ? new Date(data.receivedDate).toLocaleDateString('ru-RU') : '-'}</strong></div>
-                  <div className="info-row"><span>Тип документа</span><strong>{data.documentType ?? '-'}</strong></div>
-                  <div className="info-row"><span>Категория</span><strong>{data.category ?? '-'}</strong></div>
                   <div className="info-row"><span>Внёс в систему</span><strong>{data.createdBy}</strong></div>
+                  <div className="info-row"><span>Дата загрузки</span><strong>{data.uploadedAt ? new Date(data.uploadedAt).toLocaleDateString('ru-RU') : '-'}</strong></div>
                   <div className="info-row"><span>Статус</span><span className={`status-badge ${getStatusColor(data.currentStatus)}`}>{translateStatus(data.currentStatus)}</span></div>
-                  <div className="info-row"><span>Текущий отдел</span><strong>{data.routes?.[0]?.departmentName ?? 'Не назначен'}</strong></div>
+                  <div className="info-row"><span>Текущий отдел</span><strong>{currentDepartmentLabel}</strong></div>
                 </div>
               </Card>
 
@@ -226,31 +307,65 @@ const DocumentCardPage: React.FC = () => {
                   <div className="classif-item">
                     <span className="classif-label">Тип документа</span>
                     <div className="classif-right">
-                      <span className="classif-value">{data.classification?.type || '-'}</span>
-                      <span className={`confidence-chip ${getConfidenceClassFromDecimal(data.classification?.typeConfidence ?? null)}`}>{data.classification?.typeConfidence ?? 0}%</span>
+                      <span className="classif-value">{data.classification?.type || aiResult?.documentTypeSuggested || '-'}</span>
+                      <span className={`confidence-chip ${getConfidenceClass(normalizePercent(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null))}`}
+                        data-tooltip="Точность определения типа документа AI-моделью">
+                        {normalizePercent(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null)}%
+                        <span className="confidence-info-symbol">ⓘ</span>
+                      </span>
                     </div>
                   </div>
                   <div className="classif-item">
                     <span className="classif-label">Категория</span>
                     <div className="classif-right">
-                      <span className="classif-value">{data.classification?.category || '-'}</span>
-                      <span className={`confidence-chip ${getConfidenceClassFromDecimal(data.classification?.categoryConfidence ?? null)}`}>{data.classification?.categoryConfidence ?? 0}%</span>
+                      <span className="classif-value">{data.classification?.category || aiResult?.categorySuggested || '-'}</span>
+                      <span className={`confidence-chip ${getConfidenceClass(normalizePercent(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null))}`}
+                        data-tooltip="Точность определения категории документа AI-моделью">
+                        {normalizePercent(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null)}%
+                        <span className="confidence-info-symbol">ⓘ</span>
+                      </span>
                     </div>
                   </div>
+                  {aiResult?.extractedAmount != null && (
+                    <div className="classif-item">
+                      <span className="classif-label">Сумма</span>
+                      <div className="classif-right">
+                        <span className="classif-value">{aiResult.extractedAmount.toLocaleString('ru-RU')} ₽</span>
+                      </div>
+                    </div>
+                  )}
+                  {suggestedDepartment && (
+                    <div className="classif-item">
+                      <span className="classif-label">Рекомендован в отдел</span>
+                      <div className="classif-right">
+                        <span className="classif-value">{suggestedDepartment}</span>
+                      </div>
+                    </div>
+                  )}
+                  {aiResult?.summaryText && (
+                    <div className="classif-item">
+                      <span className="classif-label">Краткая сводка</span>
+                      <div className="classif-right">
+                        <span className="classif-value" style={{ textAlign: 'right', flex: 1 }}>{aiResult.summaryText}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
 
-              {data.source && (
-                <Card>
-                  <h3 className="card-section-title">Источник документа</h3>
+              <Card>
+                <h3 className="card-section-title">Источник документа</h3>
+                {data.source ? (
                   <div className="info-block">
-                    <div className="info-row"><span>Тип источника</span><strong>{data.source.sourceType === 'organization' ? 'Организация' : data.source.sourceType === 'individual' ? 'Физ. лицо' : data.source.sourceType}</strong></div>
+                    <div className="info-row"><span>Тип источника</span><strong>{data.source.sourceType === 'organization' ? 'Организация' : data.source.sourceType === 'individual' ? 'Физ. лицо' : data.source.sourceType === 'department' ? 'Подразделение' : data.source.sourceType}</strong></div>
                     {data.source.organizationName && <div className="info-row"><span>Организация</span><strong>{data.source.organizationName}</strong></div>}
                     {data.source.senderName && <div className="info-row"><span>Отправитель</span><strong>{data.source.senderName}</strong></div>}
                     {data.source.contactInfo && <div className="info-row"><span>Контакты</span><strong>{data.source.contactInfo}</strong></div>}
                   </div>
-                </Card>
-              )}
+                ) : (
+                  <div className="empty-message">Не указан</div>
+                )}
+              </Card>
 
               <Card>
                 <h3 className="card-section-title">Связанные файлы</h3>
@@ -261,31 +376,23 @@ const DocumentCardPage: React.FC = () => {
                         <span className="file-icon" />
                         <span className="file-name">{file.fileName}</span>
                         <span className="file-size">{(file.fileSize / 1024).toFixed(0)} КБ</span>
-                        <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${file.filePath}`} download={file.fileName} className="file-download" target="_blank" rel="noopener noreferrer">Скачать</a>
+                        <div className="file-actions">
+                          {canPreviewFromExt(file.fileName) && (
+                            <button className="file-preview-btn" onClick={() => handlePreviewFile(file)} title="Предпросмотр">
+                              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                <path d="M2 8s3-5 6-5 6 5 6 5-3 5-6 5-6-5-6-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                                <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3"/>
+                              </svg>
+                            </button>
+                          )}
+                          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${file.filePath}`} download={file.fileName} className="file-download" target="_blank" rel="noopener noreferrer">Скачать</a>
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="empty-message">Нет файлов</div>
                 )}
-              </Card>
-
-              <Card>
-                <h3 className="card-section-title">О процентах</h3>
-                <div className="percentage-legend">
-                  <div className="legend-item">
-                    <span className="legend-dot" />
-                    <span className="legend-text"><strong>Общая уверенность:</strong> средневзвешенная оценка (OCR 20% + AI 80%)</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-dot" />
-                    <span className="legend-text"><strong>Классификация:</strong> точность определения типа и категории</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-dot" />
-                    <span className="legend-text"><strong>Точность OCR:</strong> качество извлечения текста из файла</span>
-                  </div>
-                </div>
               </Card>
             </div>
           )}
@@ -334,7 +441,11 @@ const DocumentCardPage: React.FC = () => {
                   <div className="ai-result-card">
                     <div className="ai-result-card-label">Уверенность модели</div>
                     <div className="ai-result-card-value">
-                      <span className={`confidence-chip ${getConfidenceClassFromDecimal(aiResult.confidenceScore ?? null)}`}>{aiResult.confidenceScore ?? 0}%</span>
+                      <span className={`confidence-chip ${getConfidenceClass(normalizePercent(aiResult.confidenceScore))}`}
+                        data-tooltip="Уверенность AI-модели в правильности всего анализа">
+                        {normalizePercent(aiResult.confidenceScore)}%
+                        <span className="confidence-info-symbol">ⓘ</span>
+                      </span>
                     </div>
                   </div>
                   {aiResult.extractedDate && (
@@ -343,16 +454,32 @@ const DocumentCardPage: React.FC = () => {
                       <div className="ai-result-card-value">{new Date(aiResult.extractedDate).toLocaleDateString('ru-RU')}</div>
                     </div>
                   )}
-                  {aiResult.extractedCounterparty && (
-                    <div className="ai-result-card">
-                      <div className="ai-result-card-label">Контрагент</div>
-                      <div className="ai-result-card-value">{aiResult.extractedCounterparty}</div>
-                    </div>
-                  )}
                   {aiResult.extractedAmount != null && (
                     <div className="ai-result-card">
                       <div className="ai-result-card-label">Сумма</div>
                       <div className="ai-result-card-value">{aiResult.extractedAmount.toLocaleString('ru-RU')} ₽</div>
+                    </div>
+                  )}
+                  {(aiResult.sourceTypeSuggested || aiResult.sourceOrganizationSuggested || aiResult.sourceSenderSuggested) && (
+                    <div className="ai-result-card ai-result-card--wide">
+                      <div className="ai-result-card-label">Источник</div>
+                      <div className="ai-result-card-value">
+                        {aiResult.sourceTypeSuggested && (
+                          <span>Тип: {aiResult.sourceTypeSuggested === 'organization' ? 'Организация' : aiResult.sourceTypeSuggested === 'individual' ? 'Физ. лицо' : aiResult.sourceTypeSuggested === 'department' ? 'Подразделение' : aiResult.sourceTypeSuggested}</span>
+                        )}
+                        {aiResult.sourceOrganizationSuggested && (
+                          <span>{aiResult.sourceTypeSuggested ? ' — ' : ''}{aiResult.sourceOrganizationSuggested}</span>
+                        )}
+                        {aiResult.sourceSenderSuggested && (
+                          <span>{aiResult.sourceOrganizationSuggested ? ', ' : ''}{aiResult.sourceSenderSuggested}</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {aiResult.sourceContactSuggested && (
+                    <div className="ai-result-card ai-result-card--wide">
+                      <div className="ai-result-card-label">Контакты</div>
+                      <div className="ai-result-card-value">{aiResult.sourceContactSuggested}</div>
                     </div>
                   )}
                   <div className="ai-result-card ai-result-card--wide">
@@ -380,8 +507,10 @@ const DocumentCardPage: React.FC = () => {
                 <h3 className="card-section-title">Распознанный текст</h3>
                 <div className="ocr-header-right">
                   {data.ocrResult && (
-                    <span className={`confidence-chip ${getConfidenceClass(data.ocrResult.ocrConfidence)}`}>
-                      Точность: {data.ocrResult.ocrConfidence}%
+                    <span className={`confidence-chip ${getConfidenceClass(normalizePercent(data.ocrResult.ocrConfidence))}`}
+                      data-tooltip="Качество извлечения текста из файла. Зависит от качества исходного изображения или PDF.">
+                      Точность: {normalizePercent(data.ocrResult.ocrConfidence)}%
+                      <span className="confidence-info-symbol">ⓘ</span>
                     </span>
                   )}
                   <button className="ocr-copy-btn" onClick={handleCopyOcr} disabled={!data.ocrResult?.rawText}>
@@ -396,26 +525,39 @@ const DocumentCardPage: React.FC = () => {
           {activeTab === "history" && (
             <Card>
               <h3 className="card-section-title">История маршрутов</h3>
-              <div className="table-wrapper">
-                <table className="history-table">
-                  <thead>
-                    <tr><th>Отдел</th><th>Статус</th><th>Причина</th><th>Дата</th></tr>
-                  </thead>
-                  <tbody>
-                    {data.routes.map((route: DocumentRoute, idx: number) => (
-                      <tr key={idx}>
-                        <td>{route.departmentName}</td>
-                        <td><span className={`status-badge ${getStatusColor(route.routeStatus)}`}>{translateStatus(route.routeStatus)}</span></td>
-                        <td>{route.routeReason || '-'}</td>
-                        <td>{new Date(route.routedAt).toLocaleDateString('ru-RU')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {data.routes.length > 0 ? (
+                <div className="table-wrapper">
+                  <table className="history-table">
+                    <thead>
+                      <tr><th>Отдел</th><th>Статус</th><th>Причина</th><th>Дата</th></tr>
+                    </thead>
+                    <tbody>
+                      {data.routes.map((route: DocumentRoute, idx: number) => (
+                        <tr key={idx}>
+                          <td>{route.departmentName}</td>
+                          <td><span className={`status-badge ${getStatusColor(route.routeStatus)}`}>{translateStatus(route.routeStatus)}</span></td>
+                          <td>{route.routeReason || '-'}</td>
+                          <td>{new Date(route.routedAt).toLocaleString('ru-RU', {
+                            day: '2-digit', month: '2-digit', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                          })}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="empty-message">Маршрутов пока нет</div>
+              )}
             </Card>
           )}
         </div>
+      </div>
+
+      <div className="doc-bottom-actions">
+        <button className="delete-doc-btn" onClick={handleDelete}>
+          Удалить документ
+        </button>
       </div>
 
       {from !== 'archive' && from !== 'search' && (
@@ -424,6 +566,24 @@ const DocumentCardPage: React.FC = () => {
             В архив документов
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </a>
+        </div>
+      )}
+
+      {preview && (
+        <div className="preview-overlay" onClick={closePreview}>
+          <div className="preview-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="preview-header">
+              <h3>{preview.fileName}</h3>
+              <button className="preview-close-btn" onClick={closePreview}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+            <div className="preview-content">
+              {preview.isImage && <img src={preview.content} alt={preview.fileName} className="preview-image" />}
+              {preview.isPdf && <iframe src={preview.content} title={preview.fileName} className="preview-pdf" />}
+              {!preview.isImage && !preview.isPdf && <pre className={preview.isTable ? "preview-table" : ""}>{preview.content}</pre>}
+            </div>
+          </div>
         </div>
       )}
     </div>
