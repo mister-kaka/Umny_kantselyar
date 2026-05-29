@@ -9,6 +9,7 @@ import { DocumentFile } from '../entities/document-file.entity';
 import { OcrResult } from '../entities/ocr-result.entity';
 import { DocumentSource } from '../entities/document-source.entity';
 import { AiSetting } from '../entities/ai-setting.entity';
+import { DocumentClassification } from '../entities/document-classification.entity';
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { AiSetting } from '../entities/ai-setting.entity';
             DocumentFile,
             OcrResult,
             DocumentSource,
+            DocumentClassification,
             AiSetting,
         ]),
         HttpModule,
