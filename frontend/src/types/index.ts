@@ -245,6 +245,8 @@ export interface VerifyDocumentData {
   typeId?: number;
   categoryId?: number;
   departmentId?: number;
+  receivedDate?: string;
+  senderName?: string;
   comment?: string;
 }
 
