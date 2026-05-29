@@ -4,12 +4,14 @@ import Card from "../Card";
 import Table from "../Table";
 import "../../styles/Dashboard.css";
 import "../../styles/DocumentsListPage.css";
+import "../../styles/Settings.css";
 import { DocumentsListResponse, DocumentListItem, DocumentType, DocumentCategory } from "../../types";
 import { getDocuments, getDocumentTypes, getDocumentCategories } from "../../services/api";
 import { useNavigate } from 'react-router-dom';
 import { translateStatus, statusMap, getStatusColor } from "./MainMenu";
+import { DateFilterDropdown } from "../DropdownButton";
 import DropdownButton from "../DropdownButton";
-import Pagination from "../Pagination"; 
+import Pagination from "../Pagination";
 
 const DocumentsListPage = () => {
   const navigate = useNavigate();
@@ -18,7 +20,8 @@ const DocumentsListPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filtersError, setFiltersError] = useState('');
-  const [page, setPage] = useState(1); 
+  const [page, setPage] = useState(1);
+  const [Plimit, setPLimit] = useState(10);
 
   const [types, setTypes] = useState<DocumentType[]>([]);
   const [categories, setCategories] = useState<DocumentCategory[]>([]);
@@ -27,6 +30,11 @@ const DocumentsListPage = () => {
     typeId: undefined as number | undefined,
     categoryId: undefined as number | undefined,
     status: undefined as string | undefined,
+  });
+
+  const [dateFilter, setDateFilter] = useState<{ from: string | null; to: string | null }>({
+    from: null,
+    to: null,
   });
 
   const [selectedLabels, setSelectedLabels] = useState({
@@ -40,15 +48,15 @@ const DocumentsListPage = () => {
     setActiveFilter(prev => (prev === filterId ? null : filterId));
   };
 
-  const hasActiveFilters = !!(filters.typeId || filters.categoryId || filters.status);
+  const hasActiveFilters = !!(filters.typeId || filters.categoryId || filters.status || dateFilter.from || dateFilter.to);
 
   const handleRowClick = (id: number) => {
     navigate(`/dashboard/documents/${id}`);
   };
-  
+
   useEffect(() => {
     setPage(1);
-  }, [filters]);
+  }, [filters, dateFilter]);
 
   const fetchFilters = async () => {
     try {
@@ -68,13 +76,19 @@ const DocumentsListPage = () => {
 
   useEffect(() => {
     fetchFilters();
-  }, []); 
+  }, []);
 
   const fetchDocuments = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await getDocuments({ page, limit: 10, ...filters });
+      const response = await getDocuments({
+        page,
+        limit: Plimit,
+        ...filters,
+        dateFrom: dateFilter.from ?? undefined,
+        dateTo: dateFilter.to ?? undefined,
+      });
       setData(response);
     } catch (e) {
       const msg = 'Ошибка загрузки документов';
@@ -87,7 +101,7 @@ const DocumentsListPage = () => {
 
   useEffect(() => {
     fetchDocuments();
-  }, [page, filters]); 
+  }, [page, filters, Plimit, dateFilter]);
 
   const findTypeId = (name: string) => types.find(t => t.name === name)?.id;
   const findCategoryId = (name: string) => categories.find(c => c.name === name)?.id;
@@ -99,11 +113,11 @@ const DocumentsListPage = () => {
 
   const hasFiltersError = filtersError !== '';
 
-  const typeOptions = types.length > 0 
+  const typeOptions = types.length > 0
     ? types.map(t => t.name)
     : (hasFiltersError ? ['Ошибка загрузки'] : []);
 
-  const categoryOptions = categories.length > 0 
+  const categoryOptions = categories.length > 0
     ? categories.map(c => c.name)
     : (hasFiltersError ? ['Ошибка загрузки'] : []);
 
@@ -117,6 +131,13 @@ const DocumentsListPage = () => {
   return (
     <div>
       <Card className="filtersButtsWrapper">
+        <DateFilterDropdown
+          onFilterChange={(range) => {
+            setDateFilter({ from: range.from, to: range.to });
+          }}
+          icon={<img src="/DashboardPage_Images/Date.png" alt="📅" />}
+          isOpen={activeFilter === 'date'}
+          onToggle={() => toggleFilter('date')}/>
         <DropdownButton
           options={typeOptions}
           selectedLabel={selectedLabels.docType}
@@ -126,11 +147,10 @@ const DocumentsListPage = () => {
             setFilters(prev => ({ ...prev, typeId: id }));
             setSelectedLabels(prev => ({ ...prev, docType: name }));
           }}
-          icon={<img src="/DashboardPage_Images/DocumentType.png" alt="📄" />}
+          icon={<img src="/icons/filters/Document_type.png" alt="📄" />}
           defaultLabel="Тип документа"
           isOpen={activeFilter === 'docType'}
-          onToggle={() => toggleFilter('docType')}
-        />
+          onToggle={() => toggleFilter('docType')}/>
         <DropdownButton
           options={categoryOptions}
           selectedLabel={selectedLabels.category}
@@ -140,11 +160,10 @@ const DocumentsListPage = () => {
             setFilters(prev => ({ ...prev, categoryId: id }));
             setSelectedLabels(prev => ({ ...prev, category: name }));
           }}
-          icon={<img src="/DashboardPage_Images/Category.png" alt="🗂️" />}
+          icon={<img src="/icons/filters/Category.png" alt="🗂️" />}
           defaultLabel="Категория"
           isOpen={activeFilter === 'category'}
-          onToggle={() => toggleFilter('category')}
-        />
+          onToggle={() => toggleFilter('category')}/>
         <DropdownButton
           options={statusOptions}
           selectedLabel={selectedLabels.status}
@@ -154,11 +173,10 @@ const DocumentsListPage = () => {
             setFilters(prev => ({ ...prev, status: ENGStatus }));
             setSelectedLabels(prev => ({ ...prev, status: RUSStatus }));
           }}
-          icon={<img src="/DashboardPage_Images/Status.png" alt="🟢🟡🔴" />}
+          icon={<img src="/icons/filters/Status.png" alt="🟢🟡🔴" />}
           defaultLabel="Статус"
           isOpen={activeFilter === 'status'}
-          onToggle={() => toggleFilter('status')}
-        />
+          onToggle={() => toggleFilter('status')}/>
         <button
           className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
           disabled={!hasActiveFilters}
@@ -169,29 +187,41 @@ const DocumentsListPage = () => {
               categoryId: undefined,
               status: undefined,
             });
+            setDateFilter({ from: null, to: null });
             setPage(1);
             setSelectedLabels({
               docType: 'Тип документа',
               category: 'Категория',
               status: 'Статус',
             });
-          }}
-        >
+          }}>
           Сбросить фильтры
         </button>
       </Card>
 
-      <Card>
+      <Card className="cuttinPaddin">
         <Table
           title={<h4>Все документы ({data?.total ?? 0})</h4>}
           rightTitle={data && (
-            <Pagination
-              page={page}
-              totalPages={data.totalPages}
-              onPageChange={(newPage) => setPage(newPage)}
-            />
-          )}
-        >
+            <span className="UltimatePaginationWrapper">
+              <span>Кол-во документов на странице:
+                <DropdownButton
+                  options={['5', '10', '20', '50']}
+                  selectedLabel={String(Plimit)}
+                  onSelect={(value) => {
+                    const newLimit = parseInt(value, 10);
+                    if (!isNaN(newLimit)) setPLimit(newLimit);
+                  }}
+                  defaultLabel="10"
+                  isOpen={activeFilter === 'limitSelector'}
+                  onToggle={() => toggleFilter('limitSelector')}/>
+              </span>
+              <Pagination
+                page={page}
+                totalPages={data.totalPages}
+                onPageChange={(newPage) => setPage(newPage)}/>
+            </span>
+          )}>
           <thead>
             <tr>
               <th>Рег. номер</th>
