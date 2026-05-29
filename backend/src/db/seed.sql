@@ -170,7 +170,11 @@ CREATE TABLE document_ai_results (
     extracted_date DATE,
     extracted_amount DECIMAL(15,2),
     extracted_counterparty VARCHAR(200),
-    key_phrases TEXT[]
+    key_phrases TEXT[],
+    source_type_suggested VARCHAR(50),
+    source_organization_suggested VARCHAR(200),
+    source_sender_suggested VARCHAR(200),
+    source_contact_suggested VARCHAR(500)
 );
 
 -- Таблицы этапа 5
@@ -467,7 +471,7 @@ INSERT INTO document_classifications (document_id, type_id, category_id, type_co
 
 -- api_key (пока тестовый бесплатный ключ от OpenRouter)
 INSERT INTO ai_settings (provider_code, model_name, api_key, base_url, is_active) VALUES
-('deepseek', 'deepseek/deepseek-chat', 'd82134df1601e0540ac2687f7b0ca6d4:5e2b45c666275aea6d76fc81c0bf3cb92b2605798c5d26dc6e301910501c4f96f268946f61c112bf494baac5921c4769774e99762ca6cec908c5a4bc2117891c0b30055dd8a3245d1c1d2b813aecd4cc', 'https://openrouter.ai/api/v1', TRUE);
+('deepseek', 'deepseek/deepseek-chat', '4558000b00d96913b37183c820b702dc:9b3d3789052db89c280d580d7b3d4c4adfaa6a90ed8356b407e67883d9a60f595b0cf04b586cfea26a76a62a199180d888d54d4bb5bd21b7117223e4df593feaba108edbff83660b1078b8ed02253af8', 'https://openrouter.ai/api/v1', TRUE);
 
 INSERT INTO user_notification_settings (user_id, new_document, ai_complete, extract_error, pending_verification, routed_to_department, low_confidence, route_error, overdue_verification) VALUES
 (1, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
