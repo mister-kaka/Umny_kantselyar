@@ -28,23 +28,23 @@ export const translateStatus = (status: string): string => {
 
 export const getStatusColor = (status: string): string => {
     switch (status) {
+        case 'routed':
         case 'completed':
         case 'approved':
-        case 'verified':
             return 'status-loaded';
+        case 'verified':
+            return 'status-assigned';
+        case 'pending_verification':
+            return 'status-low-confidence';
         case 'in_review':
             return 'status-data-refinement';
-        case 'pending':
-        case 'pending_verification':
-            return 'status-clarify';
-        case 'in_progress':
-        case 'sent':
-        case 'routed':
-            return 'status-assigned';
         case 'rejected':
             return 'status-rejected';
+        case 'pending':
+        case 'sent':
+        case 'in_progress':
         default:
-            return 'status-assigned';
+            return 'status-archived';
     }
 };
 
