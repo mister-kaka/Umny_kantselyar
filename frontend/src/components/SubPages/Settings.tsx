@@ -1,110 +1,384 @@
-import React from "react";
-import "../styles/global.css";
-import { NavLink, useNavigate } from 'react-router-dom';
-import { useSidebar } from "../contexts/SidebarContexts";
-import "../styles/Sidebar.css";
+import "./../../styles/global.css";
+import "./../../styles/Dashboard.css";
+import "./../../styles/Settings.css";
+import Card from "../Card";
+import DropdownButton from "../DropdownButton";
+import Table from "../Table";
+import React, { useState, useEffect } from "react";
+import { getAiProviders, getAiSettings, updateAiSettings, testAiConnection} from "../../services/api";
+import { AiProvider, AiSettings } from "../../types";
 
-const Sidebar = () => {
-  const { collapsed, toggleSidebar } = useSidebar();
-  const navigate = useNavigate();
+const Settings = () => {
+  const [activeTab, setActiveTab] = useState<
+    "provider" | "interface" | "notifications" | "security"
+  >("provider");
 
-  const menuItems = [
-    {path: "/dashboard/main", label: "Главная", icon: "/icons/sidebar/MainMenu.png", iconActive: "/icons/sidebar/MainMenu_active.png", alt: "🏠"},
-    {path: "/dashboard/incoming", label: "Входящие документы", icon: "/icons/sidebar/Add_document.png", iconActive: "/icons/sidebar/Add_document_active.png", alt: "📥"},
-    {path: "/dashboard/verification", label: "Очередь проверки", icon: "/icons/sidebar/Check.png", iconActive: "/icons/sidebar/Check_active.png", alt: "🔍"},
-    {path: "/dashboard/routing", label: "Маршрутизация", icon: "/icons/sidebar/Route.png", iconActive: "/icons/sidebar/Route_active.png", alt: "☑️"},
-    {path: "/dashboard/documents", label: "Архив документов", icon: "/icons/sidebar/Archive.png", iconActive: "/icons/sidebar/Archive_active.png", alt: "📄"},
-    {path: "/dashboard/departments", label: "Подразделения", icon: "/icons/sidebar/Departments.png", iconActive: "/icons/sidebar/Departments_active.png", alt: "📍"},
-    {path: "/dashboard/analytics", label: "Аналитика", icon: "/icons/sidebar/Analitics.png", iconActive: "/icons/sidebar/Analitics_active.png", alt: "🏢"},
-    {path: "/dashboard/settings", label: "Настройки", icon: "/icons/sidebar/Settings.png", iconActive: "/icons/sidebar/Settings_active.png", alt: "⚙️"},
-    {path: "/dashboard/notifications", label: "Уведомления", icon: "/icons/sidebar/Notifications.png", iconActive: "/icons/sidebar/Notifications_active.png", alt: "🔔"},
-  ];
+  const [providers, setProviders] = useState<AiProvider[]>([]);
+  const [settings, setSettings] = useState<AiSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    sessionStorage.removeItem('access_token');
-    navigate('/login');
+  const [selectedProviderCode, setSelectedProviderCode] = useState("");
+  const [selectedModelCode, setSelectedModelCode] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
+
+  const [isProviderOpen, setIsProviderOpen] = useState(false);
+  const [isModelOpen, setIsModelOpen] = useState(false);
+
+  const [settingsStatus, setSettingsStatus] = useState("");
+  const [statusType, setStatusType] = useState<"" | "success" | "error" | "loading">("");
+
+  const [notifications, setNotifications] = useState({
+    newDocument: false,
+    statusChange: false,
+    routingUpdate: false,
+    aiAnalysis: false,
+    systemNews: false,
+  });
+
+  const [interfaceSettings, setInterfaceSettings] = useState({
+    compact: false,
+    showConfidence: false,
+    limit: 10,
+    theme: "light" as "light" | "dark",
+  });
+
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const toggleFilter = (key: string) => {
+    setActiveFilter((prev) => (prev === key ? null : key));
+  };
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [providersData, settingsData] = await Promise.all([
+        getAiProviders(),
+        getAiSettings(),
+      ]);
+      setProviders(providersData);
+      setSettings(settingsData);
+      setSelectedProviderCode(settingsData.providerCode);
+      setSelectedModelCode(settingsData.modelName);
+      setApiKey("");
+      setBaseUrl(settingsData.baseUrl || "");
+      setError(null);
+    } catch (e) {
+      setError("Не удалось загрузить настройки");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (!settingsStatus) return;
+    const t = setTimeout(() => { setSettingsStatus(""); setStatusType(""); }, 3000);
+    return () => clearTimeout(t);
+  }, [settingsStatus]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", interfaceSettings.theme);
+  }, [interfaceSettings.theme]);
+
+  useEffect(() => {
+  if (interfaceSettings.compact) {
+    document.documentElement.classList.add("compact-view");
+  } else {
+    document.documentElement.classList.remove("compact-view");
+  }
+  }, [interfaceSettings.compact]);
+
+  const currentProvider = providers.find(p => p.providerCode === selectedProviderCode);
+  const currentModel = currentProvider?.models.find(m => m.modelCode === selectedModelCode);
+
+  const handleProviderSelect = (name: string) => {
+    const p = providers.find(p => p.providerName === name);
+    if (p) {
+      setSelectedProviderCode(p.providerCode);
+      setSelectedModelCode(p.models[0]?.modelCode || "");
+      setIsProviderOpen(false);
+    }
+  };
+
+  const handleModelSelect = (name: string) => {
+    const m = currentProvider?.models.find(m => m.modelName === name);
+    if (m) { setSelectedModelCode(m.modelCode); setIsModelOpen(false); }
+  };
+
+  const handleSave = async () => {
+    setSettingsStatus(""); setStatusType("");
+    if (!selectedProviderCode) return setErrorMsg("Выберите провайдера");
+    if (!selectedModelCode) return setErrorMsg("Выберите модель");
+    if (!apiKey.trim()) return setErrorMsg("Введите API ключ");
+    try {
+      const updated = await updateAiSettings({
+        providerCode: selectedProviderCode, modelName: selectedModelCode,
+        apiKey, baseUrl: baseUrl || null,
+      });
+      setSettings(updated);
+      setSettingsStatus("Настройки сохранены!"); setStatusType("success");
+    } catch { setErrorMsg("Ошибка сохранения"); }
+  };
+
+  const handleTestConnection = async () => {
+    setSettingsStatus(""); setStatusType("");
+    if (!selectedProviderCode) return setErrorMsg("Выберите провайдера");
+    if (!apiKey.trim()) return setErrorMsg("Введите API ключ");
+    setSettingsStatus("Проверка..."); setStatusType("loading");
+    try {
+      const result = await testAiConnection({
+        providerCode: selectedProviderCode, modelName: selectedModelCode,
+        apiKey, baseUrl: baseUrl || null,
+      });
+      if (result.status === 'success') {
+        setSettingsStatus("Успешное подключение!"); setStatusType("success");
+      } else {
+        setErrorMsg(`Ошибка: ${result.message}`);
+      }
+    } catch { setErrorMsg("Ошибка подключения"); }
+  };
+
+  const setErrorMsg = (msg: string) => {
+    setSettingsStatus(msg); setStatusType("error");
   };
 
   return (
-    <>
-      <div
-        className={`mobile-overlay ${!collapsed ? 'active' : ''}`}
-        onClick={toggleSidebar}
-      />
+    <div>
+      <div className="Heading-main-text">
+        <h2>Настройки</h2>
+        <h4 className="text-secondary">Управление параметрами ИИ и системы</h4>
+      </div>
 
-      <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-        <div>
-          <button
-            className={`button-hide ${collapsed ? 'collapsed' : ''}`}
-            onClick={toggleSidebar}
-            aria-label={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
-          >
-            <svg
-              className="sidebar-arrow-icon"
-              width="22"
-              height="22"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              {collapsed ? (
-                <path
-                  d="M6 3l5 5-5 5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              ) : (
-                <path
-                  d="M10 3L5 8l5 5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              )}
-            </svg>
-          </button>
+      <Card className="settings-tabs">
+        {[
+          { key: "provider", label: "Настройки провайдера" },
+          { key: "interface", label: "Интерфейс" },
+          { key: "notifications", label: "Уведомления" },
+          { key: "security", label: "Безопасность" },
+        ].map(tab => (
+          <span
+            key={tab.key}
+            className={`settings-option ${activeTab === tab.key ? "active" : ""}`}
+            onClick={() => setActiveTab(tab.key as any)}>
+            {tab.label}
+          </span>
+        ))}
+      </Card>
 
-          {!collapsed && (
-            <div className="Umny-cantselyar-text">
-              <h3>Умный Канцеляр</h3>
-              <h6 className="AOD-text">Автоматизация обработки документов</h6>
-            </div>
+      {loading ? (
+        <p>Загрузка...</p>
+      ) : error ? (
+        <p>{error} — <button className="apply-button" onClick={fetchData}>Повторить</button></p>
+      ) : (
+        <>
+          {activeTab === "provider" && (
+            <Card className="cuttinPaddin">
+              <form autoComplete="off" onSubmit={e => e.preventDefault()}>
+                <div className="settings-form">
+                  <div className="settings-form-row">
+                    <span className="settings-form-label">Провайдер:</span>
+                    <div className="settings-form-control">
+                      <DropdownButton
+                        options={providers.map(p => p.providerName)}
+                        selectedLabel={currentProvider?.providerName || "Выберите провайдера"}
+                        onSelect={handleProviderSelect}
+                        isOpen={isProviderOpen}
+                        onToggle={() => {
+                          setIsProviderOpen(prev => !prev);
+                          setIsModelOpen(false);
+                        }}/>
+                    </div>
+                  </div>
+
+                  <div className="settings-form-row">
+                    <span className="settings-form-label">Модель:</span>
+                    <div className="settings-form-control">
+                      <DropdownButton
+                        options={currentProvider?.models.map(m => m.modelName) || []}
+                        selectedLabel={currentModel?.modelName || "Выберите модель"}
+                        onSelect={handleModelSelect}
+                        isOpen={isModelOpen}
+                        onToggle={() => {
+                          setIsModelOpen(prev => !prev);
+                          setIsProviderOpen(false);
+                        }}/>
+                    </div>
+                  </div>
+
+                  <div className="settings-form-row">
+                    <span className="settings-form-label">API Key:</span>
+                    <div className="settings-form-control">
+                      <input
+                        type="text"
+                        readOnly
+                        style={{ position: 'absolute', opacity: 0, width: 1, height: 1, pointerEvents: 'none' }}
+                        tabIndex={-1}/>
+                      <input
+                        type="password"
+                        readOnly
+                        style={{ position: 'absolute', opacity: 0, width: 1, height: 1, pointerEvents: 'none' }}
+                        tabIndex={-1}/>
+                      <input
+                        type="password"
+                        name="ai_provider_key"
+                        autoComplete="new-password"
+                        value={apiKey}
+                        onChange={e => setApiKey(e.target.value)}
+                        placeholder="Введите API ключ"
+                        className="settings-form-input"/>
+                    </div>
+                  </div>
+
+                  <div className="settings-form-row">
+                    <span className="settings-form-label">Base URL:</span>
+                    <div className="settings-form-control">
+                      <input
+                        type="text"
+                        value={baseUrl}
+                        onChange={e => setBaseUrl(e.target.value)}
+                        placeholder="https://api.example.com"
+                        className="settings-form-input"/>
+                    </div>
+                  </div>
+
+                  <div className="settings-actions">
+                    <button className="apply-button" onClick={handleTestConnection}>
+                      Проверить подключение
+                    </button>
+                    <button className="apply-button" onClick={handleSave}>
+                      Сохранить настройки
+                    </button>
+                    <span></span>
+                    {settingsStatus && (
+                      <span className={`settings-status ${statusType}`}>
+                        {settingsStatus}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </form>
+            </Card>
           )}
 
-          <div className={`items-margin-top ${collapsed ? 'collapsed' : ''}`}>
-            {menuItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
-              >
-                {({ isActive }) => (
-                  <>
-                    <img src={isActive ? item.iconActive : item.icon} className="Casual-icon" alt={item.alt} />
-                    <span className="item-label">{item.label}</span>
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </div>
-        </div>
+          {activeTab === "interface" && (
+            <Card className="cuttinPaddin">
+              <div className="settings-form">
+                <h3>Параметры интерфейса</h3>
+                <div className="settings-form-row">
+                  <span className="settings-form-label">Компактный вид</span>
+                  <label className="switch">
+                    <input type="checkbox" checked={interfaceSettings.compact}
+                      onChange={e => setInterfaceSettings(prev => ({ ...prev, compact: e.target.checked }))} />
+                    <span className="slider round"></span>
+                  </label>
+                </div>
+                <div className="settings-form-row">
+                  <span className="settings-form-label">Показывать уверенность</span>
+                  <label className="switch">
+                    <input type="checkbox" checked={interfaceSettings.showConfidence}
+                      onChange={e => setInterfaceSettings(prev => ({ ...prev, showConfidence: e.target.checked }))} />
+                    <span className="slider round"></span>
+                  </label>
+                </div>
+                  <div className="settings-form-row">
+                    <span className="settings-form-label">Лимит страниц</span>
+                    <DropdownButton
+                      options={["10", "20", "50"]}
+                      selectedLabel={String(interfaceSettings.limit)}
+                      onSelect={val => setInterfaceSettings(prev => ({ ...prev, limit: parseInt(val) }))}
+                      defaultLabel="10"
+                      isOpen={activeFilter === "limit"}
+                      onToggle={() => toggleFilter("limit")}/>
+                  </div>
+                <div className="settings-form-row">
+                  <span className="settings-form-label">Тема</span>
+                  <div className="settings-actions">
+                    <button className="apply-button" onClick={() => setInterfaceSettings(prev => ({ ...prev, theme: "light" }))}
+                      disabled={interfaceSettings.theme === "light"}>
+                      Светлая
+                    </button>
+                    <button className="apply-button" onClick={() => setInterfaceSettings(prev => ({ ...prev, theme: "dark" }))}
+                      disabled={interfaceSettings.theme === "dark"}>
+                      Тёмная
+                    </button>
+                  </div>
+                </div>
+                <div className="settings-actions">
+                  <button className="apply-button" onClick={() => alert("Сохранение интерфейса — заглушка")}>
+                    Сохранить
+                  </button>
+                </div>
+              </div>
+            </Card>
+          )}
 
-        <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
-          <button onClick={handleLogout} className="sidebar-item out-button">
-            <img src="/icons/sidebar/Exit.png" className="Casual-icon" alt="Выход" />
-            <span className="item-label">Выход из системы</span>
-          </button>
-          <h6 className={`version-text ${collapsed ? 'collapsed' : ''}`}>
-            Версия 1.0.2<br />© 2026 Умный Канцеляр
-          </h6>
-        </div>
-      </div>
-    </>
+          {activeTab === "notifications" && (
+            <Card className="cuttinPaddin">
+              <div className="settings-form">
+                <h3>Настройки уведомлений</h3>
+                {[
+                  ["newDocument", "Новый документ"],
+                  ["statusChange", "Изменение статуса"],
+                  ["routingUpdate", "Маршрутизация"],
+                  ["aiAnalysis", "AI-анализ завершён"],
+                  ["systemNews", "Системные новости"],
+                ].map(([key, label]) => (
+                  <div className="settings-form-row" key={key}>
+                    <span className="settings-form-label">{label}</span>
+                    <label className="switch">
+                      <input type="checkbox" checked={(notifications as any)[key]}
+                        onChange={e => setNotifications(prev => ({ ...prev, [key]: e.target.checked }))} />
+                      <span className="slider round"></span>
+                    </label>
+                  </div>
+                ))}
+                <div className="settings-actions">
+                  <button className="apply-button">
+                    Сохранить
+                  </button>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {activeTab === "security" && (
+            <Card className="cuttinPaddin">
+              <div className="settings-form">
+                <h3>История входов</h3>
+                <Table>
+                  <thead><tr><th>Время</th><th>IP</th><th>Устройство</th></tr></thead>
+                  <tbody>
+                    <tr><td colSpan={3}></td></tr>
+                  </tbody>
+                </Table>
+
+                <h3>Активные сессии</h3>
+                <Table>
+                  <thead><tr><th>Устройство</th><th>IP</th><th>Начало</th></tr></thead>
+                  <tbody>
+                    <tr><td colSpan={3}></td></tr>
+                  </tbody>
+                </Table>
+
+                <h3>Журнал действий</h3>
+                <Table>
+                  <thead><tr><th>Дата</th><th>Пользователь</th><th>Действие</th></tr></thead>
+                  <tbody>
+                    <tr><td colSpan={3}></td></tr>
+                  </tbody>
+                </Table>
+                <button className="apply-button">Выйти со всех устройств</button>
+              </div>
+            </Card>
+          )}
+        </>
+      )}
+    </div>
   );
 };
 
-export default Sidebar;
+export default Settings;
