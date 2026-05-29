@@ -4,6 +4,7 @@ export class DocumentListItemDto {
     title!: string;
     senderName!: string;
     receivedDate!: Date | null;
+    uploadedAt?: Date | null;  
     documentType!: string;      
     category!: string | null;  
     currentStatus!: string;

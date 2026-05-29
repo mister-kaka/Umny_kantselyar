@@ -59,6 +59,7 @@ export const getDocuments = async (filters?: {
   status?: string;
   dateFrom?: string;   
   dateTo?: string; 
+  dateField?: string;
   page?: number;
   limit?: number;
 }): Promise<DocumentsListResponse> => {
