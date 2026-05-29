@@ -240,3 +240,17 @@ export type FileItem = {
 };
 
 export type UploadStep = "idle" | "processing" | "success" | "error";
+
+export interface VerifyDocumentData {
+  typeId?: number;
+  categoryId?: number;
+  departmentId?: number;
+  receivedDate?: string;
+  senderName?: string;
+  comment?: string;
+}
+
+export interface RouteDocumentData {
+  departmentId: number;
+  comment?: string;
+}

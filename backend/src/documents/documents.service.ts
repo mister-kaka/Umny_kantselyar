@@ -10,12 +10,15 @@ import { DocumentRoute } from '../entities/document-route.entity';
 import { DocumentFile } from '../entities/document-file.entity';
 import { OcrResult } from '../entities/ocr-result.entity';
 import { DocumentSource } from '../entities/document-source.entity';
+import { DocumentClassification } from '../entities/document-classification.entity';
 import { AiSetting } from '../entities/ai-setting.entity';
 import { GetDocumentsDto } from './dto/get-documents.dto';
 import { DocumentsListResponseDto, DocumentListItemDto } from './dto/document-list.dto';
 import { DocumentCardDto } from './dto/document-card.dto';
 import { UploadDocumentResponseDto } from './dto/upload-document.dto';
 import { ExtractTextResponseDto } from './dto/extract-text-response.dto';
+import { VerifyDocumentDto } from './dto/verify-document.dto';
+import { RouteDocumentDto } from './dto/route-document.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
 import { decrypt } from '../ai/ai-key.util';
 
@@ -38,6 +41,8 @@ export class DocumentsService {
         private ocrResultRepository: Repository<OcrResult>,
         @InjectRepository(DocumentSource)
         private documentSourceRepository: Repository<DocumentSource>,
+        @InjectRepository(DocumentClassification)
+        private classificationRepository: Repository<DocumentClassification>,
         @InjectRepository(AiSetting)
         private aiSettingRepository: Repository<AiSetting>,
         private readonly httpService: HttpService,
@@ -968,6 +973,120 @@ export class DocumentsService {
 
             throw new HttpException(
                 'Ошибка сервера при извлечении текста',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    // PUT /documents/:id/verify - подтверждение оператором
+    async verifyDocument(id: number, dto: VerifyDocumentDto): Promise<{ message: string }> {
+        try {
+            const document = await this.documentRepository.findOne({ where: { id } });
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            if (dto.typeId) document.documentTypeId = dto.typeId;
+            if (dto.categoryId) document.categoryId = dto.categoryId;
+            if (dto.departmentId) document.currentDepartmentId = dto.departmentId;
+            if (dto.receivedDate) document.receivedDate = new Date(dto.receivedDate);
+            if (dto.senderName) document.senderName = dto.senderName;
+
+            document.currentStatus = 'verified';
+            document.verifiedAt = new Date();
+
+            await this.documentRepository.save(document);
+
+            const classification = await this.classificationRepository.findOne({
+                where: { documentId: id },
+                order: { createdAt: 'DESC' },
+            });
+            if (classification) {
+                classification.isVerified = true;
+                await this.classificationRepository.save(classification);
+            }
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'PUT',
+                url: `/documents/${id}/verify`,
+                action: 'подтверждение документа оператором',
+                status: 'success',
+                statusCode: 200,
+                message: `Документ ${document.registrationNumber} проверен`,
+            });
+
+            return { message: 'Документ проверен' };
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'PUT',
+                url: `/documents/${id}/verify`,
+                action: 'подтверждение документа оператором',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при проверке документа',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    // POST /documents/:id/route - направление в отдел
+    async routeDocument(id: number, dto: RouteDocumentDto): Promise<{ message: string }> {
+        try {
+            const document = await this.documentRepository.findOne({ where: { id } });
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            const route = this.documentRouteRepository.create({
+                documentId: id,
+                departmentId: dto.departmentId,
+                routeStatus: 'sent',
+                routeReason: dto.comment || 'Направлен оператором',
+                routedAt: new Date(),
+            });
+            await this.documentRouteRepository.save(route);
+
+            document.currentDepartmentId = dto.departmentId;
+            document.currentStatus = 'routed';
+            document.routedAt = new Date();
+            await this.documentRepository.save(document);
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: `/documents/${id}/route`,
+                action: 'направление документа в отдел',
+                status: 'success',
+                statusCode: 201,
+                message: `Документ ${document.registrationNumber} направлен в отдел ${dto.departmentId}`,
+            });
+
+            return { message: 'Документ направлен в отдел' };
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: `/documents/${id}/route`,
+                action: 'направление документа в отдел',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при направлении документа',
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }

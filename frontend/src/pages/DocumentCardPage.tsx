@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
-import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument } from '../services/api';
-import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult } from '../types/';
+import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument, verifyDocument, routeDocument, getDocumentTypes, getDocumentCategories, getDepartments, createDocumentType, createDocumentCategory } from '../services/api';
+import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult, DocumentType, DocumentCategory, Department } from '../types/';
 import Card from '../components/Card';
 import { translateStatus, getStatusColor } from '../components/SubPages/MainMenu';
 import * as mammoth from 'mammoth';
@@ -36,7 +36,7 @@ const DocumentCardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from;
-  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "ocr" | "history">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "verification" | "ocr" | "history">("overview");
 
   const [data, setData] = useState<DocumentCardType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +49,23 @@ const DocumentCardPage: React.FC = () => {
 
   const [copied, setCopied] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
+
+  const [verifyTypeId, setVerifyTypeId] = useState<number | undefined>(undefined);
+  const [verifyTypeText, setVerifyTypeText] = useState('');
+  const [verifyCategoryId, setVerifyCategoryId] = useState<number | undefined>(undefined);
+  const [verifyCategoryText, setVerifyCategoryText] = useState('');
+  const [verifyDepartmentId, setVerifyDepartmentId] = useState<number | undefined>(undefined);
+  const [verifyReceivedDate, setVerifyReceivedDate] = useState<string>('');
+  const [verifySenderName, setVerifySenderName] = useState<string>('');
+  const [verifyComment, setVerifyComment] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [verifyMessage, setVerifyMessage] = useState('');
+
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   const getBackLabel = (): string => {
     switch (from) {
@@ -67,6 +84,18 @@ const DocumentCardPage: React.FC = () => {
       default: return '/dashboard/documents';
     }
   };
+
+  useEffect(() => {
+    Promise.all([
+      getDocumentTypes(),
+      getDocumentCategories(),
+      getDepartments()
+    ]).then(([types, cats, deps]) => {
+      setDocumentTypes(types);
+      setDocumentCategories(cats);
+      setDepartments(deps);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -93,6 +122,22 @@ const DocumentCardPage: React.FC = () => {
         setLoading(false);
       });
   }, [id]);
+
+  useEffect(() => {
+    if (data) {
+      const typeName = data.classification?.type || aiResult?.documentTypeSuggested || '';
+      const categoryName = data.classification?.category || aiResult?.categorySuggested || '';
+      const deptName = data.currentDepartment || data.routes?.[0]?.departmentName;
+
+      setVerifyTypeId(documentTypes.find(t => t.name === typeName)?.id);
+      setVerifyTypeText(typeName);
+      setVerifyCategoryId(documentCategories.find(c => c.name === categoryName)?.id);
+      setVerifyCategoryText(categoryName);
+      setVerifyDepartmentId(deptName ? departments.find(d => d.name === deptName)?.id : undefined);
+      setVerifyReceivedDate(data.receivedDate ? new Date(data.receivedDate).toISOString().split('T')[0] : '');
+      setVerifySenderName(data.senderName || '');
+    }
+  }, [data, documentTypes, documentCategories, departments, aiResult]);
 
   const loadAiResult = async (docId: number) => {
     try {
@@ -139,6 +184,75 @@ const DocumentCardPage: React.FC = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  };
+
+  const handleVerify = async () => {
+    if (!id) return;
+    setVerifyLoading(true);
+    setVerifyStatus('idle');
+    setVerifyMessage('');
+    try {
+      let finalTypeId = verifyTypeId;
+      if (verifyTypeText && !verifyTypeId) {
+        try {
+          const newType = await createDocumentType(verifyTypeText);
+          finalTypeId = newType.id;
+          setDocumentTypes(prev => [...prev, newType]);
+          setVerifyTypeId(newType.id);
+        } catch {}
+      }
+
+      let finalCategoryId = verifyCategoryId;
+      if (verifyCategoryText && !verifyCategoryId) {
+        try {
+          const newCategory = await createDocumentCategory(verifyCategoryText);
+          finalCategoryId = newCategory.id;
+          setDocumentCategories(prev => [...prev, newCategory]);
+          setVerifyCategoryId(newCategory.id);
+        } catch {}
+      }
+
+      await verifyDocument(Number(id), {
+        typeId: finalTypeId,
+        categoryId: finalCategoryId,
+        departmentId: verifyDepartmentId,
+        receivedDate: verifyReceivedDate || undefined,
+        senderName: verifySenderName || undefined,
+        comment: verifyComment || undefined,
+      });
+      setVerifyStatus('success');
+      setVerifyMessage('Документ проверен');
+      const updatedData = await getDocumentById(Number(id));
+      setData(updatedData);
+    } catch {
+      setVerifyStatus('error');
+      setVerifyMessage('Ошибка при проверке документа');
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  const handleRoute = async () => {
+    if (!id || !verifyDepartmentId) return;
+    setRouteLoading(true);
+    setVerifyStatus('idle');
+    setVerifyMessage('');
+    try {
+      await routeDocument(Number(id), {
+        departmentId: verifyDepartmentId,
+        comment: verifyComment || undefined,
+      });
+      setVerifyStatus('success');
+      setVerifyMessage('Документ направлен в отдел');
+      const updatedData = await getDocumentById(Number(id));
+      setData(updatedData);
+      setActiveTab('history');
+    } catch {
+      setVerifyStatus('error');
+      setVerifyMessage('Ошибка при направлении документа');
+    } finally {
+      setRouteLoading(false);
+    }
   };
 
   const handlePreviewFile = async (file: DocumentFile) => {
@@ -283,6 +397,7 @@ const DocumentCardPage: React.FC = () => {
         <div className="tabs">
           <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Обзор</button>
           <button className={`tab ${activeTab === "ai" ? "active" : ""}`} onClick={() => setActiveTab("ai")}>AI-анализ</button>
+          <button className={`tab ${activeTab === "verification" ? "active" : ""}`} onClick={() => setActiveTab("verification")}>Проверка</button>
           <button className={`tab ${activeTab === "ocr" ? "active" : ""}`} onClick={() => setActiveTab("ocr")}>Текст OCR</button>
           <button className={`tab ${activeTab === "history" ? "active" : ""}`} onClick={() => setActiveTab("history")}>История маршрутов</button>
         </div>
@@ -499,6 +614,123 @@ const DocumentCardPage: React.FC = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === "verification" && (
+            <Card>
+              <h3 className="card-section-title">Проверка оператором</h3>
+              <p className="verification-hint">Проверьте и при необходимости скорректируйте данные, определённые AI.</p>
+
+              <div className="verification-form">
+                <div className="verification-group">
+                  <h4 className="verification-group-title">Классификация</h4>
+                  <div className="verification-row">
+                    <label className="verification-label">Тип документа</label>
+                    <input
+                      type="text"
+                      className="verification-select"
+                      list="verification-types"
+                      value={verifyTypeText}
+                      onChange={e => {
+                        setVerifyTypeText(e.target.value);
+                        const found = documentTypes.find(t => t.name.toLowerCase() === e.target.value.toLowerCase());
+                        setVerifyTypeId(found?.id);
+                      }}
+                      placeholder="Выберите или введите новый тип"
+                    />
+                    <datalist id="verification-types">
+                      {documentTypes.map(t => (
+                        <option key={t.id} value={t.name} />
+                      ))}
+                    </datalist>
+                    {aiResult?.documentTypeSuggested && !verifyTypeId && (
+                      <span className="verification-ai-hint">AI предложил: {aiResult.documentTypeSuggested}</span>
+                    )}
+                  </div>
+
+                  <div className="verification-row">
+                    <label className="verification-label">Категория</label>
+                    <input
+                      type="text"
+                      className="verification-select"
+                      list="verification-categories"
+                      value={verifyCategoryText}
+                      onChange={e => {
+                        setVerifyCategoryText(e.target.value);
+                        const found = documentCategories.find(c => c.name.toLowerCase() === e.target.value.toLowerCase());
+                        setVerifyCategoryId(found?.id);
+                      }}
+                      placeholder="Выберите или введите новую категорию"
+                    />
+                    <datalist id="verification-categories">
+                      {documentCategories.map(c => (
+                        <option key={c.id} value={c.name} />
+                      ))}
+                    </datalist>
+                    {aiResult?.categorySuggested && !verifyCategoryId && (
+                      <span className="verification-ai-hint">AI предложил: {aiResult.categorySuggested}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="verification-group">
+                  <h4 className="verification-group-title">Маршрутизация</h4>
+                  <div className="verification-row">
+                    <label className="verification-label">Отдел</label>
+                    <select className="verification-select" value={verifyDepartmentId ?? ''} onChange={e => setVerifyDepartmentId(e.target.value ? Number(e.target.value) : undefined)}>
+                      <option value="">— Выберите отдел —</option>
+                      {departments.map(d => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                    {aiResult?.departmentSuggested && (
+                      <span className="verification-ai-hint">AI предложил: {aiResult.departmentSuggested}</span>
+                    )}
+                  </div>
+
+                  <div className="verification-row">
+                    <label className="verification-label">Дата документа</label>
+                    <input
+                      type="date"
+                      className="verification-select"
+                      value={verifyReceivedDate}
+                      onChange={e => setVerifyReceivedDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="verification-row">
+                    <label className="verification-label">Отправитель</label>
+                    <input
+                      type="text"
+                      className="verification-select"
+                      value={verifySenderName}
+                      onChange={e => setVerifySenderName(e.target.value)}
+                      placeholder="Отправитель"
+                    />
+                  </div>
+
+                  <div className="verification-row">
+                    <label className="verification-label">Комментарий</label>
+                    <textarea className="verification-textarea" value={verifyComment} onChange={e => setVerifyComment(e.target.value)} placeholder="Комментарий к проверке (необязательно)" rows={3} />
+                  </div>
+                </div>
+
+                <div className="verification-actions">
+                  <button className="ai-btn" onClick={handleVerify} disabled={verifyLoading}>
+                    {verifyLoading ? 'Сохранение...' : 'Подтвердить'}
+                  </button>
+                  <button className="ai-btn-secondary" onClick={handleRoute} disabled={routeLoading || !verifyDepartmentId}>
+                    {routeLoading ? 'Отправка...' : 'Направить в отдел'}
+                  </button>
+                </div>
+
+                {verifyStatus !== 'idle' && (
+                  <div className={`verification-status ${verifyStatus}`}>
+                    {verifyMessage}
+                  </div>
+                )}
+              </div>
+            </Card>
           )}
 
           {activeTab === "ocr" && (

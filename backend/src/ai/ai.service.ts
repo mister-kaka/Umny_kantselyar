@@ -16,6 +16,7 @@ import { AppLoggerService } from '../logger/app-logger.service';
 import { AnalyzeAiResponseDto } from './dto/analyze-ai.dto';
 import { AiResultResponseDto } from './dto/ai-result.dto';
 import { decrypt } from './ai-key.util';
+import { transliterate } from '../utils/transliterate';
 
 const MAX_TEXT_LENGTH = 3000;
 const AI_TIMEOUT = 30000;
@@ -293,7 +294,7 @@ export class AiService {
             if (!type) {
                 type = this.documentTypeRepository.create({
                     name: aiResponse.documentType,
-                    code: this.transliterate(aiResponse.documentType).toLowerCase().replace(/\s+/g, '_'),
+                    code: transliterate(aiResponse.documentType).toLowerCase().replace(/\s+/g, '_'),
                     description: 'Автоматически создан AI',
                 });
                 await this.documentTypeRepository.save(type);
@@ -317,7 +318,7 @@ export class AiService {
             if (!category) {
                 category = this.documentCategoryRepository.create({
                     name: aiResponse.category,
-                    code: this.transliterate(aiResponse.category).toLowerCase().replace(/\s+/g, '_'),
+                    code: transliterate(aiResponse.category).toLowerCase().replace(/\s+/g, '_'),
                     description: 'Автоматически создана AI',
                 });
                 await this.documentCategoryRepository.save(category);
@@ -399,17 +400,6 @@ export class AiService {
             statusCode: 200,
             message: `Поля обновлены. Тип: ${aiResponse.documentType}, Категория: ${aiResponse.category}, Отправитель: ${aiResponse.sender}, Дата: ${aiResponse.date}`,
         });
-    }
-
-    private transliterate(text: string): string {
-        const map: Record<string, string> = {
-            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
-            'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
-            'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-            'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
-            'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
-        };
-        return text.toLowerCase().split('').map(ch => map[ch] || ch).join('');
     }
 
     private async buildPrompt(documentText: string, documentTitle: string): Promise<string> {

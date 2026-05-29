@@ -1,17 +1,23 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { DocumentCategoriesService } from './document-categories.service';
 import { DocumentCategoryDto } from './dto/document-category.dto';
 
 @Controller('document-categories')
 export class DocumentCategoriesController {
-  constructor(
-    private readonly documentCategoriesService: DocumentCategoriesService,
-  ) {}
+    constructor(
+        private readonly documentCategoriesService: DocumentCategoriesService,
+    ) {}
 
-  @Get()
-  @UseGuards(AuthGuard('jwt'))
-  async findAll(): Promise<DocumentCategoryDto[]> {
-    return this.documentCategoriesService.findAll();
-  }
+    @Get()
+    @UseGuards(AuthGuard('jwt'))
+    async findAll(): Promise<DocumentCategoryDto[]> {
+        return this.documentCategoriesService.findAll();
+    }
+
+    @Post()
+    @UseGuards(AuthGuard('jwt'))
+    async create(@Body('name') name: string): Promise<DocumentCategoryDto> {
+        return this.documentCategoriesService.create(name);
+    }
 }

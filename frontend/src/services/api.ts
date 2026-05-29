@@ -2,7 +2,7 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings, AiProvider, UpdateAiSettings, DocumentAiResult, DocumentListItem, UploadResponse, ExtractTextResponse, AiSearchResponse } from '../types';
+import { Department, AiSettings, AiProvider, UpdateAiSettings, DocumentAiResult, DocumentListItem, UploadResponse, ExtractTextResponse, AiSearchResponse, VerifyDocumentData, RouteDocumentData } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -168,6 +168,16 @@ export const deleteDocument = async (id: number): Promise<void> => {
     await api.delete(`/documents/${id}`);
 };
 
+export const verifyDocument = async (id: number, data: VerifyDocumentData): Promise<{ message: string }> => {
+  const res = await api.put<{ message: string }>(`/documents/${id}/verify`, data);
+  return res.data;
+};
+
+export const routeDocument = async (id: number, data: RouteDocumentData): Promise<{ message: string }> => {
+  const res = await api.post<{ message: string }>(`/documents/${id}/route`, data);
+  return res.data;
+};
+
 export const uploadDocument = async (
   file: File
 ): Promise<UploadResponse> => {
@@ -208,3 +218,12 @@ export const extractText = async (
   }
 };
 
+export const createDocumentType = async (name: string): Promise<DocumentType> => {
+    const res = await api.post<DocumentType>('/document-types', { name });
+    return res.data;
+};
+
+export const createDocumentCategory = async (name: string): Promise<DocumentCategory> => {
+    const res = await api.post<DocumentCategory>('/document-categories', { name });
+    return res.data;
+};
