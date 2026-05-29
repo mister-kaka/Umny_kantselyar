@@ -764,6 +764,98 @@
   font-weight: 400;
 }
 
+/* ========================================================================
+   ВКЛАДКА ПРОВЕРКИ
+   ======================================================================== */
+.verification-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.verification-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 600px;
+}
+
+.verification-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.verification-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.verification-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-button);
+  background-color: var(--color-bg-page);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.verification-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(129, 216, 208, 0.2);
+}
+
+.verification-ai-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.verification-textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-button);
+  background-color: var(--color-bg-page);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.verification-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(129, 216, 208, 0.2);
+}
+
+.verification-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.verification-status {
+  padding: 8px 16px;
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.verification-status.success {
+  background-color: rgba(126, 226, 159, 0.12);
+  color: var(--color-status-loaded);
+}
+
+.verification-status.error {
+  background-color: rgba(232, 115, 115, 0.1);
+  color: var(--color-status-rejected);
+}
+
 .ocr-header {
   display: flex;
   align-items: center;
