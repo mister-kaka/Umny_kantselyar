@@ -1,7 +1,7 @@
 import "../../styles/global.css";
 import "../../styles/UploadPage.css";
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Card from "../Card";
 import { uploadDocument, extractText, analyzeDocument } from "../../services/api";
 import * as mammoth from "mammoth";
@@ -85,6 +85,61 @@ const UploadPage: React.FC<UploadPageProps> = ({
   const [dragItemId, setDragItemId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cancelRef = useRef(false);
+
+
+  const location = useLocation();
+
+  // Обработка сканированного файла из камеры
+  useEffect(() => {
+    const scannedFile = location.state?.scannedFile;
+    if (scannedFile) {
+      console.log("Получен файл из сканера:", scannedFile);
+      
+      const newFileItem: FileItem = {
+        id: generateFileId(),
+        file: scannedFile.file,
+        status: "waiting",
+        selected: true,
+      };
+      
+      setFiles(prev => [newFileItem, ...prev]);
+      
+      navigate("/dashboard/incoming", { replace: true, state: {} });
+    }
+  }, [location.state, navigate, setFiles]);
+
+
+
+  useEffect(() => {
+  const savedScan = localStorage.getItem("pending_scan");
+  if (savedScan) {
+    try {
+      const scanData = JSON.parse(savedScan);
+      
+      const base64Data = scanData.fileData.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "image/jpeg" });
+      const file = new File([blob], scanData.fileName, { type: "image/jpeg" });
+      
+      const newFileItem: FileItem = {
+        id: generateFileId(),
+        file: file,
+        status: "waiting" as const,
+        selected: true,
+      };
+      
+      setFiles(prev => [newFileItem, ...prev]);
+      localStorage.removeItem("pending_scan");
+    } catch (e) {
+      console.error("Ошибка восстановления файла из localStorage:", e);
+    }
+  }
+  }, [location.key, setFiles]);
 
   const validateFile = (f: File): string | null => {
     if (!f.type || !ALLOWED_MIME.includes(f.type)) return "Неподдерживаемый формат";
@@ -359,6 +414,7 @@ const UploadPage: React.FC<UploadPageProps> = ({
     return 0;
   });
 
+  
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
