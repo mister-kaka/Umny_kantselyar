@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Query, Body, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors, Delete } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
@@ -8,6 +8,8 @@ import { DocumentCardDto } from './dto/document-card.dto';
 import { UploadDocumentResponseDto } from './dto/upload-document.dto';
 import { ExtractTextResponseDto } from './dto/extract-text-response.dto';
 import { Request } from 'express';
+import { VerifyDocumentDto } from './dto/verify-document.dto';
+import { RouteDocumentDto } from './dto/route-document.dto';
 
 interface RequestWithUser extends Request {
   user: {
@@ -27,22 +29,15 @@ export class DocumentsController {
     }
 
     @UseGuards(AuthGuard('jwt'))
+    @Get('search/ai')
+    async searchAi(@Query('q') q: string): Promise<DocumentsListResponseDto> {
+        return this.documentsService.searchAi(q);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
     @Get('search')
     async searchDocuments(@Query('q') q: string): Promise<DocumentListItemDto[]> {
         return this.documentsService.search(q);
-    }
-
-    @UseGuards(AuthGuard('jwt'))
-    @Get(':id')
-    async getDocumentById(@Param('id', ParseIntPipe) id: number): Promise<DocumentCardDto> {
-        return this.documentsService.findOne(id);
-    }
-
-    @UseGuards(AuthGuard('jwt'))
-    @Delete(':id')
-    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
-        await this.documentsService.delete(id);
-        return { message: 'Документ удалён' };
     }
 
     @UseGuards(AuthGuard('jwt'))
@@ -56,6 +51,43 @@ export class DocumentsController {
             throw new HttpException('Файл обязателен', 400);
         }
         return this.documentsService.uploadDocument(file, req.user.userId);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post('generate-embeddings')
+    async generateEmbeddings(): Promise<{ message: string; count: number }> {
+        return this.documentsService.generateEmbeddings();
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get(':id')
+    async getDocumentById(@Param('id', ParseIntPipe) id: number): Promise<DocumentCardDto> {
+        return this.documentsService.findOne(id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Put(':id/verify')
+    async verifyDocument(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: VerifyDocumentDto,
+    ) {
+        return this.documentsService.verifyDocument(id, dto);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post(':id/route')
+    async routeDocument(
+     @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RouteDocumentDto,
+    ) {
+        return this.documentsService.routeDocument(id, dto);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete(':id')
+    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+        await this.documentsService.delete(id);
+        return { message: 'Документ удалён' };
     }
 
     @UseGuards(AuthGuard('jwt'))

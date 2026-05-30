@@ -3,7 +3,7 @@ export class RecentDocumentDto {
   registrationNumber!: string;
   title!: string;
   status!: string;
-  date!: Date;
+  date!: Date | null;
 }
 
 export class DepartmentRouteStatusDto {

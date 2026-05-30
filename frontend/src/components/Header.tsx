@@ -6,12 +6,18 @@ import "../styles/Dashboard.css";
 import Search from "./Search";
 import { useNavigate } from "react-router-dom";
 import "../styles/Header.css";
+import { useState } from "react";
+import Scanner from "./SubPages/Scanner";
 
 const Header = () => {
   const { collapsed, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
+  const [showScanner, setShowScanner] = useState(false);
+  
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
+
+      {showScanner && <Scanner onClose={() => setShowScanner(false)} />}
       
       <button className="mobile-header-arrow" onClick={toggleSidebar}>
         <span className="burger-icon">
@@ -28,10 +34,10 @@ const Header = () => {
       <button className="button-primary header-action-btn" onClick={() => navigate('/dashboard/incoming')} title="Загрузка">
         <img src="/icons/header/Upload.png" className="Casual-icon" alt="📩" />
       </button>
-      <button className="button-secondary-with-border header-action-btn" title="Сканирование">
+      <button className="button-secondary-with-border header-action-btn" onClick={() => setShowScanner(true)} title="Сканирование">
         <img src="/icons/header/Scan.png" className="Casual-icon" alt="☐" />
       </button>
-      <button className="button-secondary header-action-btn" title="Уведомления">
+      <button className="button-secondary header-action-btn" onClick={() => navigate('/dashboard/notifications')} title="Уведомления">
         <img src="/icons/header/Notifications.png" className="Casual-icon" alt="🔔" />
       </button>
 

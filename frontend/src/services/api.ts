@@ -2,8 +2,7 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings, AiProvider,  UpdateAiSettings, DocumentAiResult, DocumentListItem, UploadResponse,
-ExtractTextResponse } from '../types';
+import { Department, AiSettings, AiProvider, UpdateAiSettings, DocumentAiResult, DocumentListItem, UploadResponse, ExtractTextResponse, AiSearchResponse, VerifyDocumentData, RouteDocumentData } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -58,6 +57,9 @@ export const getDocuments = async (filters?: {
   typeId?: number;
   categoryId?: number;
   status?: string;
+  dateFrom?: string;   
+  dateTo?: string; 
+  dateField?: string;
   page?: number;
   limit?: number;
 }): Promise<DocumentsListResponse> => {
@@ -138,6 +140,14 @@ export const searchDocuments = async (query: string): Promise<DocumentListItem[]
   return res.data;
 };
 
+export const searchAi = async (q: string): Promise<AiSearchResponse> => {
+  const response = await api.get<AiSearchResponse>('/documents/search/ai', { 
+    params: { q } 
+  });
+  
+  return response.data;
+};
+
 export const analyzeDocument = async (id: number): Promise<DocumentAiResult> => {
    const res = await api.post<DocumentAiResult>(`/documents/${id}/analyze-ai`);
    return res.data;
@@ -156,6 +166,16 @@ export const testAiConnection = async (data: UpdateAiSettings): Promise<{ status
 
 export const deleteDocument = async (id: number): Promise<void> => {
     await api.delete(`/documents/${id}`);
+};
+
+export const verifyDocument = async (id: number, data: VerifyDocumentData): Promise<{ message: string }> => {
+  const res = await api.put<{ message: string }>(`/documents/${id}/verify`, data);
+  return res.data;
+};
+
+export const routeDocument = async (id: number, data: RouteDocumentData): Promise<{ message: string }> => {
+  const res = await api.post<{ message: string }>(`/documents/${id}/route`, data);
+  return res.data;
 };
 
 export const uploadDocument = async (
@@ -196,4 +216,14 @@ export const extractText = async (
     console.error("Ошибка извлечения текста", error);
     throw error;
   }
+};
+
+export const createDocumentType = async (name: string): Promise<DocumentType> => {
+    const res = await api.post<DocumentType>('/document-types', { name });
+    return res.data;
+};
+
+export const createDocumentCategory = async (name: string): Promise<DocumentCategory> => {
+    const res = await api.post<DocumentCategory>('/document-categories', { name });
+    return res.data;
 };

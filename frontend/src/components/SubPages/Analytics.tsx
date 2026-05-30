@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { getDashboard, getDocumentTypes, getDocumentCategories, getDocuments } from '../../services/api';
 import { DashboardData, DocumentType, DocumentCategory, DocumentListItem } from '../../types';
-import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  LineChart, Line, ResponsiveContainer
-} from 'recharts';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement } from 'chart.js';
+import { Pie, Bar, Line } from 'react-chartjs-2';
 import '../../styles/Analytics.css';
+
+// Регистрация компонентов Chart.js
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement);
 
 const Analytics = () => {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
@@ -40,33 +41,89 @@ const Analytics = () => {
   if (error) return <div className="analytics-error">{error}</div>;
 
   // Данные для круговой диаграммы по типам документов
-  const typeStats = docTypes.map(type => ({
-    name: type.name,
-    value: documents.filter(doc => doc.documentType === type.name).length,
-    id: type.id
-  })).filter(item => item.value > 0);
+  const typeStats = docTypes
+    .map(type => ({
+      name: type.name,
+      value: documents.filter(doc => doc.documentType === type.name).length,
+    }))
+    .filter(item => item.value > 0);
 
   // Данные для столбчатой диаграммы по категориям
-  const categoryStats = docCategories.map(cat => ({
-    name: cat.name,
-    value: documents.filter(doc => doc.category === cat.name).length,
-    id: cat.id
-  })).filter(item => item.value > 0);
+  const categoryStats = docCategories
+    .map(cat => ({
+      name: cat.name,
+      value: documents.filter(doc => doc.category === cat.name).length,
+    }))
+    .filter(item => item.value > 0);
 
-  // Данные для линейного графика поступления по дням (последние 7 дней)
+  // Данные для линейного графика (последние 7 дней)
   const last7Days = [...Array(7)].map((_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - i);
     return date.toISOString().split('T')[0];
   }).reverse();
 
-  const dailyStats = last7Days.map(date => ({
-    date: date.slice(5),
-    count: documents.filter(doc => doc.receivedDate?.startsWith(date)).length
-  }));
+  const dailyData = {
+    labels: last7Days.map(date => date.slice(5)),
+    datasets: [{
+      label: 'Количество документов',
+      data: last7Days.map(date => documents.filter(doc => doc.receivedDate?.startsWith(date)).length),
+      fill: false,
+      borderColor: '#81D8D0',
+      backgroundColor: '#81D8D0',
+      tension: 0.1,
+    }]
+  };
 
-  // Цвета для диаграмм
-  const COLORS = ['#81D8D0', '#7EE29F', '#FAB25F', '#E87373', '#7EADE2', '#C27EE2', '#BBDFFB', '#979797'];
+  // Цвета для круговой диаграммы
+  const pieColors = ['#81D8D0', '#7EE29F', '#FAB25F', '#E87373', '#7EADE2', '#C27EE2', '#BBDFFB', '#979797'];
+
+  const pieData = {
+    labels: typeStats.map(item => item.name),
+    datasets: [{
+      data: typeStats.map(item => item.value),
+      backgroundColor: pieColors.slice(0, typeStats.length),
+      borderWidth: 0,
+    }]
+  };
+
+  const barData = {
+    labels: categoryStats.map(item => item.name),
+    datasets: [{
+      label: 'Количество документов',
+      data: categoryStats.map(item => item.value),
+      backgroundColor: '#81D8D0',
+      borderRadius: 8,
+    }]
+  };
+
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' as const },
+    },
+  };
+
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right' as const },
+    },
+  };
+
+  const lineOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#e5e5e5' } },
+      x: { grid: { display: false } }
+    },
+    plugins: {
+      legend: { position: 'top' as const },
+    },
+  };
 
   return (
     <div className="analytics-page">
@@ -94,32 +151,14 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/*диаграммы*/}
+      {/* Диаграммы */}
       <div className="charts-grid">
-        {/*круговая диаграмма*/}
+        {/* Круговая диаграмма по типам */}
         <div className="chart-card">
           <h3>Типы документов</h3>
           <div className="chart-container">
             {typeStats.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={typeStats}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {typeStats.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <Pie data={pieData} options={pieOptions} />
             ) : (
               <div className="empty-chart">Нет данных</div>
             )}
@@ -131,15 +170,7 @@ const Analytics = () => {
           <h3>Категории документов</h3>
           <div className="chart-container">
             {categoryStats.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={categoryStats}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#81D8D0" />
-                </BarChart>
-              </ResponsiveContainer>
+              <Bar data={barData} options={barOptions} />
             ) : (
               <div className="empty-chart">Нет данных</div>
             )}
@@ -150,19 +181,7 @@ const Analytics = () => {
         <div className="chart-card full-width">
           <h3>Поступление документов по дням</h3>
           <div className="chart-container">
-            {dailyStats.some(d => d.count > 0) ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={dailyStats}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="#81D8D0" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="empty-chart">Нет данных</div>
-            )}
+            <Line data={dailyData} options={lineOptions} />
           </div>
         </div>
       </div>

@@ -22,8 +22,8 @@ export class Document {
     @Column({ name: 'title', length: 255 })
     title!: string;
 
-    @Column({ name: 'received_date', type: 'date' })
-    receivedDate!: Date;
+    @Column({ name: 'received_date', type: 'date', nullable: true })
+    receivedDate!: Date | null;
 
     @Column({ name: 'document_type_id' })
     documentTypeId!: number;
@@ -54,6 +54,12 @@ export class Document {
 
     @Column({ name: 'current_department_id', type: 'integer', nullable: true })
     currentDepartmentId!: number | null;
+
+    @Column({ type: 'vector', nullable: true })
+    embedding!: number[];
+
+    @Column({ name: 'uploaded_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    uploadedAt!: Date;
 
     @ManyToOne(() => DocumentType)
     @JoinColumn({ name: 'document_type_id' })

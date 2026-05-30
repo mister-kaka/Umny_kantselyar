@@ -94,7 +94,7 @@ const Sidebar = () => {
         </div>
 
         <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
-          <button onClick={handleLogout} className="sidebar-item">
+          <button onClick={handleLogout} className="sidebar-item out-button">
             <img src="/icons/sidebar/Exit.png" className="Casual-icon" alt="Выход" />
             <span className="item-label">Выход из системы</span>
           </button>

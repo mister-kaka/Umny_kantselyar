@@ -16,7 +16,10 @@ export const statusMap: Record<string, string> = {
     'approved': 'Одобрено',
     'in_review': 'На рассмотрении',
     'sent': 'Отправлено',
-    'rejected': 'Отклонено'
+    'rejected': 'Отклонено', 
+    'pending_verification': 'Ожидает проверки',
+    'routed': 'Направлен в отдел',
+    'verified': 'Проверено',
 };
 
 export const translateStatus = (status: string): string => {
@@ -25,20 +28,23 @@ export const translateStatus = (status: string): string => {
 
 export const getStatusColor = (status: string): string => {
     switch (status) {
+        case 'routed':
         case 'completed':
         case 'approved':
             return 'status-loaded';
+        case 'verified':
+            return 'status-assigned';
+        case 'pending_verification':
+            return 'status-low-confidence';
         case 'in_review':
             return 'status-data-refinement';
-        case 'pending':
-            return 'status-clarify';
-        case 'in_progress':
-        case 'sent':
-            return 'status-assigned';
         case 'rejected':
             return 'status-rejected';
+        case 'pending':
+        case 'sent':
+        case 'in_progress':
         default:
-            return 'status-assigned';
+            return 'status-archived';
     }
 };
 
@@ -155,7 +161,7 @@ const MainMenu = () => {
                                 <th>Рег. номер</th>
                                 <th>Название файла</th>
                                 <th>Статус</th>
-                                <th>Дата</th>
+                                <th>Дата загрузки</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -172,7 +178,7 @@ const MainMenu = () => {
                                             {translateStatus(doc.status)}
                                         </span>
                                     </td>
-                                    <td>{formatDate(String(doc.date))}</td>
+                                    <td>{formatDate(String(doc.uploadedAt || doc.date))}</td>
                                 </tr>
                             ))}
                         </tbody>

@@ -8,6 +8,7 @@ export interface RecentDocument {
   title: string;
   status: string;
   date: string;
+  uploadedAt?: string;
 }
 
 export interface DepartmentRouteStatus {
@@ -42,37 +43,19 @@ export interface DocumentListItem {
   title: string;
   senderName: string;
   receivedDate: string;
+  uploadedAt?: string;
   documentType: string;
   category: string;
   currentStatus: string;
   department: string;
+  isExactMatch?: boolean;
 }
 
 export interface DocumentSource {
-    sourceType: string;
-    organizationName: string | null;
-    senderName: string | null;
-    contactInfo: string | null;
-}
-
-export interface DocumentCard {
-  id: number;
-  registrationNumber: string;
-  title: string;
-  senderName: string;
-  receivedDate: string;
-  documentType: string | null;   
-  category: string | null;       
-  currentStatus: string;
-  files: DocumentFile[];
-  createdBy: string;
-  createdAt: string;
-  confidenceScore: number | null;
-  ocrResult: OcrResult | null;
-  classification: DocumentClassification | null; 
-  routes: DocumentRoute[];
-  source: DocumentSource | null;  
-  aiResult: DocumentAiResult | null;
+  sourceType: string;
+  organizationName: string | null;
+  senderName: string | null;
+  contactInfo: string | null;
 }
 
 export interface DocumentFile {
@@ -109,15 +92,69 @@ export interface DocumentRoute {
   routedAt: string;
 }
 
+export interface DocumentAiResult {
+    id: number;
+    documentId: number;
+    documentTypeSuggested: string | null;
+    categorySuggested: string | null;
+    summaryText: string | null;
+    departmentSuggested: string | null;
+    confidenceScore: number | null;
+    providerCode: string;
+    modelName: string;
+    createdAt: string;
+    extractedDate?: string | null;
+    extractedAmount?: number | null;
+    extractedCounterparty?: string | null;
+    keyPhrases?: string[] | null;
+    sourceTypeSuggested?: string | null;
+    sourceOrganizationSuggested?: string | null;
+    sourceSenderSuggested?: string | null;
+    sourceContactSuggested?: string | null;
+}
+
+export interface DocumentCard {
+    id: number;
+    registrationNumber: string;
+    title: string;
+    senderName: string;
+    receivedDate: string;
+    documentType: string | null;   
+    category: string | null;       
+    currentStatus: string;
+    files: DocumentFile[];
+    createdBy: string;
+    createdAt: string;
+    confidenceScore: number | null;
+    ocrResult: OcrResult | null;
+    classification: DocumentClassification | null; 
+    routes: DocumentRoute[];
+    source: DocumentSource | null;  
+    aiResult: DocumentAiResult | null;
+    uploadedAt?: string | null;
+    currentDepartment?: string | null;
+}
+
 export interface DocumentsFilters {
   typeId?: number;
   categoryId?: number;
   status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  dateField?: string;
   page?: number;
   limit?: number;
 }
 
 export interface DocumentsListResponse {
+  items: DocumentListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AiSearchResponse {
   items: DocumentListItem[];
   total: number;
   page: number;
@@ -146,7 +183,6 @@ export interface Department {
   isActive: boolean;
 }
 
-
 export interface AiSettings {
   id: number;
   providerCode: string;
@@ -173,19 +209,6 @@ export interface AiProvider {
 export interface AiModel {
   modelCode: string;
   modelName: string;
-}
-
-export interface DocumentAiResult {
-  id: number;
-  documentId: number;
-  documentTypeSuggested: string | null;
-  categorySuggested: string | null;
-  summaryText: string | null;
-  departmentSuggested: string | null;
-  confidenceScore: number | null;
-  providerCode: string;
-  modelName: string;
-  createdAt: string;
 }
 
 export interface UploadResponse {
@@ -217,3 +240,17 @@ export type FileItem = {
 };
 
 export type UploadStep = "idle" | "processing" | "success" | "error";
+
+export interface VerifyDocumentData {
+  typeId?: number;
+  categoryId?: number;
+  departmentId?: number;
+  receivedDate?: string;
+  senderName?: string;
+  comment?: string;
+}
+
+export interface RouteDocumentData {
+  departmentId: number;
+  comment?: string;
+}
