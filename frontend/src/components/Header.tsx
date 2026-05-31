@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/Header.css";
 import { useState } from "react";
 import Scanner from "./SubPages/Scanner";
+import Tooltip from "./Tooltip";
 
 const Header = () => {
   const { collapsed, toggleSidebar } = useSidebar();
@@ -31,21 +32,29 @@ const Header = () => {
         <Search />
       </div>
 
-      <button className="button-primary header-action-btn" onClick={() => navigate('/dashboard/incoming')} title="Загрузка">
-        <img src="/icons/header/Upload.png" className="Casual-icon" alt="📩" />
-      </button>
-      <button className="button-secondary-with-border header-action-btn" onClick={() => setShowScanner(true)} title="Сканирование">
-        <img src="/icons/header/Scan.png" className="Casual-icon" alt="☐" />
-      </button>
-      <button className="button-secondary header-action-btn" onClick={() => navigate('/dashboard/notifications')} title="Уведомления">
-        <img src="/icons/header/Notifications.png" className="Casual-icon" alt="🔔" />
-      </button>
+      <Tooltip text="Загрузка документов" position="bottom">
+        <button className="button-primary header-action-btn" onClick={() => navigate('/dashboard/incoming')}>
+          <img src="/icons/header/Upload.png" className="Casual-icon" alt="📩" />
+        </button>
+      </Tooltip>
+      <Tooltip text="Сканировать документ с камеры" position="bottom">
+        <button className="button-secondary-with-border header-action-btn" onClick={() => setShowScanner(true)}>
+          <img src="/icons/header/Scan.png" className="Casual-icon" alt="☐" />
+        </button>
+      </Tooltip>
+      <Tooltip text="Уведомления" position="bottom">
+        <button className="button-secondary header-action-btn" onClick={() => navigate('/dashboard/notifications')}>
+          <img src="/icons/header/Notifications.png" className="Casual-icon" alt="🔔" />
+        </button>
+      </Tooltip>
 
       <div className="profile-block">
         <h5></h5>
         <h6 className="text-secondary"></h6>
       </div>
-      <img src="/icons/header/User.png" className="profile-image" alt="👤" title="Профиль" />
+      <Tooltip text="Профиль пользователя" position="bottom">
+        <img src="/icons/header/User.png" className="profile-image" alt="👤" />
+      </Tooltip>
     </div>
   );
 };
