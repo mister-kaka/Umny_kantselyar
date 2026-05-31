@@ -100,6 +100,45 @@ const DocumentsListPage = () => {
     fetchDocuments();
   };
 
+  const handleExport = async () => {
+  try {
+    const exportBtn = document.querySelector('.export-excel-btn');
+    if (exportBtn) exportBtn.textContent = 'Экспорт...';
+    
+    const params = new URLSearchParams();
+    if (filters.typeId) params.append('typeId', String(filters.typeId));
+    if (filters.categoryId) params.append('categoryId', String(filters.categoryId));
+    if (filters.status) params.append('status', filters.status);
+    if (dateFilter.from) params.append('dateFrom', dateFilter.from);
+    if (dateFilter.to) params.append('dateTo', dateFilter.to);
+    
+    const response = await fetch(`http://localhost:3000/documents/export?${params.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Ошибка экспорта');
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `documents_export_${new Date().toISOString().slice(0, 19)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    } catch (error) {
+      console.error('Ошибка экспорта:', error);
+      alert('Не удалось экспортировать документы');
+    } finally {
+      const exportBtn = document.querySelector('.export-excel-btn');
+      if (exportBtn) exportBtn.textContent = 'Экспорт';
+    }
+  };
+
   useEffect(() => {
     setPage(1);
   }, [filters, dateFilter]);
@@ -262,6 +301,13 @@ const DocumentsListPage = () => {
           }}>
           Сбросить фильтры
         </button>
+
+        <button 
+          className="apply-button"
+          onClick={handleExport}>
+          Экспорт
+        </button>
+
         {selectedIds.size > 0 && (
           <button
             className="mass-delete-btn"

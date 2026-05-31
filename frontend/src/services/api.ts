@@ -227,3 +227,23 @@ export const createDocumentCategory = async (name: string): Promise<DocumentCate
     const res = await api.post<DocumentCategory>('/document-categories', { name });
     return res.data;
 };
+
+export const exportDocuments = async (filters?: {
+  typeId?: number;
+  categoryId?: number;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<Blob> => {
+  const params = new URLSearchParams();
+  if (filters?.typeId) params.append('typeId', String(filters.typeId));
+  if (filters?.categoryId) params.append('categoryId', String(filters.categoryId));
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
+  if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+  
+  const response = await api.get(`/documents/export?${params.toString()}`, {
+    responseType: 'blob',
+  });
+  return response.data;
+};

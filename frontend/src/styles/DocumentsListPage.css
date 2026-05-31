@@ -280,6 +280,8 @@
   cursor: not-allowed;
 }
 
+
+
 @media (max-width: 1024px) {
   .filtersButtsWrapper {
     gap: 4px;
