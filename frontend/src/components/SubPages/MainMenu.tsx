@@ -98,15 +98,15 @@ const MainMenu = () => {
                 </Card>
                 <Card className="main-card">
                     <img src="/icons/dashboard/In_processing.png"
-                        className="Main-cards-image" alt="✔️"/>
-                    <h1>{data?.inProgress}</h1>
-                    <h5 className="text-secondary">В обработке</h5>
+                        className="Main-cards-image" alt="➡️"/>
+                    <h1>{data?.routedCount || 0}</h1>
+                    <h5 className="text-secondary">Направлено в отдел</h5>
                 </Card>
                 <Card className="main-card">
                     <img src="/icons/dashboard/Require_verification.png"
-                        className="Main-cards-image" alt="❕"/>
+                        className="Main-cards-image" alt="⏳"/>
                     <h1>{data?.pendingCheck}</h1>
-                    <h5 className="text-secondary">Требуют проверки</h5>
+                    <h5 className="text-secondary">Ожидают проверки</h5>
                 </Card>
             </div>
             
@@ -149,15 +149,19 @@ const MainMenu = () => {
                 
                 <div className="subCards-container">
                     <Card title={<h4>Статусы маршрутов по отделам</h4>}>
-                        {groupedDepartments.map((dept) => (
-                            <Card key={dept.departmentId} title={<h5>{dept.departmentName}</h5>} className="card-in-card-blue-cortisol">
-                                {dept.statuses.map((status, idx) => (
-                                    <h6 key={idx} className="text-tertiary">
-                                        {translateStatus(status.routeStatus)} ({status.count}) 
-                                    </h6>
-                                ))}
-                            </Card>
-                        ))}
+                        {groupedDepartments.map((dept) => {
+                            const filteredStatuses = dept.statuses.filter(s => s.routeStatus === 'routed');
+                            if (filteredStatuses.length === 0) return null;
+                            return (
+                                <Card key={dept.departmentId} title={<h5>{dept.departmentName}</h5>} className="card-in-card-blue-cortisol">
+                                    {filteredStatuses.map((status, idx) => (
+                                        <h6 key={idx} className="text-tertiary">
+                                            {translateStatus(status.routeStatus)} ({status.count}) 
+                                        </h6>
+                                    ))}
+                                </Card>
+                            );
+                        })}
                     </Card>
                 </div>
             </div>
