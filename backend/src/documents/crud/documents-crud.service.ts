@@ -411,6 +411,7 @@ export class DocumentsCrudService {
 
             document.currentStatus = 'rejected';
             document.rejectedAt = new Date();
+            document.currentDepartmentId = null;
 
             await this.documentRepository.save(document);
 
