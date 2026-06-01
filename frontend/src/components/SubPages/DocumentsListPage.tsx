@@ -184,52 +184,60 @@ const DocumentsListPage = () => {
   return (
     <div>
       <Card className="filtersButtsWrapper">
-        <DateFilterDropdown
-          onFilterChange={(range) => {
-            setDateFilter({ from: range.from, to: range.to });
-          }}
-          icon={<img src="/icons/filters/data.png" alt="📅" />}
-          isOpen={activeFilter === 'date'}
-          onToggle={() => toggleFilter('date')}/>
-        <DropdownButton
-          options={typeOptions}
-          selectedLabel={selectedLabels.docType}
-          onSelect={(name) => {
-            if (name === 'Ошибка загрузки') return;
-            const id = findTypeId(name);
-            setFilters(prev => ({ ...prev, typeId: id }));
-            setSelectedLabels(prev => ({ ...prev, docType: name }));
-          }}
-          icon={<img src="/icons/filters/Document_type.png" alt="📄" />}
-          defaultLabel="Тип документа"
-          isOpen={activeFilter === 'docType'}
-          onToggle={() => toggleFilter('docType')}/>
-        <DropdownButton
-          options={categoryOptions}
-          selectedLabel={selectedLabels.category}
-          onSelect={(name) => {
-            if (name === 'Ошибка загрузки') return;
-            const id = findCategoryId(name);
-            setFilters(prev => ({ ...prev, categoryId: id }));
-            setSelectedLabels(prev => ({ ...prev, category: name }));
-          }}
-          icon={<img src="/icons/filters/Category.png" alt="🗂️" />}
-          defaultLabel="Категория"
-          isOpen={activeFilter === 'category'}
-          onToggle={() => toggleFilter('category')}/>
-        <DropdownButton
-          options={statusOptions}
-          selectedLabel={selectedLabels.status}
-          onSelect={(RUSStatus) => {
-            if (RUSStatus === 'Ошибка загрузки') return;
-            const ENGStatus = reverseStatusMap[RUSStatus] || RUSStatus;
-            setFilters(prev => ({ ...prev, status: ENGStatus }));
-            setSelectedLabels(prev => ({ ...prev, status: RUSStatus }));
-          }}
-          icon={<img src="/icons/filters/Status.png" alt="🟢🟡🔴" />}
-          defaultLabel="Статус"
-          isOpen={activeFilter === 'status'}
-          onToggle={() => toggleFilter('status')}/>
+        <Tooltip text="Фильтр по дате загрузки">
+          <DateFilterDropdown
+            onFilterChange={(range) => {
+              setDateFilter({ from: range.from, to: range.to });
+            }}
+            icon={<img src="/icons/filters/data.png" alt="📅" />}
+            isOpen={activeFilter === 'date'}
+            onToggle={() => toggleFilter('date')}/>
+        </Tooltip>
+        <Tooltip text="Показать документы только выбранного типа">
+          <DropdownButton
+            options={typeOptions}
+            selectedLabel={selectedLabels.docType}
+            onSelect={(name) => {
+              if (name === 'Ошибка загрузки') return;
+              const id = findTypeId(name);
+              setFilters(prev => ({ ...prev, typeId: id }));
+              setSelectedLabels(prev => ({ ...prev, docType: name }));
+            }}
+            icon={<img src="/icons/filters/Document_type.png" alt="📄" />}
+            defaultLabel="Тип документа"
+            isOpen={activeFilter === 'docType'}
+            onToggle={() => toggleFilter('docType')}/>
+        </Tooltip>
+        <Tooltip text="Показать документы только выбранной категории">
+          <DropdownButton
+            options={categoryOptions}
+            selectedLabel={selectedLabels.category}
+            onSelect={(name) => {
+              if (name === 'Ошибка загрузки') return;
+              const id = findCategoryId(name);
+              setFilters(prev => ({ ...prev, categoryId: id }));
+              setSelectedLabels(prev => ({ ...prev, category: name }));
+            }}
+            icon={<img src="/icons/filters/Category.png" alt="🗂️" />}
+            defaultLabel="Категория"
+            isOpen={activeFilter === 'category'}
+            onToggle={() => toggleFilter('category')}/>
+        </Tooltip>
+        <Tooltip text="Показать документы с выбранным статусом">
+          <DropdownButton
+            options={statusOptions}
+            selectedLabel={selectedLabels.status}
+            onSelect={(RUSStatus) => {
+              if (RUSStatus === 'Ошибка загрузки') return;
+              const ENGStatus = reverseStatusMap[RUSStatus] || RUSStatus;
+              setFilters(prev => ({ ...prev, status: ENGStatus }));
+              setSelectedLabels(prev => ({ ...prev, status: RUSStatus }));
+            }}
+            icon={<img src="/icons/filters/Status.png" alt="🟢🟡🔴" />}
+            defaultLabel="Статус"
+            isOpen={activeFilter === 'status'}
+            onToggle={() => toggleFilter('status')}/>
+        </Tooltip>
         <Tooltip text="Количество документов на странице">
           <DropdownButton
             options={['5', '10', '20', '50']}
@@ -242,34 +250,38 @@ const DocumentsListPage = () => {
             isOpen={activeFilter === 'limitSelector'}
             onToggle={() => toggleFilter('limitSelector')}/>
         </Tooltip>
-        <button
-          className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
-          disabled={!hasActiveFilters}
-          onClick={() => {
-            if (!hasActiveFilters) return;
-            setFilters({
-              typeId: undefined,
-              categoryId: undefined,
-              status: undefined,
-            });
-            setDateFilter({ from: null, to: null });
-            setPage(1);
-            setSelectedLabels({
-              docType: 'Тип документа',
-              category: 'Категория',
-              status: 'Статус',
-            });
-          }}>
-          Сбросить фильтры
-        </button>
-        {selectedIds.size > 0 && (
+        <Tooltip text="Сбросить все фильтры">
           <button
-            className="mass-delete-btn"
-            onClick={handleDeleteSelected}
-            disabled={deleting}
-          >
-            {deleting ? 'Удаление...' : `Удалить (${selectedIds.size})`}
+            className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
+            disabled={!hasActiveFilters}
+            onClick={() => {
+              if (!hasActiveFilters) return;
+              setFilters({
+                typeId: undefined,
+                categoryId: undefined,
+                status: undefined,
+              });
+              setDateFilter({ from: null, to: null });
+              setPage(1);
+              setSelectedLabels({
+                docType: 'Тип документа',
+                category: 'Категория',
+                status: 'Статус',
+              });
+            }}>
+            Сбросить фильтры
           </button>
+        </Tooltip>
+        {selectedIds.size > 0 && (
+          <Tooltip text="Удалить выбранные документы. Действие необратимо">
+            <button
+              className="mass-delete-btn"
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+            >
+              {deleting ? 'Удаление...' : `Удалить (${selectedIds.size})`}
+            </button>
+          </Tooltip>
         )}
       </Card>
 
