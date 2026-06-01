@@ -2,22 +2,9 @@ import { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { getDashboard, getDocumentTypes, getDocumentCategories, getDocuments } from '../../services/api';
 import { DashboardData, DocumentType, DocumentCategory, DocumentListItem } from '../../types';
 import '../../styles/Analytics.css';
-import { translateStatus } from './MainMenu';
+import { getStatusHexColor, translateStatus } from '../../constants/statuses';
 
 const Chart = lazy(() => import('react-apexcharts'));
-
-const STATUS_HEX_COLORS: Record<string, string> = {
-  'routed': '#7EE29F',
-  'completed': '#7EE29F',
-  'approved': '#7EE29F',
-  'verified': '#7EADE2',
-  'pending_verification': '#FAB25F',
-  'in_review': '#f6c681',
-  'rejected': '#E87373',
-  'pending': '#979797',
-  'sent': '#979797',
-  'in_progress': '#979797',
-};
 
 const CLEAN_PALETTE = ['#81D8D0', '#5DBFBB', '#7EADE2', '#3BA6A5', '#BBDFFB', '#A2C5C3', '#C7D9D8', '#E1EDED'];
 const ACCENT = '#81D8D0';
@@ -100,7 +87,7 @@ const Analytics = () => {
         status,
         label: translateStatus(status),
         count,
-        color: STATUS_HEX_COLORS[status] || '#979797'
+        color: getStatusHexColor(status),
       }))
       .sort((a, b) => b.count - a.count);
 

@@ -8,7 +8,7 @@ import "../../styles/Settings.css";
 import { DocumentsListResponse, DocumentListItem, DocumentType, DocumentCategory } from "../../types";
 import { getDocuments, getDocumentTypes, getDocumentCategories, deleteDocument } from "../../services/api";
 import { useNavigate } from 'react-router-dom';
-import { translateStatus, statusMap, getStatusColor } from "./MainMenu";
+import { translateStatus, getStatusColorClass, getAllStatusesForFilter } from "../../constants/statuses";
 import { DateFilterDropdown } from "../DropdownButton";
 import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
@@ -53,6 +53,12 @@ const DocumentsListPage = () => {
   const [deleting, setDeleting] = useState(false);
 
   const hasActiveFilters = !!(filters.typeId || filters.categoryId || filters.status || dateFilter.from || dateFilter.to);
+
+  const statusOptionsForFilter = getAllStatusesForFilter();
+  const RUSStatuses = statusOptionsForFilter.map(s => s.label);
+  const reverseStatusMap = Object.fromEntries(
+    statusOptionsForFilter.map(s => [s.label, s.value])
+  );
 
   const handleRowClick = (id: number) => {
     navigate(`/dashboard/documents/${id}`, { state: { from: 'archive' } });
@@ -156,11 +162,6 @@ const DocumentsListPage = () => {
 
   const findTypeId = (name: string) => types.find(t => t.name === name)?.id;
   const findCategoryId = (name: string) => categories.find(c => c.name === name)?.id;
-
-  const RUSStatuses = Object.values(statusMap);
-  const reverseStatusMap = Object.fromEntries(
-    Object.entries(statusMap).map(([eng, rus]) => [rus, eng])
-  );
 
   const hasFiltersError = filtersError !== '';
 
@@ -345,7 +346,7 @@ const DocumentsListPage = () => {
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.documentType}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.category}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
-                    <span className={`status-badge ${getStatusColor(doc.currentStatus)}`}>
+                    <span className={`status-badge ${getStatusColorClass(doc.currentStatus)}`}>
                       {translateStatus(doc.currentStatus)}
                     </span>
                   </td>
