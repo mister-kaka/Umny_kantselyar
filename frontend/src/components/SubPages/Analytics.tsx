@@ -1,29 +1,21 @@
 import { useEffect, useState, useMemo, lazy, Suspense } from 'react';
-import { getDashboard, getDocumentTypes, getDocumentCategories, getDocuments } from '../../services/api';
-import { DashboardData, DocumentType, DocumentCategory, DocumentListItem } from '../../types';
+import { getDocumentTypes, getDocumentCategories, getDocuments, getAnalyticsData } from '../../services/api';
+import { DocumentType, DocumentCategory, DocumentListItem, AnalyticsData } from '../../types';
 import '../../styles/Analytics.css';
-import { translateStatus } from './MainMenu';
+import { getStatusHexColor, translateStatus } from '../../constants/statuses';
 
 const Chart = lazy(() => import('react-apexcharts'));
-
-const STATUS_HEX_COLORS: Record<string, string> = {
-  'routed': '#7EE29F',
-  'completed': '#7EE29F',
-  'approved': '#7EE29F',
-  'verified': '#7EADE2',
-  'pending_verification': '#FAB25F',
-  'in_review': '#f6c681',
-  'rejected': '#E87373',
-  'pending': '#979797',
-  'sent': '#979797',
-  'in_progress': '#979797',
-};
 
 const CLEAN_PALETTE = ['#81D8D0', '#5DBFBB', '#7EADE2', '#3BA6A5', '#BBDFFB', '#A2C5C3', '#C7D9D8', '#E1EDED'];
 const ACCENT = '#81D8D0';
 
+const formatConfidence = (value: number | null | undefined): number => {
+  if (value == null) return 0;
+  return Math.round(value * 100);
+};
+
 const Analytics = () => {
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [docTypes, setDocTypes] = useState<DocumentType[]>([]);
   const [docCategories, setDocCategories] = useState<DocumentCategory[]>([]);
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
@@ -33,13 +25,13 @@ const Analytics = () => {
 
   useEffect(() => {
     Promise.all([
-      getDashboard(),
+      getAnalyticsData(),
       getDocumentTypes(),
       getDocumentCategories(),
       getDocuments({ limit: 1000 }),
     ])
-      .then(([dashboardData, types, categories, docsResponse]) => {
-        setDashboard(dashboardData);
+      .then(([analytics, types, categories, docsResponse]) => {
+        setAnalyticsData(analytics);
         setDocTypes(types);
         setDocCategories(categories);
         setDocuments(docsResponse.items);
@@ -70,7 +62,7 @@ const Analytics = () => {
     }).reverse();
   }, []);
 
-  const { typeStats, categoryStats, statusStats, dailyData, aiProcessedCount } = useMemo(() => {
+  const { typeStats, categoryStats, statusStats, dailyData } = useMemo(() => {
     const validTypeNames = new Set(docTypes.map(t => t.name));
     const classifiedDocs = documents.filter(doc => validTypeNames.has(doc.documentType));
 
@@ -100,7 +92,7 @@ const Analytics = () => {
         status,
         label: translateStatus(status),
         count,
-        color: STATUS_HEX_COLORS[status] || '#979797'
+        color: getStatusHexColor(status),
       }))
       .sort((a, b) => b.count - a.count);
 
@@ -108,16 +100,11 @@ const Analytics = () => {
       documents.filter(doc => (doc.uploadedAt || doc.receivedDate)?.startsWith(date)).length
     );
 
-    const aiCount = documents.filter(
-      doc => doc.confidenceScore != null && doc.confidenceScore > 0
-    ).length;
-
     return {
       typeStats: tStats,
       categoryStats: cStats,
       statusStats: sStats,
       dailyData: dData,
-      aiProcessedCount: aiCount
     };
   }, [documents, docTypes, docCategories, last14Days]);
 
@@ -256,10 +243,10 @@ const Analytics = () => {
   };
 
   const statCards = [
-    { value: dashboard?.totalDocuments || 0, label: 'Всего документов', icon: '/icons/analytics/total.png' },
-    { value: dashboard?.inProgress || 0, label: 'В обработке', icon: '/icons/analytics/processing.png' },
-    { value: dashboard?.pendingCheck || 0, label: 'На проверке', icon: '/icons/analytics/pending.png' },
-    { value: aiProcessedCount, label: 'AI распознано', icon: '/icons/analytics/ai.png' },
+    { value: analyticsData?.totalDocuments || 0, label: 'Всего документов', icon: '/icons/analytics/total.png' },
+    { value: analyticsData?.avgConfidence || 0, label: 'Средняя уверенность', icon: '/icons/analytics/confidence.png', suffix: '%' },
+    { value: analyticsData?.rejectedCount || 0, label: 'Отклонено', icon: '/icons/analytics/rejected.png' },
+    { value: analyticsData?.last7Days || 0, label: 'За 7 дней', icon: '/icons/analytics/last7days.png' },
   ];
 
   return (
@@ -276,7 +263,10 @@ const Analytics = () => {
               <img src={card.icon} className="analytics-stat-icon" alt={card.label} />
             </div>
             <div className="stat-card-content">
-              <div className="stat-card-value">{card.value}</div>
+              <div className="stat-card-value">
+                {card.value}
+                {card.suffix && <span className="stat-card-suffix">{card.suffix}</span>}
+              </div>
               <div className="stat-card-label">{card.label}</div>
             </div>
           </div>

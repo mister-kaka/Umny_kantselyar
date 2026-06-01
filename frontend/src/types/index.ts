@@ -22,6 +22,7 @@ export interface DashboardData {
   totalDocuments: number;
   inProgress: number;
   pendingCheck: number;
+  routedCount: number;
   recentDocuments: RecentDocument[];
   departmentRouteStatuses: DepartmentRouteStatus[];
 }
@@ -254,4 +255,11 @@ export interface VerifyDocumentData {
 export interface RouteDocumentData {
   departmentId: number;
   comment?: string;
+}
+
+export interface AnalyticsData {
+  totalDocuments: number;
+  avgConfidence: number;
+  rejectedCount: number;
+  last7Days: number;
 }

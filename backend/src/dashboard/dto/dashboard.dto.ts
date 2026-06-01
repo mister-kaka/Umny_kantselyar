@@ -17,6 +17,7 @@ export class DashboardResponseDto {
   totalDocuments!: number;
   inProgress!: number;
   pendingCheck!: number;
+  routedCount!: number;
   recentDocuments!: RecentDocumentDto[];
    departmentRouteStatuses!: DepartmentRouteStatusDto[];
 }

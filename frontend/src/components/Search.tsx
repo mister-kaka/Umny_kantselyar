@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchDocuments, searchAi } from './../services/api';
 import { DocumentListItem, AiSearchResponse } from './../types';
-import { translateStatus, getStatusColor } from './SubPages/MainMenu';
+import { translateStatus, getStatusColorClass } from '../constants/statuses';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -389,7 +389,7 @@ const Search: React.FC = () => {
                 <span className="doc-search-title">{doc.title}</span>
                 <span className="doc-search-sender">{doc.senderName}</span>
               </div>
-              <span className={`status-badge ${getStatusColor(doc.currentStatus)}`}>
+              <span className={`status-badge ${getStatusColorClass(doc.currentStatus)}`}>
                 {translateStatus(doc.currentStatus)}
               </span>
             </li>
