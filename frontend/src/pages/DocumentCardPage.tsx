@@ -31,6 +31,11 @@ const canPreviewFromExt = (fileName: string): boolean => {
   return getPreviewTypeFromExt(fileName) !== 'none';
 };
 
+const formatConfidence = (value: number | null | undefined): number => {
+  if (value == null) return 0;
+  return Math.round(value * 100);
+};
+
 const DocumentCardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -354,18 +359,13 @@ const DocumentCardPage: React.FC = () => {
   if (error) return <div className="doc-error">{error}</div>;
   if (!data) return <div className="doc-error">Документ не найден</div>;
 
-  const normalizePercent = (value: number | null | undefined): number => {
-    if (value == null) return 0;
-    return value > 1 ? Math.round(value) : Math.round(value * 100);
-  };
-
   const getConfidenceClass = (percent: number): string => {
     if (percent >= 90) return "confidence-high";
     if (percent >= 70) return "confidence-medium";
     return "confidence-low";
   };
 
-  const overallConfidence = normalizePercent(data.confidenceScore);
+  const overallConfidence = formatConfidence(data.confidenceScore);
   const hasOcrText = !!data.ocrResult?.rawText;
 
   const currentDepartmentLabel = data.currentDepartment
@@ -499,10 +499,10 @@ const DocumentCardPage: React.FC = () => {
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.type || aiResult?.documentTypeSuggested || '-'}</span>
                       <span
-                        className={`confidence-chip ${getConfidenceClass(normalizePercent(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null))}`}
+                        className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null))}`}
                         data-tooltip="Точность определения типа документа AI-моделью"
                       >
-                        {normalizePercent(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null)}%
+                        {formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null)}%
                         <span className="confidence-info-symbol">ⓘ</span>
                       </span>
                     </div>
@@ -512,10 +512,10 @@ const DocumentCardPage: React.FC = () => {
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.category || aiResult?.categorySuggested || '-'}</span>
                       <span
-                        className={`confidence-chip ${getConfidenceClass(normalizePercent(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null))}`}
+                        className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null))}`}
                         data-tooltip="Точность определения категории документа AI-моделью"
                       >
-                        {normalizePercent(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null)}%
+                        {formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null)}%
                         <span className="confidence-info-symbol">ⓘ</span>
                       </span>
                     </div>
@@ -693,10 +693,10 @@ const DocumentCardPage: React.FC = () => {
                     <div className="ai-result-card-label">Уверенность модели</div>
                     <div className="ai-result-card-value">
                       <span
-                        className={`confidence-chip ${getConfidenceClass(normalizePercent(aiResult.confidenceScore))}`}
+                        className={`confidence-chip ${getConfidenceClass(formatConfidence(aiResult.confidenceScore))}`}
                         data-tooltip="Уверенность AI-модели в правильности всего анализа"
                       >
-                        {normalizePercent(aiResult.confidenceScore)}%
+                        {formatConfidence(aiResult.confidenceScore)}%
                         <span className="confidence-info-symbol">ⓘ</span>
                       </span>
                     </div>
@@ -928,10 +928,10 @@ const DocumentCardPage: React.FC = () => {
                 <div className="ocr-header-right">
                   {data.ocrResult && (
                     <span
-                      className={`confidence-chip ${getConfidenceClass(normalizePercent(data.ocrResult.ocrConfidence))}`}
+                      className={`confidence-chip ${getConfidenceClass(formatConfidence(data.ocrResult.ocrConfidence))}`}
                       data-tooltip="Качество извлечения текста из файла. Зависит от качества исходного изображения или PDF."
                     >
-                      Точность: {normalizePercent(data.ocrResult.ocrConfidence)}%
+                      Точность: {formatConfidence(data.ocrResult.ocrConfidence)}%
                       <span className="confidence-info-symbol">ⓘ</span>
                     </span>
                   )}
