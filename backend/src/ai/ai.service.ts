@@ -346,9 +346,9 @@ export class AiService {
         const ocrConf = document.ocrResult?.ocrConfidence
             ? Number(document.ocrResult.ocrConfidence)
             : 0;
-        const aiConf = aiResponse.confidence ?? 0;
+        const aiConf = aiResponse.confidence ?? 0 / 100;
         const totalConfidence = Math.round(ocrConf * 0.2 + aiConf * 0.8);
-        document.confidenceScore = totalConfidence;
+        document.confidenceScore = totalConfidence / 100;
 
         document.currentStatus = 'pending_verification';
 
@@ -359,8 +359,8 @@ export class AiService {
                 documentId: document.id,
                 typeId: document.documentTypeId,
                 categoryId: document.categoryId,
-                typeConfidence: aiResponse.confidence,
-                categoryConfidence: aiResponse.confidence,
+                typeConfidence: (aiResponse.confidence ?? 0) / 100,
+                categoryConfidence: (aiResponse.confidence ?? 0) / 100,
                 isVerified: false,
             });
             await this.classificationRepository.save(classification);
