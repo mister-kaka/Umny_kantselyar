@@ -9,7 +9,7 @@ import Card from "../Card";
 
 interface Notification {
     id: number;
-    type: "new_document" | "ai_complete" | "extract_error" | "pending_verification" | "routed" | "low_confidence" | "route_error" | "overdue" | "success";
+    type: "new_document" | "ai_complete" | "extract_error" | "pending_verification" | "routed" | "low_confidence" | "route_error" | "overdue" | "success" | "rejected";
     title: string;
     message: string;
     time: string;
@@ -31,13 +31,14 @@ interface NotificationsStats {
         route_error: number;
         overdue: number;
         success: number;
+        rejected: number;
     };
 }
 
 // Мок-данные для статистики (удалить, когда API готов)
 const mockStats: NotificationsStats = {
-    total: 24,
-    unread: 5,
+    total: 25,
+    unread: 6,
     today: 4,
     byType: {
         new_document: 6,
@@ -49,6 +50,7 @@ const mockStats: NotificationsStats = {
         route_error: 1,
         overdue: 1,
         success: 0,
+        rejected: 1,
     },
 };
 
@@ -135,6 +137,15 @@ const mockNotifications: Notification[] = [
         read: true,
         documentId: 109,
     },
+    {
+        id: 10,
+        type: "rejected",
+        title: "Документ отклонён",
+        message: "Документ «Договор №123» был отклонён оператором",
+        time: new Date(Date.now() - 1000 * 60 * 60 * 168).toISOString(),
+        read: false,
+        documentId: 110,
+    },
 ];
 
 const Notifications = () => {
@@ -196,6 +207,8 @@ const Notifications = () => {
             return "";
         case "success":
             return "";
+        case "rejected":
+            return "";
         default:
             return "";
         }
@@ -221,6 +234,8 @@ const Notifications = () => {
                 return "notification-icon overdue";
             case "success":
                 return "notification-icon success";
+            case "rejected":
+                return "notification-icon rejected";
             default:
                 return "notification-icon";
         }
@@ -382,7 +397,6 @@ const Notifications = () => {
             </Card>
             </div>
 
-            {/* Блок с уведомлениями — теперь отдельно, вне stats-cards-container */}
             <Card className="notifications-card">
             <div className="notifications-header">
                 <div className="notifications-title-wrap">
