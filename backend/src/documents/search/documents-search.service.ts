@@ -480,7 +480,7 @@ export class DocumentsSearchService {
 Типы: ${types}
 Категории: ${categories}
 Отделы: ${departments}
-Статусы: in_review, approved, completed, sent, pending, pending_verification, routed
+Статусы: in_review, pending_verification, verified, routed, rejected
 
 ЗАПРОС: "${cleanQuery}"
 

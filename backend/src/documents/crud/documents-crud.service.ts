@@ -76,6 +76,7 @@ export class DocumentsCrudService {
                 createdBy: document.creator?.fullName || 'Неизвестно',
                 createdAt: document.createdAt,
                 currentDepartment: document.currentDepartment?.name || null,
+                rejectedAt: document.rejectedAt,
                 files: document.files?.map(f => ({
                     id: f.id, fileName: f.fileName, fileType: f.fileType,
                     filePath: f.filePath, fileSize: f.fileSize, uploadedAt: f.uploadedAt,
@@ -350,7 +351,7 @@ export class DocumentsCrudService {
             const route = this.documentRouteRepository.create({
                 documentId: id,
                 departmentId: dto.departmentId,
-                routeStatus: 'sent',
+                routeStatus: 'routed',
                 routeReason: dto.comment || 'Направлен оператором',
                 routedAt: new Date(),
             });
@@ -388,6 +389,67 @@ export class DocumentsCrudService {
 
             throw new HttpException(
                 'Ошибка сервера при направлении документа',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    // POST /documents/:id/reject - отклонение документа
+    async rejectDocument(id: number, comment?: string, userId?: number): Promise<{ message: string }> {
+        try {
+            const document = await this.documentRepository.findOne({ where: { id } });
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            if (document.currentStatus === 'routed' || document.currentStatus === 'rejected') {
+                throw new HttpException(
+                    'Документ уже обработан и не может быть отклонён',
+                    HttpStatus.BAD_REQUEST
+                );
+            }
+
+            document.currentStatus = 'rejected';
+            document.rejectedAt = new Date();
+
+            await this.documentRepository.save(document);
+
+            const route = this.documentRouteRepository.create({
+                documentId: id,
+                departmentId: document.currentDepartmentId ?? undefined,
+                routeStatus: 'rejected',
+                routeReason: comment || 'Документ отклонён оператором',
+                routedAt: new Date(),
+            });
+            await this.documentRouteRepository.save(route);
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: `/documents/${id}/reject`,
+                action: 'отклонение документа',
+                status: 'success',
+                statusCode: 200,
+                message: `Документ ${document.registrationNumber} отклонён${comment ? `: ${comment}` : ''}`,
+            });
+
+            return { message: 'Документ отклонён' };
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: `/documents/${id}/reject`,
+                action: 'отклонение документа',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при отклонении документа',
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }

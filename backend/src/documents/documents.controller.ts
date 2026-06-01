@@ -13,6 +13,7 @@ import { UploadDocumentResponseDto } from './dto/upload-document.dto';
 import { ExtractTextResponseDto } from './dto/extract-text-response.dto';
 import { VerifyDocumentDto } from './dto/verify-document.dto';
 import { RouteDocumentDto } from './dto/route-document.dto';
+import { RejectDocumentDto } from './dto/reject-document.dto';
 import { Request } from 'express';
 
 interface RequestWithUser extends Request {
@@ -105,5 +106,15 @@ export class DocumentsController {
         @Param('id', ParseIntPipe) id: number,
     ): Promise<ExtractTextResponseDto> {
         return this.extractionService.extractText(id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post(':id/reject')
+    async rejectDocument(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: RejectDocumentDto,
+        @Req() req: RequestWithUser,
+    ) {
+        return this.crudService.rejectDocument(id, dto.comment, req.user.userId);
     }
 }
