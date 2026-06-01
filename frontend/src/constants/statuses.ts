@@ -20,22 +20,21 @@ export const STATUS_TRANSLATIONS: Record<DocumentStatus, string> = {
 
 // CSS классы для бейджа
 export const STATUS_CSS_CLASS: Record<DocumentStatus, string> = {
-    [STATUSES.IN_REVIEW]: 'status-data-refinement', 
-    [STATUSES.PENDING_VERIFICATION]: 'status-low-confidence', 
-    [STATUSES.VERIFIED]: 'status-assigned',           
-    [STATUSES.ROUTED]: 'status-loaded',               
-    [STATUSES.REJECTED]: 'status-rejected',           
+  [STATUSES.IN_REVIEW]: 'status-in-review',
+  [STATUSES.PENDING_VERIFICATION]: 'status-pending-verification',
+  [STATUSES.VERIFIED]: 'status-verified',
+  [STATUSES.ROUTED]: 'status-routed',
+  [STATUSES.REJECTED]: 'status-rejected',
 };
 
 // HEX цвета для графиков ApexCharts
 export const STATUS_HEX_COLORS: Record<DocumentStatus, string> = {
-    [STATUSES.IN_REVIEW]: '#f6c681',
-    [STATUSES.PENDING_VERIFICATION]: '#FAB25F',
-    [STATUSES.VERIFIED]: '#7EADE2',
-    [STATUSES.ROUTED]: '#7EE29F',
-    [STATUSES.REJECTED]: '#E87373',
+  [STATUSES.IN_REVIEW]: '#FFD966',
+  [STATUSES.PENDING_VERIFICATION]: '#F4A261',
+  [STATUSES.VERIFIED]: '#5B8FBF',
+  [STATUSES.ROUTED]: '#6BCB7A',
+  [STATUSES.REJECTED]: '#E86060',
 };
-
 // Порядок статусов для отображения
 export const STATUS_ORDER: DocumentStatus[] = [
     STATUSES.IN_REVIEW,
