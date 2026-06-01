@@ -49,6 +49,7 @@ export interface DocumentListItem {
   currentStatus: string;
   department: string;
   isExactMatch?: boolean;
+  confidenceScore?: number | null;
 }
 
 export interface DocumentSource {
