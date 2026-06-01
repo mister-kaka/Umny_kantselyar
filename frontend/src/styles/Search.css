@@ -84,3 +84,107 @@
   font-style: italic;
   margin: 5px 5px 5px 10px;
 }
+
+
+/*Адаптив поиска*/
+
+
+/* 1. <= 1024px */
+@media (max-width: 1024px) {
+  .document-search-item {
+    padding: 8px 12px;
+  }
+}
+
+/* 2. <= 768px */
+@media (max-width: 768px) {
+  .Search-dropdown-menu {
+    max-height: 350px; 
+  }
+  
+ 
+  .document-search-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  /* текст переноситься */
+  .doc-search-title,
+  .doc-search-sender {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+
+  .doc-search-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px; 
+  }
+
+  /* Статус-кнопка уезжает на левый край и становится меньше */
+  .document-search-item .status-badge,
+  .document-search-item [class*="status-"] {
+    font-size: 11px;
+    padding: 4px 10px;
+    align-self: flex-start;
+  }
+}
+
+/* 3.<= 480px */
+@media (max-width: 480px) {
+  .doc-search-reg {
+    font-size: 12px;
+  }
+  .doc-search-title {
+    font-size: 12px;
+  }
+  .doc-search-sender {
+    font-size: 11px;
+  }
+  .document-search-item .status-badge,
+  .document-search-item [class*="status-"] {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+}
+
+/* 4. <= 375px */
+@media (max-width: 375px) {
+  /* Экстремальное сжатие текста для экономии места */
+  .doc-search-reg {
+    font-size: 10px;
+  }
+  .doc-search-title {
+    font-size: 10px;
+  }
+  .doc-search-sender {
+    font-size: 9px;
+  }
+  /* Еще сильнее уменьшаем цветную кнопку */
+  .document-search-item .status-badge,
+  .document-search-item [class*="status-"] {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+}
+
+/* 5. <= 320px */
+@media (max-width: 320px) {
+  .Search-dropdown-menu {
+    max-height: 250px; 
+  }
+  .document-search-item {
+    padding: 6px 8px;
+    gap: 6px; /* Уменьшаем расстояние между текстом и кнопкой статуса */
+  }
+  /* Даем тексту 3 строчки, так как шрифт теперь 10px */
+  .doc-search-title {
+    -webkit-line-clamp: 3;
+  }
+}
