@@ -234,6 +234,7 @@ export class DocumentsListService {
                 category: doc.category?.name ?? null,
                 currentStatus: doc.currentStatus,
                 department: doc.documentRoutes?.[0]?.department?.name ?? null,
+                confidenceScore: doc.confidenceScore ? Number(doc.confidenceScore) : null,
             }));
 
             if (filters.searchQuery) {

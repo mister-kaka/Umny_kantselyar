@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
+import sharp from 'sharp';
 import { Document } from '../../entities/document.entity';
 import { DocumentFile } from '../../entities/document-file.entity';
 import { OcrResult } from '../../entities/ocr-result.entity';
@@ -73,22 +74,43 @@ export class TextExtractionService {
                     extractedText += XLSX.utils.sheet_to_csv(sheet) + '\n';
                 });
             } else if (['jpg', 'jpeg', 'png', 'tiff', 'tif'].includes(fileExtension)) {
-                const processedPath = await this.imageProcessor.process(filePath);
-                const { data: { text, confidence } } = await Tesseract.recognize(processedPath, 'rus+eng');
-                extractedText = text;
-                ocrConfidence = Math.round(confidence);
+                try {
+                    let imageForOcr = filePath;
 
-                // Сохраняем обработанный файл как отдельную запись
-                if (processedPath !== filePath && fs.existsSync(processedPath)) {
-                    const processedFileName = path.basename(processedPath);
-                    const processedFileRecord = this.documentFileRepository.create({
-                        documentId: id,
-                        fileName: processedFileName,
-                        fileType: path.extname(processedPath).replace('.', ''),
-                        filePath: `/uploads/documents/${id}/${processedFileName}`,
-                        fileSize: fs.statSync(processedPath).size,
-                    });
-                    await this.documentFileRepository.save(processedFileRecord);
+                    if (fileExtension === 'tiff' || fileExtension === 'tif') {
+                        const pngPath = filePath.replace(/\.(tiff|tif)$/i, '.png');
+                        await sharp(filePath).png().toFile(pngPath);
+                        imageForOcr = pngPath;
+                    }
+
+                    if (fileExtension === 'jpg' || fileExtension === 'jpeg') {
+                        const pngPath = filePath.replace(/\.(jpg|jpeg)$/i, '.png');
+                        await sharp(filePath).png().toFile(pngPath);
+                        imageForOcr = pngPath;
+                    }
+
+                    const processedPath = await this.imageProcessor.process(imageForOcr);
+                    const { data: { text, confidence } } = await Tesseract.recognize(processedPath, 'rus+eng');
+                    extractedText = text;
+                    ocrConfidence = Math.round(confidence);
+
+                    if (processedPath !== imageForOcr && fs.existsSync(processedPath)) {
+                        const processedFileName = path.basename(processedPath);
+                        const processedFileRecord = this.documentFileRepository.create({
+                            documentId: id,
+                            fileName: processedFileName,
+                            fileType: path.extname(processedPath).replace('.', ''),
+                            filePath: `/uploads/documents/${id}/${processedFileName}`,
+                            fileSize: fs.statSync(processedPath).size,
+                        });
+                        await this.documentFileRepository.save(processedFileRecord);
+                    }
+                } catch (ocrError) {
+                    console.error('OCR error:', ocrError);
+                    throw new HttpException(
+                        'Не удалось распознать изображение. Используйте PNG формат.',
+                        HttpStatus.BAD_REQUEST
+                    );
                 }
             } else {
                 throw new HttpException('Неподдерживаемый формат файла', HttpStatus.BAD_REQUEST);

@@ -45,12 +45,14 @@ export class DashboardService {
                 totalDocuments,
                 inProgress,
                 pendingCheck,
+                routedCount,
                 recentDocumentsRaw,
                 departmentRouteStatusesRaw
             ] = await Promise.all([
                 this.getTotalDocuments(),
                 this.getInProgressCount(),
                 this.getPendingCheckCount(),
+                this.getRoutedCount(),
                 this.getRecentDocuments(),
                 this.getDepartmentRouteStatuses()
             ]);
@@ -85,6 +87,7 @@ export class DashboardService {
                 totalDocuments,
                 inProgress,
                 pendingCheck,
+                routedCount,
                 recentDocuments,
                 departmentRouteStatuses,
             };
@@ -122,7 +125,13 @@ export class DashboardService {
 
     private async getPendingCheckCount(): Promise<number> {
         return this.documentRepository.count({
-            where: { currentStatus: 'pending' },
+            where: { currentStatus: 'pending_verification' },
+        });
+    }
+
+    private async getRoutedCount(): Promise<number> {
+        return this.documentRepository.count({
+            where: { currentStatus: 'routed' },
         });
     }
 

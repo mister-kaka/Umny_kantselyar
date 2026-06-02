@@ -2,7 +2,9 @@ import axios from 'axios';
 import { LoginResponse, DashboardData } from '../types';
 import { DocumentsListResponse, DocumentCard } from '../types';
 import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings, AiProvider, UpdateAiSettings, DocumentAiResult, DocumentListItem, UploadResponse, ExtractTextResponse, AiSearchResponse, VerifyDocumentData, RouteDocumentData } from '../types';
+import { Department, AiSettings, AiProvider, UpdateAiSettings, 
+  DocumentAiResult, DocumentListItem, UploadResponse, ExtractTextResponse, 
+  AiSearchResponse, VerifyDocumentData, RouteDocumentData, AnalyticsData } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -226,4 +228,14 @@ export const createDocumentType = async (name: string): Promise<DocumentType> =>
 export const createDocumentCategory = async (name: string): Promise<DocumentCategory> => {
     const res = await api.post<DocumentCategory>('/document-categories', { name });
     return res.data;
+};
+
+export const getAnalyticsData = async (): Promise<AnalyticsData> => {
+  try {
+    const response = await api.get<AnalyticsData>('/analytics/data');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения данных аналитики', error);
+    throw error;
+  }
 };

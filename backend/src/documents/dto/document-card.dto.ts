@@ -67,4 +67,6 @@ export class DocumentCardDto {
     source!: DocumentSourceDto | null;
 
     aiResult!: AiResultResponseDto | null;
+
+    rejectedAt?: Date | null;
 }

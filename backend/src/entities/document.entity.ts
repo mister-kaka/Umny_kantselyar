@@ -52,6 +52,9 @@ export class Document {
     @Column({ name: 'routed_at', type: 'timestamp', nullable: true })
     routedAt!: Date | null;
 
+    @Column({ name: 'rejected_at', type: 'timestamp', nullable: true })
+    rejectedAt!: Date | null;
+
     @Column({ name: 'current_department_id', type: 'integer', nullable: true })
     currentDepartmentId!: number | null;
 
