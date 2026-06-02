@@ -18,6 +18,13 @@ import { OcrResult } from './entities/ocr-result.entity';
 import { DocumentClassification } from './entities/document-classification.entity';
 import { AiSetting } from './entities/ai-setting.entity';
 import { DocumentAiResult } from './entities/document-ai-result.entity';
+import { UserNotificationSettings } from './entities/user-notification-settings.entity';
+import { UserInterfaceSettings } from './entities/user-interface-settings.entity';
+import { LoginHistory } from './entities/login-history.entity';
+import { RouteTemplate } from './entities/route-template.entity';
+import { DocumentComment } from './entities/document-comment.entity';
+import { AuditLog } from './entities/audit-log.entity';
+import { Notification } from './entities/notification.entity';
 
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
@@ -25,6 +32,9 @@ import { DocumentsModule } from './documents/documents.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { DocumentTypesModule } from './document-types/document-types.module';
 import { DocumentCategoriesModule } from './document-categories/document-categories.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+
 import { AiModule } from './ai/ai.module';
 import { SettingsModule } from './settings/settings.module';
 
@@ -63,6 +73,13 @@ import { memoryStorage } from 'multer';
           DocumentClassification,
           AiSetting,
           DocumentAiResult,
+          UserNotificationSettings,
+          UserInterfaceSettings,
+          LoginHistory,
+          RouteTemplate,
+          DocumentComment,
+          AuditLog,
+          Notification,
         ],
         synchronize: false, 
         logging: ['error'],  
@@ -74,7 +91,7 @@ import { memoryStorage } from 'multer';
     MulterModule.register({
       storage: memoryStorage(),
       limits: {
-        fileSize: 10 * 1024 * 1024,
+        fileSize: 50 * 1024 * 1024,
       },
     }),
 
@@ -86,6 +103,8 @@ import { memoryStorage } from 'multer';
     DocumentCategoriesModule,
     SettingsModule,
     AiModule,
+    NotificationsModule,
+     AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

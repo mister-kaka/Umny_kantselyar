@@ -24,6 +24,9 @@ export class OcrResult {
     @Column({ name: 'processed_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     processedAt!: Date;
 
+    @Column({ type: 'vector', nullable: true })
+    embedding!: number[];
+
     @OneToOne(() => Document, (document) => document.ocrResult)
     @JoinColumn({ name: 'document_id' })
     document!: Document;

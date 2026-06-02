@@ -3,7 +3,7 @@ export class RecentDocumentDto {
   registrationNumber!: string;
   title!: string;
   status!: string;
-  date!: Date;
+  date!: Date | null;
 }
 
 export class DepartmentRouteStatusDto {
@@ -17,6 +17,7 @@ export class DashboardResponseDto {
   totalDocuments!: number;
   inProgress!: number;
   pendingCheck!: number;
+  routedCount!: number;
   recentDocuments!: RecentDocumentDto[];
    departmentRouteStatuses!: DepartmentRouteStatusDto[];
 }

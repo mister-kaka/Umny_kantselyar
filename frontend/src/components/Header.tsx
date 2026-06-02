@@ -1,27 +1,25 @@
 import "../styles/global.css";
-import React, { useState } from "react";
+import "../styles/Search.css";
 import "../contexts/SidebarContexts";
 import { useSidebar } from "../contexts/SidebarContexts";
 import "../styles/Dashboard.css";
+import Search from "./Search";
+import { useNavigate } from "react-router-dom";
+import "../styles/Header.css";
+import { useState } from "react";
+import Scanner from "./SubPages/Scanner";
+import Tooltip from "./Tooltip";
 
-interface HeaderProps {
-  onSearch?: (query: string) => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ onSearch }) => {
+const Header = () => {
   const { collapsed, toggleSidebar } = useSidebar();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    if (onSearch) onSearch(value);
-  };
-
+  const navigate = useNavigate();
+  const [showScanner, setShowScanner] = useState(false);
+  
   return (
     <div className={`header ${collapsed ? 'collapsed' : ''}`}>
+
+      {showScanner && <Scanner onClose={() => setShowScanner(false)} />}
       
-      {/* Кнопка-бургер для мобильных */}
       <button className="mobile-header-arrow" onClick={toggleSidebar}>
         <span className="burger-icon">
           <span />
@@ -30,32 +28,33 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
         </span>
       </button>
 
-      <div className="Search">
-        <img src="/DashboardPage_Images/Search.jpg" className="Search-icon" alt="🔍" />
-        <input 
-          type="text"
-          placeholder="Поиск по документам, номерам, отправителям"
-          value={searchQuery}
-          onChange={handleChange}
-          className="Search-input"
-        />
+      <div className="header-search-wrapper">
+        <Search />
       </div>
 
-      <button className="button-primary header-action-btn">
-        <img src="/DashboardPage_Images/Upload.png" className="Casual-icon" alt="📩" />
-      </button>
-      <button className="button-secondary-with-border header-action-btn">
-        <img src="/DashboardPage_Images/Scanner.png" className="Casual-icon" alt="☐" />
-      </button>
-      <button className="button-secondary header-action-btn">
-        <img src="/DashboardPage_Images/Notifications.jpg" className="Casual-icon" alt="🔔" />
-      </button>
+      <Tooltip text="Загрузка документов" position="bottom">
+        <button className="button-primary header-action-btn" onClick={() => navigate('/dashboard/incoming')}>
+          <img src="/icons/header/Upload.png" className="Casual-icon" alt="📩" />
+        </button>
+      </Tooltip>
+      <Tooltip text="Сканировать документ с камеры" position="bottom">
+        <button className="button-secondary-with-border header-action-btn" onClick={() => setShowScanner(true)}>
+          <img src="/icons/header/Scan.png" className="Casual-icon" alt="☐" />
+        </button>
+      </Tooltip>
+      <Tooltip text="Уведомления" position="bottom">
+        <button className="button-secondary header-action-btn" onClick={() => navigate('/dashboard/notifications')}>
+          <img src="/icons/header/Notifications.png" className="Casual-icon" alt="🔔" />
+        </button>
+      </Tooltip>
 
       <div className="profile-block">
         <h5></h5>
         <h6 className="text-secondary"></h6>
       </div>
-      <img src="/DashboardPage_Images/Profile.jpg" className="profile-image" alt="👤" />
+      <Tooltip text="Профиль пользователя" position="bottom">
+        <img src="/icons/header/User.png" className="profile-image" alt="👤" />
+      </Tooltip>
     </div>
   );
 };

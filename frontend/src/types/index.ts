@@ -8,6 +8,7 @@ export interface RecentDocument {
   title: string;
   status: string;
   date: string;
+  uploadedAt?: string;
 }
 
 export interface DepartmentRouteStatus {
@@ -21,6 +22,7 @@ export interface DashboardData {
   totalDocuments: number;
   inProgress: number;
   pendingCheck: number;
+  routedCount: number;
   recentDocuments: RecentDocument[];
   departmentRouteStatuses: DepartmentRouteStatus[];
 }
@@ -42,37 +44,20 @@ export interface DocumentListItem {
   title: string;
   senderName: string;
   receivedDate: string;
+  uploadedAt?: string;
   documentType: string;
   category: string;
   currentStatus: string;
   department: string;
+  isExactMatch?: boolean;
+  confidenceScore?: number | null;
 }
 
 export interface DocumentSource {
-    sourceType: string;
-    organizationName: string | null;
-    senderName: string | null;
-    contactInfo: string | null;
-}
-
-export interface DocumentCard {
-  id: number;
-  registrationNumber: string;
-  title: string;
-  senderName: string;
-  receivedDate: string;
-  documentType: string | null;   
-  category: string | null;       
-  currentStatus: string;
-  files: DocumentFile[];
-  createdBy: string;
-  createdAt: string;
-  confidenceScore: number | null;
-  ocrResult: OcrResult | null;
-  classification: DocumentClassification | null; 
-  routes: DocumentRoute[];
-  source: DocumentSource | null;  
-  aiResult: DocumentAiResult | null;
+  sourceType: string;
+  organizationName: string | null;
+  senderName: string | null;
+  contactInfo: string | null;
 }
 
 export interface DocumentFile {
@@ -109,15 +94,69 @@ export interface DocumentRoute {
   routedAt: string;
 }
 
+export interface DocumentAiResult {
+    id: number;
+    documentId: number;
+    documentTypeSuggested: string | null;
+    categorySuggested: string | null;
+    summaryText: string | null;
+    departmentSuggested: string | null;
+    confidenceScore: number | null;
+    providerCode: string;
+    modelName: string;
+    createdAt: string;
+    extractedDate?: string | null;
+    extractedAmount?: number | null;
+    extractedCounterparty?: string | null;
+    keyPhrases?: string[] | null;
+    sourceTypeSuggested?: string | null;
+    sourceOrganizationSuggested?: string | null;
+    sourceSenderSuggested?: string | null;
+    sourceContactSuggested?: string | null;
+}
+
+export interface DocumentCard {
+    id: number;
+    registrationNumber: string;
+    title: string;
+    senderName: string;
+    receivedDate: string;
+    documentType: string | null;   
+    category: string | null;       
+    currentStatus: string;
+    files: DocumentFile[];
+    createdBy: string;
+    createdAt: string;
+    confidenceScore: number | null;
+    ocrResult: OcrResult | null;
+    classification: DocumentClassification | null; 
+    routes: DocumentRoute[];
+    source: DocumentSource | null;  
+    aiResult: DocumentAiResult | null;
+    uploadedAt?: string | null;
+    currentDepartment?: string | null;
+}
+
 export interface DocumentsFilters {
   typeId?: number;
   categoryId?: number;
   status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  dateField?: string;
   page?: number;
   limit?: number;
 }
 
 export interface DocumentsListResponse {
+  items: DocumentListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AiSearchResponse {
   items: DocumentListItem[];
   total: number;
   page: number;
@@ -145,7 +184,6 @@ export interface Department {
   code: string;
   isActive: boolean;
 }
-
 
 export interface AiSettings {
   id: number;
@@ -175,30 +213,47 @@ export interface AiModel {
   modelName: string;
 }
 
-export interface DocumentAiResult {
+export interface UploadResponse {
   id: number;
-  documentId: number;
-  documentTypeSuggested: string | null;
-  categorySuggested: string | null;
-  summaryText: string | null;
-  departmentSuggested: string | null;
-  confidenceScore: number | null;
-  providerCode: string;
-  modelName: string;
-  createdAt: string;
+  registrationNumber: string;
+  fileName: string;
+  fileSize: number;
+  filePath: string;
+  uploadedAt: string;
 }
 
+export interface ExtractTextResponse {
+  id: number;
+  documentId: number;
+  rawText: string;
+  normalizedText: string;
+  language: string;
+  ocrConfidence: number;
+  processedAt: string;
+}
+
+export type FileItem = {
+  id: string;
+  file: File;
+  status: "waiting" | "uploading" | "extracting" | "analyzing" | "done" | "error" | "paused" | "cancelled";
+  selected: boolean;
+  errorMessage?: string;
+  documentId?: number;
+};
+
+export type UploadStep = "idle" | "processing" | "success" | "error";
+
 export interface VerifyDocumentData {
-  typeId: number;
-  categoryId: number;
-  departmentId: number;
-  status: string;
+  typeId?: number;
+  categoryId?: number;
+  departmentId?: number;
+  receivedDate?: string;
+  senderName?: string;
   comment?: string;
 }
 
 export interface RouteDocumentData {
   departmentId: number;
-  templateId?: number;
   comment?: string;
 }
 
@@ -242,6 +297,8 @@ export interface Profile {
 export interface UpdateProfileData {
   name?: string;
   email?: string;
+  currentPassword?: string;
+  newPassword?: string;
 }
 
 export interface NotificationSettings {
@@ -250,6 +307,9 @@ export interface NotificationSettings {
   extractError: boolean;
   pendingVerification: boolean;
   routedToDepartment: boolean;
+  lowConfidence: boolean;
+  routeError: boolean;
+  overdueVerification: boolean;
 }
 
 export interface InterfaceSettings {
@@ -302,7 +362,7 @@ export interface ExportFilters {
 
 export interface AppNotification {
   id: number;
-  type: 'new_document' | 'ai_complete' | 'extract_error' | 'pending_verification' | 'routed_to_department';
+  type: 'new_document' | 'ai_complete' | 'extract_error' | 'pending_verification' | 'routed_to_department' | 'low_confidence' | 'route_error' | 'overdue' | 'success' | 'rejected';
   title: string;
   message: string;
   documentId?: number;
@@ -312,4 +372,13 @@ export interface AppNotification {
 
 export interface UnreadCount {
   count: number;
+}
+
+export interface AnalyticsData {
+  totalDocuments: number;
+  avgConfidence: number;
+  rejectedCount: number;
+  last7Days: number;
+  pendingVerificationCount: number;
+  aiProcessedCount: number;
 }

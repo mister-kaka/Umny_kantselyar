@@ -33,6 +33,33 @@ export class DocumentAiResult {
     @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     createdAt!: Date;
 
+    @Column({ type: 'vector', nullable: true })
+    embedding!: number[];
+
+    @Column({ name: 'extracted_date', type: 'date', nullable: true })
+    extractedDate!: Date | null;
+
+    @Column({ name: 'extracted_amount', type: 'decimal', precision: 15, scale: 2, nullable: true })
+    extractedAmount!: number | null;
+
+    @Column({ name: 'extracted_counterparty', type: 'varchar', length: 200, nullable: true })
+    extractedCounterparty!: string | null;
+
+    @Column({ name: 'key_phrases', type: 'text', array: true, nullable: true })
+    keyPhrases!: string[] | null;
+
+    @Column({ name: 'source_type_suggested', type: 'varchar', length: 50, nullable: true })
+    sourceTypeSuggested!: string | null;
+
+    @Column({ name: 'source_organization_suggested', type: 'varchar', length: 200, nullable: true })
+    sourceOrganizationSuggested!: string | null;
+
+    @Column({ name: 'source_sender_suggested', type: 'varchar', length: 200, nullable: true })
+    sourceSenderSuggested!: string | null;
+
+    @Column({ name: 'source_contact_suggested', type: 'varchar', length: 500, nullable: true })
+    sourceContactSuggested!: string | null;
+
     @ManyToOne(() => Document, (document) => document.aiResults)
     @JoinColumn({ name: 'document_id' })
     document!: Document;

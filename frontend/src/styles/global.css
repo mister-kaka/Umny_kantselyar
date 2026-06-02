@@ -9,6 +9,8 @@
     --color-accent: #81D8D0;                 /* контрастный цвет — фон кнопок, акценты */
     --color-accent-hover: #6BCCC3;           /* темнее — при наведении на кнопку */
     --color-accent-light: #CDEFEC;           /* полупрозрачный — активная вкладка в боковой панели */
+    --Filter-Hover: rgba(129, 216, 208, 0.08);
+    --certain-buttons_hover: rgba(129, 216, 208, 0.1); /* ховер неактивных вкладок сайдбара и второчтепенных кнопок */
 
     /*    ЦВЕТА СТАТУСОВ    */
     --color-status-loaded: #7EE29F;          /* загружен, обработан, успех, высокая уверенность */
@@ -44,6 +46,8 @@
 
     /* Sidebar */
      --sidebar-width: 260px;
+     --sidebar-width: 260px;
+    --sidebarButtAndHeaderButt-height: 40px; 
 
     /* ошибки */
     --color-error: #d93025;
@@ -57,7 +61,18 @@
     --color-placeholder: #dadce0;
 }
 
-
+[data-theme="dark"] {
+  --color-bg-page: #1a1a2e;
+  --color-bg-surface: #16213e;
+  --border-color: #2a2a4a;
+  --text-primary: #eaeaea;
+  --text-secondary: #bbbbbb;
+  --text-tertiary: #999999;
+  --table-border: #2a2a4a;
+  --color-accent: #159e91;  
+  --color-accent-hover: #36bbad;  
+  --certain-buttons_hover: rgba(234, 234, 234, 0.9);
+}
 
 /*  Базовые стили  */
 
@@ -145,7 +160,7 @@ p {
 
 .button-secondary:hover {
   color: var(--color-accent-hover);  /* темнее при наведении */
-  background-color: rgba(129, 216, 208, 0.1); /* лёгкий фон при ховере (опционально) */
+  background-color: var(--certain-buttons_hover); /* лёгкий фон при ховере (опционально) */
 }
 
 
@@ -239,13 +254,13 @@ tbody tr:hover {
 /* активная вкладка sidebar */
 .sidebar-item.active {
   background-color: var(--color-accent-light);
-  color: #6BCCC3;
+  color: var(--color-accent-hover);
   font-weight: 500;
 }
 
 /* Ховер для неактивных вкладок sidebar */
 .sidebar-item:not(.active):hover {
-  background-color: rgba(129, 216, 208, 0.1);
+  background-color: var(--certain-buttons_hover);
 }
 
 
@@ -379,4 +394,316 @@ ul, ol {
 /*      Поля ввода      */
 input, textarea, select {
   font-family: 'Inter', sans-serif;
+}
+
+/* Адаптив - глобальные правила */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .status-badge {
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+
+  .confidence-badge {
+    width: fit-content;
+  }
+
+  .table-wrapper {
+    position: relative;
+  }
+
+  .table-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 28px;
+    background: linear-gradient(to right, rgba(255,255,255,0), var(--color-bg-surface, #ffffff));
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+
+  .status-badge {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
+}
+
+/* компактный вид */
+.compact-view {
+  font-size: 13px;
+}
+
+.compact-view .Heading-main-text{
+  margin-top: 12px;
+}
+
+.compact-view .main-card {
+  padding: 12px;
+  margin: 8px;
+}
+.compact-view .Main-cards-image {
+  width: 32px;
+  height: 32px;
+}
+.compact-view .main-card h1 {
+  font-size: 24px;
+  margin: 4px 0;
+}
+.compact-view .main-card h5 {
+  font-size: 10px;
+}
+
+.compact-view .data-table th,
+.compact-view .data-table td {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  height: auto;
+  font-size: 12px;
+}
+.compact-view .data-table th {
+  font-size: 11px;
+}
+.compact-view .table-title {
+  font-size: 15px;
+}
+
+.compact-view .status-badge {
+  padding: 2px 8px;
+  font-size: 10px;
+}
+
+.compact-view .dropdown-button {
+  padding: 6px 12px;
+  height: 34px;
+  font-size: 12px;
+}
+.compact-view .removeFiltersButt {
+  height: 34px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.compact-view .paginationWrapper {
+  gap: 0.5rem;
+  font-size: 12px;
+}
+
+.compact-view .header {
+  --header-height: 48px;
+}
+.compact-view .button-primary,
+.compact-view .button-secondary,
+.compact-view .button-secondary-with-border,
+.compact-view .header-action-btn {
+  height: 32px;
+  width: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  margin: 3px;
+}
+.compact-view .Casual-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.compact-view .sidebar {
+  width: 200px;
+  transition: width 0.2s ease;
+}
+.compact-view .main-content {
+  margin-left: 200px;
+  margin-top: 48px;
+  transition: margin-left 0.2s ease;
+}
+.compact-view .header {
+  left: 200px;
+  transition: left 0.2s ease;
+}
+
+.compact-view .sidebar-item {
+  height: 34px;
+  margin: 4px 18px 4px 12px;
+  font-size: 12px;
+}
+.compact-view .sidebar-item .Casual-icon {
+  width: 20px;
+  height: 20px;
+}
+.compact-view .item-label {
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.compact-view .button-hide {
+  height: 32px;
+  width: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  margin-left: 158px; 
+  transition: all 0.2s ease;
+}
+
+.compact-view .sidebar-footer {
+  width: 200px;
+  overflow: hidden;
+}
+
+.compact-view .out-button {
+  margin: 4px 12px 4px 12px;
+}
+
+.compact-view .version-text{
+  margin-bottom: 6px;
+}
+
+.compact-view .sidebar.collapsed {
+  width: 64px;
+  overflow: hidden;
+}
+
+.compact-view .main-content.collapsed {
+  margin-left: 64px;
+  transition: margin-left 0.2s ease;
+}
+.compact-view .header.collapsed {
+  left: 64px;
+  transition: left 0.2s ease;
+}
+
+.compact-view .sidebar.collapsed .button-hide {
+  margin-left: 16px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.compact-view .sidebar.collapsed .sidebar-item {
+  width: 34px; 
+  height: 34px; 
+  margin: 4px auto;     
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+.compact-view .sidebar.collapsed .sidebar-item .Casual-icon {
+  width: 22px;
+  height: 22px;
+}
+.compact-view .sidebar.collapsed .item-label {
+  display: none;
+}
+
+.compact-view .sidebar.collapsed .sidebar-footer {
+  width: 64px;
+  padding-top: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  padding-right: 0px;
+}
+
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  cursor: help;
+}
+
+.tooltip-wrapper::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-secondary, #4b4b4b);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  padding: 8px 12px;
+  border-radius: 8px;
+  white-space: normal;
+  max-width: 240px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+  letter-spacing: 0.2px;
+}
+
+.tooltip-wrapper::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--text-secondary, #4b4b4b);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+}
+
+.tooltip-wrapper:hover::after,
+.tooltip-wrapper:hover::before {
+  opacity: 1;
+}
+
+.tooltip-wrapper.tooltip-bottom::after {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.tooltip-wrapper.tooltip-bottom::before {
+  bottom: auto;
+  top: calc(100% + 2px);
+  border-top: none;
+  border-bottom: 6px solid var(--text-secondary, #4b4b4b);
+}
+
+/* На рассмотрении*/
+.status-in-review {
+  background-color: rgba(255, 217, 102, 0.15);
+  color: #FFD966;
+}
+
+/* Ожидает проверки */
+.status-pending-verification {
+  background-color: rgba(244, 162, 97, 0.15);
+  color: #F4A261;
+}
+
+/* Проверено */
+.status-verified {
+  background-color: rgba(91, 143, 191, 0.15);
+  color: #5B8FBF;
+}
+
+/* Направлен в отдел*/
+.status-routed {
+  background-color: rgba(107, 203, 122, 0.15);
+  color: #6BCB7A;
+}
+
+/* Отклонено*/
+.status-rejected {
+  background-color: rgba(232, 96, 96, 0.15);
+  color: #E86060;
 }
