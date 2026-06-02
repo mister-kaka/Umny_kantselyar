@@ -195,7 +195,7 @@ export class AiService {
                 categorySuggested: aiResponse.category,
                 summaryText: aiResponse.summary,
                 departmentSuggested: aiResponse.department,
-                confidenceScore: aiResponse.confidence,
+                confidenceScore: (aiResponse.confidence ?? 0) / 100,
                 providerCode: settings.providerCode,
                 modelName: settings.modelName,
                 extractedDate: aiResponse.date && !isNaN(Date.parse(aiResponse.date))
@@ -219,17 +219,16 @@ export class AiService {
                 throw updateError;
             }
 
-            const ocrConf = document.ocrResult?.ocrConfidence
-                ? Number(document.ocrResult.ocrConfidence)
-                : 0;
+            const ocrConf = document.ocrResult?.ocrConfidence ?? 0;
             const aiConf = (aiResponse.confidence ?? 0) / 100;
-            const totalConfidence = Math.round(ocrConf * 0.2 + aiConf * 0.8);
+            const totalPercent = Math.round((ocrConf * 0.2 + aiConf * 0.8) * 100);
+            document.confidenceScore = totalPercent / 100;
 
             await this.notificationsService.createNotification(
                 document.createdBy,
                 'ai_complete',
                 'AI завершил анализ',
-                `Документ «${document.title}» обработан. Уверенность: ${totalConfidence}% (№${document.registrationNumber})`,
+                `Документ «${document.title}» обработан. Уверенность: ${totalPercent}% (№${document.registrationNumber})`,
                 document.id,
             );
 
@@ -241,12 +240,12 @@ export class AiService {
                 document.id,
             );
 
-            if (totalConfidence < 50) {
+            if (totalPercent < 50) {
                 await this.notificationsService.createNotification(
                     document.createdBy,
                     'low_confidence',
                     'Низкая уверенность',
-                    `Документ «${document.title}» распознан с низкой уверенностью (${totalConfidence}%) (№${document.registrationNumber})`,
+                    `Документ «${document.title}» распознан с низкой уверенностью (${totalPercent}%) (№${document.registrationNumber})`,
                     document.id,
                 );
             }
@@ -394,14 +393,11 @@ export class AiService {
             document.receivedDate = new Date(aiResponse.date);
         }
 
-        const ocrConf = document.ocrResult?.ocrConfidence
-            ? Number(document.ocrResult.ocrConfidence)
-            : 0;
+        const ocrConf = document.ocrResult?.ocrConfidence ?? 0;
         const aiConf = (aiResponse.confidence ?? 0) / 100;
-        const totalConfidence = Math.round(ocrConf * 0.2 + aiConf * 0.8);
-        document.confidenceScore = totalConfidence / 100;
-
-        document.currentStatus = 'pending_verification';
+        const totalPercent = Math.round((ocrConf * 0.2 + aiConf * 0.8) * 100);
+        document.confidenceScore = totalPercent / 100;
+        document.currentStatus = 'pending_verification'; 
 
         await this.documentRepository.save(document);
 

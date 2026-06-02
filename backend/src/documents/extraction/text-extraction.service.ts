@@ -128,7 +128,7 @@ export class TextExtractionService {
             ocrResult.rawText = extractedText;
             ocrResult.normalizedText = extractedText.trim();
             ocrResult.language = 'ru';
-            ocrResult.ocrConfidence = ocrConfidence;
+            ocrResult.ocrConfidence = ocrConfidence / 100;
             ocrResult.processedAt = new Date();
             await this.ocrResultRepository.save(ocrResult);
 
