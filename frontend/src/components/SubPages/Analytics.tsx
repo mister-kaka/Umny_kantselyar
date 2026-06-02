@@ -242,7 +242,7 @@ const Analytics = () => {
     }
   };
 
- const statCards = [
+  const statCards = [
     { value: analyticsData?.totalDocuments || 0, label: 'Всего документов', icon: '/icons/analytics/total.png' },
     { value: analyticsData?.avgConfidence || 0, label: 'Средняя уверенность', icon: '/icons/analytics/confidence.png', suffix: '%' },
     { value: analyticsData?.pendingVerificationCount || 0, label: 'Требуют проверки', icon: '/icons/analytics/pending.png' },
@@ -258,18 +258,18 @@ const Analytics = () => {
         <p className="analytics-subtitle">{documents.length} документов в системе</p>
       </div>
 
-      <div className="stats-cards-container">
+      <div className="analytics-stats-cards-container">
         {statCards.map((card, i) => (
-          <div className="stat-card" key={i}>
-            <div className="stat-card-icon-wrap">
+          <div className="analytics-stat-card" key={i}>
+            <div className="analytics-stat-card-icon-wrap">
               <img src={card.icon} className="analytics-stat-icon" alt={card.label} />
             </div>
-            <div className="stat-card-content">
-              <div className="stat-card-value">
+            <div className="analytics-stat-card-content">
+              <div className="analytics-stat-card-value">
                 {card.value}
-                {card.suffix && <span className="stat-card-suffix">{card.suffix}</span>}
+                {card.suffix && <span className="analytics-stat-card-suffix">{card.suffix}</span>}
               </div>
-              <div className="stat-card-label">{card.label}</div>
+              <div className="analytics-stat-card-label">{card.label}</div>
             </div>
           </div>
         ))}
@@ -297,6 +297,7 @@ const Analytics = () => {
             )}
           </div>
         </div>
+
         <div className="chart-card">
           <div className="chart-card-header">
             <h3>Категории</h3>
@@ -318,6 +319,7 @@ const Analytics = () => {
             )}
           </div>
         </div>
+
         <div className="chart-card full-width">
           <div className="chart-card-header">
             <h3>Динамика поступлений</h3>
@@ -337,6 +339,7 @@ const Analytics = () => {
             )}
           </div>
         </div>
+
         <div className="chart-card full-width">
           <div className="chart-card-header">
             <h3>Статусы обработки</h3>
