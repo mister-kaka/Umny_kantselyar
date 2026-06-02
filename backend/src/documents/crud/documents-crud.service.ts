@@ -1,4 +1,3 @@
-// backend/src/documents/crud/documents-crud.service.ts
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,6 +14,7 @@ import { UploadDocumentResponseDto } from '../dto/upload-document.dto';
 import { VerifyDocumentDto } from '../dto/verify-document.dto';
 import { RouteDocumentDto } from '../dto/route-document.dto';
 import { AppLoggerService } from '../../logger/app-logger.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif'];
 
@@ -34,6 +34,7 @@ export class DocumentsCrudService {
         @InjectRepository(DocumentClassification)
         private classificationRepository: Repository<DocumentClassification>,
         private readonly logger: AppLoggerService,
+        private readonly notificationsService: NotificationsService,
     ) {}
 
     // GET /documents/:id - карточка документа
@@ -246,6 +247,13 @@ export class DocumentsCrudService {
             });
             await this.documentSourceRepository.save(sourceRecord);
 
+            await this.notificationsService.createNotification(
+                createdBy,
+                'new_document',
+                'Новый документ',
+                `Поступил новый документ «${safeFileName}» от Загружен через сканирование (№${registrationNumber})`,
+                savedDocument.id,
+            );
 
             await this.logger.log({
                 module: 'Documents', type: 'POST', url: '/documents/upload',
@@ -308,6 +316,14 @@ export class DocumentsCrudService {
                 await this.classificationRepository.save(classification);
             }
 
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'verified',
+                'Документ проверен',
+                `Документ «${document.title}» проверен оператором (№${document.registrationNumber})`,
+                document.id,
+            );
+
             await this.logger.log({
                 module: 'Documents',
                 type: 'PUT',
@@ -361,6 +377,22 @@ export class DocumentsCrudService {
             document.currentStatus = 'routed';
             document.routedAt = new Date();
             await this.documentRepository.save(document);
+
+            const department = await this.documentRepository.manager
+                .createQueryBuilder()
+                .select('d.name')
+                .from('departments', 'd')
+                .where('d.id = :id', { id: dto.departmentId })
+                .getRawOne();
+            const departmentName = department?.d_name || 'отдел';
+
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'routed',
+                'Направлен в отдел',
+                `Документ «${document.title}» направлен в отдел ${departmentName} (№${document.registrationNumber})`,
+                document.id,
+            );
 
             await this.logger.log({
                 module: 'Documents',
@@ -423,6 +455,14 @@ export class DocumentsCrudService {
                 routedAt: new Date(),
             });
             await this.documentRouteRepository.save(route);
+
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'rejected',
+                'Документ отклонён',
+                `Документ «${document.title}» отклонён${comment ? `: ${comment}` : ''} (№${document.registrationNumber})`,
+                document.id,
+            );
 
             await this.logger.log({
                 module: 'Documents',

@@ -13,6 +13,24 @@ export class NotificationsService {
         private readonly logger: AppLoggerService,
     ) {}
 
+    async createNotification(
+        userId: number,
+        type: string,
+        title: string,
+        message: string,
+        documentId?: number,
+    ): Promise<void> {
+        const notification = this.notificationRepository.create({
+            userId,
+            type,
+            title,
+            message,
+            documentId,
+            isRead: false,
+        });
+        await this.notificationRepository.save(notification);
+    }
+
     async findAll(userId: number, page: number = 1, limit: number = 20): Promise<NotificationListResponseDto> {
         try {
             const skip = (page - 1) * limit;
@@ -84,10 +102,10 @@ export class NotificationsService {
                 aiComplete: all.filter(n => n.type === 'ai_complete').length,
                 extractError: all.filter(n => n.type === 'extract_error').length,
                 pendingVerification: all.filter(n => n.type === 'pending_verification').length,
-                routedToDepartment: all.filter(n => n.type === 'routed_to_department').length,
+                routedToDepartment: all.filter(n => n.type === 'routed').length,
                 lowConfidence: all.filter(n => n.type === 'low_confidence').length,
                 routeError: all.filter(n => n.type === 'route_error').length,
-                overdueVerification: all.filter(n => n.type === 'overdue_verification').length,
+                overdueVerification: all.filter(n => n.type === 'overdue').length,
             };
 
             await this.logger.log({

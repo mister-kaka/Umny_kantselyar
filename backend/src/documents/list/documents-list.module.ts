@@ -5,12 +5,14 @@ import { DocumentsListService } from './documents-list.service';
 import { Document } from '../../entities/document.entity';
 import { AiSetting } from '../../entities/ai-setting.entity';
 import { LoggerModule } from '../../logger/logger.module';
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Document, AiSetting]),
         HttpModule,
         LoggerModule,
+        NotificationsModule,
     ],
     providers: [DocumentsListService],
     exports: [DocumentsListService],

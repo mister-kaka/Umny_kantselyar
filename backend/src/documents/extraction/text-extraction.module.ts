@@ -6,12 +6,16 @@ import { DocumentFile } from '../../entities/document-file.entity';
 import { OcrResult } from '../../entities/ocr-result.entity';
 import { ImageProcessorModule } from '../../image-processor/image-processor.module';
 import { DocumentsSearchModule } from '../search/documents-search.module';
+import { LoggerModule } from '../../logger/logger.module';
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Document, DocumentFile, OcrResult]),
         ImageProcessorModule,
         DocumentsSearchModule,
+        LoggerModule,
+        NotificationsModule,
     ],
     providers: [TextExtractionService],
     exports: [TextExtractionService],
