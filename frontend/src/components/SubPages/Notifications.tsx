@@ -315,9 +315,9 @@ const Notifications = () => {
     if (loading) {
         return (
         <div className="notifications-page">
-        <div className="stats-cards-container">
+        <div className="notifications-stats-cards-container">
           {[1, 2, 3, 4].map(i => (
-            <Card key={i} className="stat-card skeleton-card">
+            <Card key={i} className="notifications-stat-card skeleton-card">
               <div className="skeleton-icon" />
               <div className="skeleton-text" />
             </Card>
@@ -363,36 +363,36 @@ const Notifications = () => {
 
     return (
     <div className="notifications-page">
-        <div className="stats-cards-container">
-            <Card className="stat-card">
-                <img src="/icons/notifications/Unread.png" className="stat-card-icon" alt="📄" />
-                <div className="stat-card-content">
-                <h1 className="stat-card-value">{stats?.unread ?? 0}</h1>
-                <h5 className="stat-card-label text-secondary">Непрочитанные</h5>
+        <div className="notifications-stats-cards-container">
+            <Card className="notifications-stat-card">
+                <img src="/icons/notifications/Unread.png" className="notifications-stat-card-icon" alt="📄" />
+                <div className="notifications-stat-card-content">
+                <h1 className="notifications-stat-card-value">{stats?.unread ?? 0}</h1>
+                <h5 className="notifications-stat-card-label text-secondary">Непрочитанные</h5>
                 </div>
             </Card>
 
-            <Card className="stat-card">
-                <img src="/icons/notifications/Low_confidence.png" className="stat-card-icon" alt="✔️" />
-                <div className="stat-card-content">
-                <h1 className="stat-card-value">{stats?.byType.low_confidence ?? 0}</h1>
-                <h5 className="stat-card-label text-secondary">Низкая уверенность</h5>
+            <Card className="notifications-stat-card">
+                <img src="/icons/notifications/Low_confidence.png" className="notifications-stat-card-icon" alt="✔️" />
+                <div className="notifications-stat-card-content">
+                <h1 className="notifications-stat-card-value">{stats?.byType.low_confidence ?? 0}</h1>
+                <h5 className="notifications-stat-card-label text-secondary">Низкая уверенность</h5>
                 </div>
             </Card>
 
-            <Card className="stat-card">
-                <img src="/icons/notifications/Error.png" className="stat-card-icon" alt="❕" />
-                <div className="stat-card-content">
-                <h1 className="stat-card-value">{stats?.byType.extract_error ?? 0}</h1>
-                <h5 className="stat-card-label text-secondary">Ошибки</h5>
+            <Card className="notifications-stat-card">
+                <img src="/icons/notifications/Error.png" className="notifications-stat-card-icon" alt="❕" />
+                <div className="notifications-stat-card-content">
+                <h1 className="notifications-stat-card-value">{stats?.byType.extract_error ?? 0}</h1>
+                <h5 className="notifications-stat-card-label text-secondary">Ошибки</h5>
                 </div>
             </Card>
 
-            <Card className="stat-card">
-                <img src="/icons/notifications/Overdue.png" className="stat-card-icon" alt="✔️" />
-                <div className="stat-card-content">
-                <h1 className="stat-card-value">{stats?.byType.overdue ?? 0}</h1>
-                <h5 className="stat-card-label text-secondary">Просроченные</h5>
+            <Card className="notifications-stat-card">
+                <img src="/icons/notifications/Overdue.png" className="notifications-stat-card-icon" alt="✔️" />
+                <div className="notifications-stat-card-content">
+                <h1 className="notifications-stat-card-value">{stats?.byType.overdue ?? 0}</h1>
+                <h5 className="notifications-stat-card-label text-secondary">Просроченные</h5>
                 </div>
             </Card>
             </div>

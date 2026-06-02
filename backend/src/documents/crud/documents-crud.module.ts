@@ -1,4 +1,3 @@
-// backend/src/documents/crud/documents-crud.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DocumentsCrudService } from './documents-crud.service';
@@ -8,6 +7,8 @@ import { DocumentFile } from '../../entities/document-file.entity';
 import { OcrResult } from '../../entities/ocr-result.entity';
 import { DocumentSource } from '../../entities/document-source.entity';
 import { DocumentClassification } from '../../entities/document-classification.entity';
+import { LoggerModule } from '../../logger/logger.module';
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 @Module({
     imports: [
@@ -15,6 +16,8 @@ import { DocumentClassification } from '../../entities/document-classification.e
             Document, DocumentRoute, DocumentFile,
             OcrResult, DocumentSource, DocumentClassification,
         ]),
+        LoggerModule,
+        NotificationsModule,
     ],
     providers: [DocumentsCrudService],
     exports: [DocumentsCrudService],

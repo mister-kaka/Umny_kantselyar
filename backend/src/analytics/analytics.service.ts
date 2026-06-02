@@ -36,6 +36,14 @@ export class AnalyticsService {
                 },
             });
 
+            const pendingVerificationCount = await this.documentRepository.count({
+                where: { currentStatus: 'pending_verification' },
+            });
+
+            const aiProcessedCount = await this.documentRepository.count({
+                where: { confidenceScore: MoreThan(0) },
+            });
+
             await this.logger.log({
                 module: 'Analytics',
                 type: 'GET',
@@ -51,6 +59,8 @@ export class AnalyticsService {
                 avgConfidence: Math.round((avgConfidenceResult?.avg || 0) * 100),
                 rejectedCount,
                 last7Days,
+                pendingVerificationCount,
+                aiProcessedCount,
             };
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';

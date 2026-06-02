@@ -3,4 +3,6 @@ export class AnalyticsResponseDto {
     avgConfidence!: number;
     rejectedCount!: number;
     last7Days!: number;
+    pendingVerificationCount!: number;
+    aiProcessedCount!: number;
 }
