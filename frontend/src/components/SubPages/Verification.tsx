@@ -8,7 +8,7 @@ import "../../styles/Dashboard.css";
 import "../../styles/DocumentsListPage.css";
 import { getDocuments, getDocumentTypes, getDocumentCategories } from "../../services/api";
 import { DocumentType, DocumentCategory } from "../../types";
-import { translateStatus, statusMap } from "./MainMenu";
+import { translateStatus, getStatusColorClass } from "../../constants/statuses";
 import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
@@ -23,6 +23,9 @@ interface VerificationDocument {
   category: string;
   currentStatus: string;
   confidenceScore?: number;
+  aiDocumentType?: string | null;
+  aiCategory?: string | null;
+  aiConfidence?: number | null;
 }
 
 const Verification = () => {
@@ -117,7 +120,6 @@ const Verification = () => {
   const findTypeId = (name: string) => types.find(t => t.name === name)?.id;
   const findCategoryId = (name: string) => categories.find(c => c.name === name)?.id;
 
-  const RUSStatuses = Object.values(statusMap);
   const typeOptions = types.length > 0
     ? types.map(t => t.name)
     : (filtersError ? ['Ошибка загрузки'] : []);
@@ -139,29 +141,11 @@ const Verification = () => {
   };
 
   const getVerificationStatusClass = (status: string): string => {
-    switch (status) {
-      case "pending_verification":
-        return "status-low-confidence";
-      case "in_review":
-        return "status-assigned";
-      case "verified":
-        return "status-loaded";
-      default:
-        return "status-low-confidence";
-    }
+    return getStatusColorClass(status);
   };
 
   const getVerificationStatusText = (status: string): string => {
-    switch (status) {
-      case "pending_verification":
-        return "Ожидает проверки";
-      case "in_review":
-        return "На проверке";
-      case "verified":
-        return "Проверено";
-      default:
-        return translateStatus(status);
-    }
+    return translateStatus(status);
   };
 
   const handleTakeToReview = async (docId: number, e: React.MouseEvent) => {
@@ -169,16 +153,10 @@ const Verification = () => {
     setTakingId(docId);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setData(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          items: prev.items.map(doc =>
-            doc.id === docId ? { ...doc, currentStatus: "in_review" } : doc
-          ),
-        };
-      });
+      // TODO: API вызов для взятия документа в проверку
+      // При нажатии "Взять в проверку" открываем карточку документа на вкладке "Проверка"
+      await new Promise(resolve => setTimeout(resolve, 300));
+      navigate(`/dashboard/documents/${docId}`, { state: { openVerificationTab: true } });
     } catch (err) {
       console.error("Ошибка:", err);
     } finally {
@@ -186,9 +164,18 @@ const Verification = () => {
     }
   };
 
+  // Форматирование уверенности (0-100%)
+  const formatConfidence = (score?: number): number => {
+    if (score === undefined || score === null) return 0;
+    // Если score уже в процентах (0-100), возвращаем как есть
+    if (score > 1) return Math.round(score);
+    // Если в долях (0-1), переводим в проценты
+    return Math.round(score * 100);
+  };
+
   return (
     <div>
-      {/* Панель фильтров как в архиве */}
+      {/* Панель фильтров */}
       <Card className="filtersButtsWrapper">
         <Tooltip text="Показать документы только выбранного типа">
           <DropdownButton
@@ -250,7 +237,7 @@ const Verification = () => {
         </Tooltip>
       </Card>
 
-      {/* Таблица как в архиве */}
+      {/* Таблица */}
       <Card className="cuttinPaddin">
         <Table
           title={<h4>Очередь проверки ({data?.total ?? 0})</h4>}
@@ -267,29 +254,29 @@ const Verification = () => {
               <th>Рег. номер</th>
               <th>Название</th>
               <th>Отправитель</th>
-              <th>Дата</th>
-              <th>Тип</th>
-              <th>Категория</th>
-              <th>Статус</th>
+              <th>Дата загрузки</th>
+              <th>Тип (AI)</th>
+              <th>Категория (AI)</th>
               <th>Уверенность</th>
+              <th>Статус</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px' }}>Загрузка...</td></tr>
+              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px' }}>Загрузка...</td>               </tr>
             ) : error ? (
               <tr>
                 <td colSpan={9} style={{ textAlign: 'center', color: 'var(--color-status-rejected)', padding: '20px' }}>
                   {error} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
-              </tr>
+               </tr>
             ) : filtersError && !types.length && !categories.length ? (
               <tr>
                 <td colSpan={9} style={{ textAlign: 'center', color: 'var(--color-status-rejected)', padding: '20px' }}>
                   {filtersError} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
-              </tr>
+               </tr>
             ) : data?.items?.length ? (
               data.items.map((doc) => (
                 <tr key={doc.id} onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
@@ -297,23 +284,23 @@ const Verification = () => {
                   <td>{doc.title}</td>
                   <td>{doc.senderName}</td>
                   <td>{new Date(doc.receivedDate).toLocaleDateString()}</td>
-                  <td>{doc.documentType}</td>
-                  <td>{doc.category}</td>
-                  <td>
-                    <span className={`status-badge ${getVerificationStatusClass(doc.currentStatus)}`}>
-                      {getVerificationStatusText(doc.currentStatus)}
-                    </span>
-                  </td>
+                  <td>{doc.aiDocumentType || doc.documentType || '-'}</td>
+                  <td>{doc.aiCategory || doc.category || '-'}</td>
                   <td>
                     <div className="confidence-cell">
                       <div className="confidence-bar">
                         <div
-                          className={`confidence-fill ${getConfidenceClass(doc.confidenceScore)}`}
-                          style={{ width: `${doc.confidenceScore || 0}%` }}
+                          className={`confidence-fill ${getConfidenceClass(formatConfidence(doc.confidenceScore))}`}
+                          style={{ width: `${formatConfidence(doc.confidenceScore)}%` }}
                         />
                       </div>
-                      <span className="confidence-text">{doc.confidenceScore || 0}%</span>
+                      <span className="confidence-text">{formatConfidence(doc.confidenceScore)}%</span>
                     </div>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${getVerificationStatusClass(doc.currentStatus)}`}>
+                      {getVerificationStatusText(doc.currentStatus)}
+                    </span>
                   </td>
                   <td>
                     {doc.currentStatus === "pending_verification" && (
@@ -340,7 +327,7 @@ const Verification = () => {
                 <td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
                   Нет документов, ожидающих проверки
                 </td>
-              </tr>
+               </tr>
             )}
           </tbody>
         </Table>

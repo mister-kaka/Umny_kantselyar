@@ -78,6 +78,15 @@ const DocumentCardPage: React.FC = () => {
   const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
 
+  useEffect(() => {
+    const shouldOpenVerification = (location.state as any)?.openVerificationTab;
+    if (shouldOpenVerification) {
+      setActiveTab("verification");
+
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
+
   const getBackLabel = (): string => {
     switch (from) {
       case 'main': return 'На главную';
