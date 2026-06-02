@@ -1,4 +1,3 @@
-// backend/src/documents/documents.controller.ts
 import { Controller, Get, Post, Put, Param, Query, Body, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors, Delete } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -6,6 +5,7 @@ import { DocumentsListService } from './list/documents-list.service';
 import { DocumentsSearchService } from './search/documents-search.service';
 import { DocumentsCrudService } from './crud/documents-crud.service';
 import { TextExtractionService } from './extraction/text-extraction.service';
+import { DocumentsRoutingService } from './routing/documents-routing.service';
 import { GetDocumentsDto } from './dto/get-documents.dto';
 import { DocumentsListResponseDto, DocumentListItemDto } from './dto/document-list.dto';
 import { DocumentCardDto } from './dto/document-card.dto';
@@ -14,13 +14,14 @@ import { ExtractTextResponseDto } from './dto/extract-text-response.dto';
 import { VerifyDocumentDto } from './dto/verify-document.dto';
 import { RouteDocumentDto } from './dto/route-document.dto';
 import { RejectDocumentDto } from './dto/reject-document.dto';
+import { RoutingDocumentDto } from './dto/routing-document.dto';
 import { Request } from 'express';
 
 interface RequestWithUser extends Request {
-  user: {
-    userId: number;
-    email: string;
-  };
+    user: {
+        userId: number;
+        email: string;
+    };
 }
 
 @Controller('documents')
@@ -30,6 +31,7 @@ export class DocumentsController {
         private readonly searchService: DocumentsSearchService,
         private readonly crudService: DocumentsCrudService,
         private readonly extractionService: TextExtractionService,
+        private readonly routingService: DocumentsRoutingService,
     ) {}
 
     @UseGuards(AuthGuard('jwt'))
@@ -48,6 +50,13 @@ export class DocumentsController {
     @Get('search')
     async searchDocuments(@Query('q') q: string): Promise<DocumentListItemDto[]> {
         return this.searchService.search(q);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get('routing')
+    async getRoutingDocuments(@Query('departmentId') departmentId?: string): Promise<RoutingDocumentDto[]> {
+        const deptId = departmentId ? parseInt(departmentId, 10) : undefined;
+        return this.routingService.getRoutingDocuments(deptId);
     }
 
     @UseGuards(AuthGuard('jwt'))
