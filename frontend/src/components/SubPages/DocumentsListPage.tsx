@@ -107,40 +107,49 @@ const DocumentsListPage = () => {
   };
 
   const handleExport = async () => {
-  try {
-    const exportBtn = document.querySelector('.export-excel-btn');
-    if (exportBtn) exportBtn.textContent = 'Экспорт...';
-    
-    const params = new URLSearchParams();
-    if (filters.typeId) params.append('typeId', String(filters.typeId));
-    if (filters.categoryId) params.append('categoryId', String(filters.categoryId));
-    if (filters.status) params.append('status', filters.status);
-    if (dateFilter.from) params.append('dateFrom', dateFilter.from);
-    if (dateFilter.to) params.append('dateTo', dateFilter.to);
-    
-    const response = await fetch(`http://localhost:3000/documents/export?${params.toString()}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    try {
+      const exportBtn = document.querySelector('.apply-button');
+      if (exportBtn) exportBtn.textContent = 'Экспорт...';
+      
+      // Получаем токен из localStorage
+      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+      
+      const params = new URLSearchParams();
+      if (filters.typeId) params.append('typeId', String(filters.typeId));
+      if (filters.categoryId) params.append('categoryId', String(filters.categoryId));
+      if (filters.status) params.append('status', filters.status);
+      if (dateFilter.from) params.append('dateFrom', dateFilter.from);
+      if (dateFilter.to) params.append('dateTo', dateFilter.to);
+      
+      const response = await fetch(`http://localhost:3000/documents/export?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Ошибка ответа:', response.status, errorText);
+        throw new Error(`Ошибка экспорта: ${response.status}`);
       }
-    });
-    
-    if (!response.ok) throw new Error('Ошибка экспорта');
-    
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `documents_export_${new Date().toISOString().slice(0, 19)}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `documents_export_${new Date().toISOString().slice(0, 19)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
     } catch (error) {
       console.error('Ошибка экспорта:', error);
       alert('Не удалось экспортировать документы');
     } finally {
-      const exportBtn = document.querySelector('.export-excel-btn');
+      const exportBtn = document.querySelector('.apply-button');
       if (exportBtn) exportBtn.textContent = 'Экспорт';
     }
   };
@@ -323,18 +332,6 @@ const DocumentsListPage = () => {
             Экспорт
           </button>
         </Tooltip>
-
-        {selectedIds.size > 0 && (
-          <Tooltip text="Удалить выбранные документы. Действие необратимо">
-            <button
-              className="mass-delete-btn"
-              onClick={handleDeleteSelected}
-              disabled={deleting}
-            >
-              {deleting ? 'Удаление...' : `Удалить (${selectedIds.size})`}
-            </button>
-          </Tooltip>
-        )}
 
         {selectedIds.size > 0 && (
           <Tooltip text="Удалить выбранные документы. Действие необратимо">
