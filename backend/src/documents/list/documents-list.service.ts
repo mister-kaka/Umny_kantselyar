@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import * as ExcelJS from 'exceljs';
 import { Document } from '../../entities/document.entity';
 import { AiSetting } from '../../entities/ai-setting.entity';
 import { GetDocumentsDto } from '../dto/get-documents.dto';
@@ -337,5 +338,41 @@ export class DocumentsListService {
                 [query, resultsCount, source]
             );
         } catch { }
+    }
+
+    async exportToExcel(filters: GetDocumentsDto): Promise<Buffer> {
+        const { items } = await this.findAll({ ...filters, limit: 10000, page: 1 });
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Документы');
+
+        worksheet.columns = [
+            { header: 'ID', key: 'id', width: 10 },
+            { header: 'Рег. номер', key: 'registrationNumber', width: 20 },
+            { header: 'Название', key: 'title', width: 40 },
+            { header: 'Отправитель', key: 'senderName', width: 30 },
+            { header: 'Дата загрузки', key: 'uploadedAt', width: 15 },
+            { header: 'Тип', key: 'documentType', width: 20 },
+            { header: 'Категория', key: 'category', width: 20 },
+            { header: 'Статус', key: 'currentStatus', width: 20 },
+            { header: 'Отдел', key: 'department', width: 20 },
+        ];
+
+        items.forEach(doc => {
+            worksheet.addRow({
+                id: doc.id,
+                registrationNumber: doc.registrationNumber,
+                title: doc.title,
+                senderName: doc.senderName,
+                uploadedAt: doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('ru-RU') : '',
+                documentType: doc.documentType,
+                category: doc.category || '',
+                currentStatus: doc.currentStatus,
+                department: doc.department || '',
+            });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        return buffer as unknown as Buffer;
     }
 }

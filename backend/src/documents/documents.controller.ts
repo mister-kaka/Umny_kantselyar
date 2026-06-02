@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Put, Param, Query, Body, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Query, Body, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors, Delete, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { DocumentsListService } from './list/documents-list.service';
 import { DocumentsSearchService } from './search/documents-search.service';
 import { DocumentsCrudService } from './crud/documents-crud.service';
@@ -57,6 +58,18 @@ export class DocumentsController {
     async getRoutingDocuments(@Query('departmentId') departmentId?: string): Promise<RoutingDocumentDto[]> {
         const deptId = departmentId ? parseInt(departmentId, 10) : undefined;
         return this.routingService.getRoutingDocuments(deptId);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get('export')
+    async exportDocuments(
+        @Query() filters: GetDocumentsDto,
+        @Res() res: Response,
+    ) {
+        const buffer = await this.listService.exportToExcel(filters);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=documents.xlsx');
+        res.send(buffer);
     }
 
     @UseGuards(AuthGuard('jwt'))
