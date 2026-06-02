@@ -17,6 +17,7 @@ import { AnalyzeAiResponseDto } from './dto/analyze-ai.dto';
 import { AiResultResponseDto } from './dto/ai-result.dto';
 import { decrypt } from './ai-key.util';
 import { transliterate } from '../utils/transliterate';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const MAX_TEXT_LENGTH = 3000;
 const AI_TIMEOUT = 30000;
@@ -77,6 +78,7 @@ export class AiService {
 
         private readonly httpService: HttpService,
         private readonly logger: AppLoggerService,
+        private readonly notificationsService: NotificationsService,
     ) {}
 
     async getActiveSettings(): Promise<AiSetting> {
@@ -152,6 +154,23 @@ export class AiService {
                     throw updateError;
                 }
 
+                const totalConfidence = 85;
+                await this.notificationsService.createNotification(
+                    document.createdBy,
+                    'ai_complete',
+                    'AI завершил анализ',
+                    `Документ «${document.title}» обработан. Уверенность: ${totalConfidence}% (№${document.registrationNumber})`,
+                    document.id,
+                );
+
+                await this.notificationsService.createNotification(
+                    document.createdBy,
+                    'pending_verification',
+                    'Требуется проверка',
+                    `Документ «${document.title}» ожидает проверки оператора (№${document.registrationNumber})`,
+                    document.id,
+                );
+
                 return this.mapToDto(savedResult);
             }
 
@@ -198,6 +217,38 @@ export class AiService {
             } catch (updateError) {
                 await this.aiResultRepository.remove(savedResult);
                 throw updateError;
+            }
+
+            const ocrConf = document.ocrResult?.ocrConfidence
+                ? Number(document.ocrResult.ocrConfidence)
+                : 0;
+            const aiConf = (aiResponse.confidence ?? 0) / 100;
+            const totalConfidence = Math.round(ocrConf * 0.2 + aiConf * 0.8);
+
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'ai_complete',
+                'AI завершил анализ',
+                `Документ «${document.title}» обработан. Уверенность: ${totalConfidence}% (№${document.registrationNumber})`,
+                document.id,
+            );
+
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'pending_verification',
+                'Требуется проверка',
+                `Документ «${document.title}» ожидает проверки оператора (№${document.registrationNumber})`,
+                document.id,
+            );
+
+            if (totalConfidence < 50) {
+                await this.notificationsService.createNotification(
+                    document.createdBy,
+                    'low_confidence',
+                    'Низкая уверенность',
+                    `Документ «${document.title}» распознан с низкой уверенностью (${totalConfidence}%) (№${document.registrationNumber})`,
+                    document.id,
+                );
             }
 
             await this.logger.log({
@@ -346,9 +397,9 @@ export class AiService {
         const ocrConf = document.ocrResult?.ocrConfidence
             ? Number(document.ocrResult.ocrConfidence)
             : 0;
-        const aiConf = aiResponse.confidence ?? 0;
+        const aiConf = (aiResponse.confidence ?? 0) / 100;
         const totalConfidence = Math.round(ocrConf * 0.2 + aiConf * 0.8);
-        document.confidenceScore = totalConfidence;
+        document.confidenceScore = totalConfidence / 100;
 
         document.currentStatus = 'pending_verification';
 
@@ -359,8 +410,8 @@ export class AiService {
                 documentId: document.id,
                 typeId: document.documentTypeId,
                 categoryId: document.categoryId,
-                typeConfidence: aiResponse.confidence,
-                categoryConfidence: aiResponse.confidence,
+                typeConfidence: (aiResponse.confidence ?? 0) / 100,
+                categoryConfidence: (aiResponse.confidence ?? 0) / 100,
                 isVerified: false,
             });
             await this.classificationRepository.save(classification);

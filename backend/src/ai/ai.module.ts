@@ -1,4 +1,3 @@
-// backend/src/ai/ai.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
@@ -12,6 +11,8 @@ import { DocumentCategory } from '../entities/document-category.entity';
 import { Department } from '../entities/department.entity';
 import { DocumentClassification } from '../entities/document-classification.entity';
 import { DocumentSource } from '../entities/document-source.entity';
+import { LoggerModule } from '../logger/logger.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
     imports: [
@@ -26,6 +27,8 @@ import { DocumentSource } from '../entities/document-source.entity';
             DocumentSource,
         ]),
         HttpModule,
+        LoggerModule,
+        NotificationsModule,
     ],
     controllers: [AiController],
     providers: [AiService],

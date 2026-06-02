@@ -8,7 +8,7 @@ import "../../styles/Settings.css";
 import { DocumentsListResponse, DocumentListItem, DocumentType, DocumentCategory } from "../../types";
 import { getDocuments, getDocumentTypes, getDocumentCategories, deleteDocument } from "../../services/api";
 import { useNavigate } from 'react-router-dom';
-import { translateStatus, statusMap, getStatusColor } from "./MainMenu";
+import { translateStatus, getStatusColorClass, getAllStatusesForFilter } from "../../constants/statuses";
 import { DateFilterDropdown } from "../DropdownButton";
 import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
@@ -53,6 +53,12 @@ const DocumentsListPage = () => {
   const [deleting, setDeleting] = useState(false);
 
   const hasActiveFilters = !!(filters.typeId || filters.categoryId || filters.status || dateFilter.from || dateFilter.to);
+
+  const statusOptionsForFilter = getAllStatusesForFilter();
+  const RUSStatuses = statusOptionsForFilter.map(s => s.label);
+  const reverseStatusMap = Object.fromEntries(
+    statusOptionsForFilter.map(s => [s.label, s.value])
+  );
 
   const handleRowClick = (id: number) => {
     navigate(`/dashboard/documents/${id}`, { state: { from: 'archive' } });
@@ -196,11 +202,6 @@ const DocumentsListPage = () => {
   const findTypeId = (name: string) => types.find(t => t.name === name)?.id;
   const findCategoryId = (name: string) => categories.find(c => c.name === name)?.id;
 
-  const RUSStatuses = Object.values(statusMap);
-  const reverseStatusMap = Object.fromEntries(
-    Object.entries(statusMap).map(([eng, rus]) => [rus, eng])
-  );
-
   const hasFiltersError = filtersError !== '';
 
   const typeOptions = types.length > 0
@@ -223,52 +224,61 @@ const DocumentsListPage = () => {
   return (
     <div>
       <Card className="filtersButtsWrapper">
-        <DateFilterDropdown
-          onFilterChange={(range) => {
-            setDateFilter({ from: range.from, to: range.to });
-          }}
-          icon={<img src="/icons/filters/data.png" alt="📅" />}
-          isOpen={activeFilter === 'date'}
-          onToggle={() => toggleFilter('date')}/>
-        <DropdownButton
-          options={typeOptions}
-          selectedLabel={selectedLabels.docType}
-          onSelect={(name) => {
-            if (name === 'Ошибка загрузки') return;
-            const id = findTypeId(name);
-            setFilters(prev => ({ ...prev, typeId: id }));
-            setSelectedLabels(prev => ({ ...prev, docType: name }));
-          }}
-          icon={<img src="/icons/filters/Document_type.png" alt="📄" />}
-          defaultLabel="Тип документа"
-          isOpen={activeFilter === 'docType'}
-          onToggle={() => toggleFilter('docType')}/>
-        <DropdownButton
-          options={categoryOptions}
-          selectedLabel={selectedLabels.category}
-          onSelect={(name) => {
-            if (name === 'Ошибка загрузки') return;
-            const id = findCategoryId(name);
-            setFilters(prev => ({ ...prev, categoryId: id }));
-            setSelectedLabels(prev => ({ ...prev, category: name }));
-          }}
-          icon={<img src="/icons/filters/Category.png" alt="🗂️" />}
-          defaultLabel="Категория"
-          isOpen={activeFilter === 'category'}
-          onToggle={() => toggleFilter('category')}/>
-        <DropdownButton
-          options={statusOptions}
-          selectedLabel={selectedLabels.status}
-          onSelect={(RUSStatus) => {
-            if (RUSStatus === 'Ошибка загрузки') return;
-            const ENGStatus = reverseStatusMap[RUSStatus] || RUSStatus;
-            setFilters(prev => ({ ...prev, status: ENGStatus }));
-            setSelectedLabels(prev => ({ ...prev, status: RUSStatus }));
-          }}
-          icon={<img src="/icons/filters/Status.png" alt="🟢🟡🔴" />}
-          defaultLabel="Статус"
-          isOpen={activeFilter === 'status'}
-          onToggle={() => toggleFilter('status')}/>
+        <Tooltip text="Фильтр по дате загрузки">
+          <DateFilterDropdown
+            onFilterChange={(range) => {
+              setDateFilter({ from: range.from, to: range.to });
+            }}
+            icon={<img src="/icons/filters/data.png" alt="📅" />}
+            isOpen={activeFilter === 'date'}
+            onToggle={() => toggleFilter('date')}/>
+        </Tooltip>
+        <Tooltip text="Показать документы только выбранного типа">
+          <DropdownButton
+            options={typeOptions}
+            selectedLabel={selectedLabels.docType}
+            onSelect={(name) => {
+              if (name === 'Ошибка загрузки') return;
+              const id = findTypeId(name);
+              setFilters(prev => ({ ...prev, typeId: id }));
+              setSelectedLabels(prev => ({ ...prev, docType: name }));
+            }}
+            icon={<img src="/icons/filters/Document_type.png" alt="📄" />}
+            defaultLabel="Тип документа"
+            isOpen={activeFilter === 'docType'}
+            onToggle={() => toggleFilter('docType')}/>
+        </Tooltip>
+        <Tooltip text="Показать документы только выбранной категории">
+          <DropdownButton
+            options={categoryOptions}
+            selectedLabel={selectedLabels.category}
+            onSelect={(name) => {
+              if (name === 'Ошибка загрузки') return;
+              const id = findCategoryId(name);
+              setFilters(prev => ({ ...prev, categoryId: id }));
+              setSelectedLabels(prev => ({ ...prev, category: name }));
+            }}
+            icon={<img src="/icons/filters/Category.png" alt="🗂️" />}
+            defaultLabel="Категория"
+            isOpen={activeFilter === 'category'}
+            onToggle={() => toggleFilter('category')}/>
+        </Tooltip>
+
+        <Tooltip text="Показать документы с выбранным статусом">
+          <DropdownButton
+            options={statusOptions}
+            selectedLabel={selectedLabels.status}
+            onSelect={(RUSStatus) => {
+              if (RUSStatus === 'Ошибка загрузки') return;
+              const ENGStatus = reverseStatusMap[RUSStatus] || RUSStatus;
+              setFilters(prev => ({ ...prev, status: ENGStatus }));
+              setSelectedLabels(prev => ({ ...prev, status: RUSStatus }));
+            }}
+            icon={<img src="/icons/filters/Status.png" alt="🟢🟡🔴" />}
+            defaultLabel="Статус"
+            isOpen={activeFilter === 'status'}
+            onToggle={() => toggleFilter('status')}/>
+        </Tooltip>
         <Tooltip text="Количество документов на странице">
           <DropdownButton
             options={['5', '10', '20', '50']}
@@ -281,41 +291,61 @@ const DocumentsListPage = () => {
             isOpen={activeFilter === 'limitSelector'}
             onToggle={() => toggleFilter('limitSelector')}/>
         </Tooltip>
-        <button
-          className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
-          disabled={!hasActiveFilters}
-          onClick={() => {
-            if (!hasActiveFilters) return;
-            setFilters({
-              typeId: undefined,
-              categoryId: undefined,
-              status: undefined,
-            });
-            setDateFilter({ from: null, to: null });
-            setPage(1);
-            setSelectedLabels({
-              docType: 'Тип документа',
-              category: 'Категория',
-              status: 'Статус',
-            });
-          }}>
-          Сбросить фильтры
-        </button>
+        <Tooltip text="Сбросить все фильтры">
+          <button
+            className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
+            disabled={!hasActiveFilters}
+            onClick={() => {
+              if (!hasActiveFilters) return;
+              setFilters({
+                typeId: undefined,
+                categoryId: undefined,
+                status: undefined,
+              });
+              setDateFilter({ from: null, to: null });
+              setPage(1);
+              setSelectedLabels({
+                docType: 'Тип документа',
+                category: 'Категория',
+                status: 'Статус',
+              });
+            }}>
+            Сбросить фильтры
+          </button>
+        </Tooltip>
 
-        <button 
-          className="apply-button"
-          onClick={handleExport}>
-          Экспорт
-        </button>
+        <Tooltip text="Экспортировать документы в Excel">
+          <button 
+            className="apply-button"
+            onClick={handleExport}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            Экспорт
+          </button>
+        </Tooltip>
 
         {selectedIds.size > 0 && (
-          <button
-            className="mass-delete-btn"
-            onClick={handleDeleteSelected}
-            disabled={deleting}
-          >
-            {deleting ? 'Удаление...' : `Удалить (${selectedIds.size})`}
-          </button>
+          <Tooltip text="Удалить выбранные документы. Действие необратимо">
+            <button
+              className="mass-delete-btn"
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+            >
+              {deleting ? 'Удаление...' : `Удалить (${selectedIds.size})`}
+            </button>
+          </Tooltip>
+        )}
+
+        {selectedIds.size > 0 && (
+          <Tooltip text="Удалить выбранные документы. Действие необратимо">
+            <button
+              className="mass-delete-btn"
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+            >
+              {deleting ? 'Удаление...' : `Удалить (${selectedIds.size})`}
+            </button>
+          </Tooltip>
         )}
       </Card>
 
@@ -379,7 +409,7 @@ const DocumentsListPage = () => {
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.documentType}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.category}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
-                    <span className={`status-badge ${getStatusColor(doc.currentStatus)}`}>
+                    <span className={`status-badge ${getStatusColorClass(doc.currentStatus)}`}>
                       {translateStatus(doc.currentStatus)}
                     </span>
                   </td>

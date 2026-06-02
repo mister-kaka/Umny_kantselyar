@@ -9,6 +9,7 @@ export class DocumentListItemDto {
     category!: string | null;  
     currentStatus!: string;
     department!: string | null;
+    confidenceScore?: number | null;
 }
 
 export class DocumentsListResponseDto {
