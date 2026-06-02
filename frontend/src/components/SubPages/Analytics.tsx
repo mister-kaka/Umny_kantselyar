@@ -242,9 +242,11 @@ const Analytics = () => {
     }
   };
 
-  const statCards = [
+ const statCards = [
     { value: analyticsData?.totalDocuments || 0, label: 'Всего документов', icon: '/icons/analytics/total.png' },
     { value: analyticsData?.avgConfidence || 0, label: 'Средняя уверенность', icon: '/icons/analytics/confidence.png', suffix: '%' },
+    { value: analyticsData?.pendingVerificationCount || 0, label: 'Требуют проверки', icon: '/icons/analytics/pending.png' },
+    { value: analyticsData?.aiProcessedCount || 0, label: 'AI обработано', icon: '/icons/analytics/ai.png' },
     { value: analyticsData?.rejectedCount || 0, label: 'Отклонено', icon: '/icons/analytics/rejected.png' },
     { value: analyticsData?.last7Days || 0, label: 'За 7 дней', icon: '/icons/analytics/last7days.png' },
   ];

@@ -262,4 +262,6 @@ export interface AnalyticsData {
   avgConfidence: number;
   rejectedCount: number;
   last7Days: number;
+  pendingVerificationCount: number;
+  aiProcessedCount: number;
 }
