@@ -6,7 +6,7 @@ import "../../styles/Dashboard.css";
 import "../../styles/DocumentsListPage.css";
 import "../../styles/Settings.css";
 import { DocumentsListResponse, DocumentListItem, DocumentType, DocumentCategory } from "../../types";
-import { getDocuments, getDocumentTypes, getDocumentCategories, deleteDocument } from "../../services/api";
+import { getDocuments, getDocumentTypes, getDocumentCategories, deleteDocument, exportDocuments } from "../../services/api";
 import { useNavigate } from 'react-router-dom';
 import { translateStatus, getStatusColorClass, getAllStatusesForFilter } from "../../constants/statuses";
 import { DateFilterDropdown } from "../DropdownButton";
@@ -23,6 +23,7 @@ const DocumentsListPage = () => {
   const [filtersError, setFiltersError] = useState('');
   const [page, setPage] = useState(1);
   const [Plimit, setPLimit] = useState(10);
+  const [isExporting, setIsExporting] = useState(false);
 
   const [types, setTypes] = useState<DocumentType[]>([]);
   const [categories, setCategories] = useState<DocumentCategory[]>([]);
@@ -107,35 +108,22 @@ const DocumentsListPage = () => {
   };
 
   const handleExport = async () => {
+    if (!data?.total || data.total === 0) {
+      alert('Нет документов для экспорта');
+      return;
+    }
+
+    setIsExporting(true);
     try {
-      const exportBtn = document.querySelector('.apply-button');
-      if (exportBtn) exportBtn.textContent = 'Экспорт...';
-      
-      // Получаем токен из localStorage
-      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-      
-      const params = new URLSearchParams();
-      if (filters.typeId) params.append('typeId', String(filters.typeId));
-      if (filters.categoryId) params.append('categoryId', String(filters.categoryId));
-      if (filters.status) params.append('status', filters.status);
-      if (dateFilter.from) params.append('dateFrom', dateFilter.from);
-      if (dateFilter.to) params.append('dateTo', dateFilter.to);
-      
-      const response = await fetch(`http://localhost:3000/documents/export?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const blob = await exportDocuments({
+        typeId: filters.typeId,
+        categoryId: filters.categoryId,
+        status: filters.status,
+        dateFrom: dateFilter.from ?? undefined,
+        dateTo: dateFilter.to ?? undefined,
+        dateField: 'upload',
       });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Ошибка ответа:', response.status, errorText);
-        throw new Error(`Ошибка экспорта: ${response.status}`);
-      }
-      
-      const blob = await response.blob();
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -144,13 +132,11 @@ const DocumentsListPage = () => {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      
     } catch (error) {
       console.error('Ошибка экспорта:', error);
       alert('Не удалось экспортировать документы');
     } finally {
-      const exportBtn = document.querySelector('.apply-button');
-      if (exportBtn) exportBtn.textContent = 'Экспорт';
+      setIsExporting(false);
     }
   };
 
@@ -327,9 +313,10 @@ const DocumentsListPage = () => {
           <button 
             className="apply-button"
             onClick={handleExport}
+            disabled={isExporting}
             style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            Экспорт
+            {isExporting ? 'Экспорт...' : 'Экспорт'}
           </button>
         </Tooltip>
 
