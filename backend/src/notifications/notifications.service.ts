@@ -1,9 +1,10 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Notification } from '../entities/notification.entity';
+import { Notification, NotificationType } from '../entities/notification.entity';
 import { AppLoggerService } from '../logger/app-logger.service';
 import { NotificationListResponseDto, UnreadCountDto } from './dto/notification.dto';
+import { AuditLogService } from '../audit/audit-log.service';
 
 @Injectable()
 export class NotificationsService {
@@ -11,11 +12,12 @@ export class NotificationsService {
         @InjectRepository(Notification)
         private notificationRepository: Repository<Notification>,
         private readonly logger: AppLoggerService,
+        private readonly auditLogService: AuditLogService,
     ) {}
 
     async createNotification(
         userId: number,
-        type: string,
+        type: NotificationType,
         title: string,
         message: string,
         documentId?: number,
@@ -105,7 +107,7 @@ export class NotificationsService {
                 routedToDepartment: all.filter(n => n.type === 'routed').length,
                 lowConfidence: all.filter(n => n.type === 'low_confidence').length,
                 routeError: all.filter(n => n.type === 'route_error').length,
-                overdueVerification: all.filter(n => n.type === 'overdue').length,
+                overdueVerification: all.filter(n => n.type === 'overdue_verification').length,
             };
 
             await this.logger.log({
@@ -155,6 +157,13 @@ export class NotificationsService {
             notification.isRead = true;
             await this.notificationRepository.save(notification);
 
+            await this.auditLogService.log(
+                userId,
+                'notification_mark_read',
+                notification.documentId || null,
+                { notificationId: id, notificationType: notification.type, notificationTitle: notification.title }
+            );
+
             await this.logger.log({
                 module: 'Notifications',
                 type: 'PUT',
@@ -189,9 +198,16 @@ export class NotificationsService {
 
     async markAllAsRead(userId: number): Promise<void> {
         try {
-            await this.notificationRepository.update(
+            const result = await this.notificationRepository.update(
                 { userId, isRead: false },
                 { isRead: true },
+            );
+
+            await this.auditLogService.log(
+                userId,
+                'notification_mark_all_read',
+                null,
+                { affectedCount: result.affected || 0 }
             );
 
             await this.logger.log({
@@ -221,6 +237,112 @@ export class NotificationsService {
 
             throw new HttpException(
                 'Ошибка сервера при обновлении уведомлений',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    // Удаление одного уведомления
+    async deleteNotification(userId: number, id: number): Promise<{ message: string }> {
+        try {
+            const notification = await this.notificationRepository.findOne({
+                where: { id, userId },
+            });
+
+            if (!notification) {
+                throw new HttpException('Уведомление не найдено', HttpStatus.NOT_FOUND);
+            }
+
+            await this.notificationRepository.remove(notification);
+
+            await this.auditLogService.log(
+                userId,
+                'notification_delete',
+                notification.documentId || null,
+                { notificationId: id, notificationType: notification.type, notificationTitle: notification.title }
+            );
+
+            await this.logger.log({
+                module: 'Notifications',
+                type: 'DELETE',
+                url: `/notifications/${id}`,
+                action: 'удаление уведомления',
+                status: 'success',
+                statusCode: 200,
+                message: `Уведомление ${id} удалено`,
+            });
+
+            return { message: 'Уведомление удалено' };
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.logger.log({
+                module: 'Notifications',
+                type: 'DELETE',
+                url: `/notifications/${id}`,
+                action: 'удаление уведомления',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при удалении уведомления',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    // Удаление всех прочитанных уведомлений
+    async deleteAllRead(userId: number): Promise<{ message: string; deletedCount: number }> {
+        try {
+            const notifications = await this.notificationRepository.find({
+                where: { userId, isRead: true },
+            });
+
+            const deletedCount = notifications.length;
+
+            if (deletedCount > 0) {
+                await this.notificationRepository.remove(notifications);
+            }
+
+            await this.auditLogService.log(
+                userId,
+                'notification_delete_all_read',
+                null,
+                { deletedCount }
+            );
+
+            await this.logger.log({
+                module: 'Notifications',
+                type: 'DELETE',
+                url: '/notifications/read',
+                action: 'удаление всех прочитанных уведомлений',
+                status: 'success',
+                statusCode: 200,
+                message: `Удалено ${deletedCount} прочитанных уведомлений`,
+            });
+
+            return { message: 'Прочитанные уведомления удалены', deletedCount };
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.logger.log({
+                module: 'Notifications',
+                type: 'DELETE',
+                url: '/notifications/read',
+                action: 'удаление всех прочитанных уведомлений',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при удалении уведомлений',
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }

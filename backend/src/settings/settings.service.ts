@@ -2,18 +2,30 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AiSetting } from '../entities/ai-setting.entity';
+import { UserNotificationSettings } from '../entities/user-notification-settings.entity';
+import { UserInterfaceSettings } from '../entities/user-interface-settings.entity';
 import { AiSettingsResponseDto } from './dto/ai-settings-response.dto';
 import { UpdateAiSettingsDto } from './dto/update-ai-settings.dto';
 import { AiProviderDto } from './dto/ai-provider.dto';
+import { NotificationSettingsResponseDto } from './dto/notification-settings-response.dto';
+import { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
+import { InterfaceSettingsResponseDto } from './dto/interface-settings-response.dto';
+import { UpdateInterfaceSettingsDto } from './dto/update-interface-settings.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
 import { encrypt, maskApiKey, decrypt } from '../ai/ai-key.util';
+import { AuditLogService } from '../audit/audit-log.service';
 
 @Injectable()
 export class SettingsService {
   constructor(
     @InjectRepository(AiSetting)
     private readonly aiSettingRepository: Repository<AiSetting>,
+    @InjectRepository(UserNotificationSettings)
+    private readonly userNotificationSettingsRepository: Repository<UserNotificationSettings>,
+    @InjectRepository(UserInterfaceSettings)
+    private readonly userInterfaceSettingsRepository: Repository<UserInterfaceSettings>,
     private readonly logger: AppLoggerService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   // GET /settings/ai - возвращает активную запись из ai_settings
@@ -72,11 +84,18 @@ export class SettingsService {
   }
 
   // PUT /settings/ai - сохраняет или обновляет настройки AI
-  async updateAiSettings(dto: UpdateAiSettingsDto): Promise<AiSettingsResponseDto> {
+  async updateAiSettings(dto: UpdateAiSettingsDto, userId?: number): Promise<AiSettingsResponseDto> {
     try {
       let settings = await this.aiSettingRepository.findOne({
         where: { isActive: true },
       });
+
+      const oldValues = settings ? {
+        providerCode: settings.providerCode,
+        modelName: settings.modelName,
+        baseUrl: settings.baseUrl,
+        isActive: settings.isActive,
+      } : null;
 
       if (settings) {
         settings.providerCode = dto.providerCode;
@@ -109,6 +128,23 @@ export class SettingsService {
         isActive: saved.isActive,
         updatedAt: saved.updatedAt,
       };
+
+      if (userId) {
+        await this.auditLogService.log(
+          userId,
+          'settings_update_ai',
+          null,
+          {
+            oldValues,
+            newValues: {
+              providerCode: dto.providerCode,
+              modelName: dto.modelName,
+              baseUrl: dto.baseUrl,
+              isActive: dto.isActive,
+            },
+          }
+        );
+      }
 
       await this.logger.log({
         module: 'Settings',
@@ -256,6 +292,250 @@ export class SettingsService {
         message: errorMessage,
       });
       return { status: 'error', message: 'Сервер недоступен' };
+    }
+  }
+
+  async getNotificationSettings(userId: number): Promise<NotificationSettingsResponseDto> {
+    try {
+      let settings = await this.userNotificationSettingsRepository.findOne({
+        where: { userId },
+      });
+
+      if (!settings) {
+        settings = this.userNotificationSettingsRepository.create({
+          userId,
+          newDocument: true,
+          aiComplete: true,
+          extractError: true,
+          pendingVerification: true,
+          routedToDepartment: true,
+          lowConfidence: false,
+          routeError: true,
+          overdueVerification: false,
+        });
+        settings = await this.userNotificationSettingsRepository.save(settings);
+      }
+
+      await this.logger.log({
+        module: 'Settings',
+        type: 'GET',
+        url: '/settings/notifications',
+        action: 'получение настроек уведомлений',
+        status: 'success',
+        statusCode: 200,
+        message: `Настройки уведомлений для пользователя ${userId} получены`,
+      });
+
+      return {
+        id: settings.id,
+        userId: settings.userId,
+        newDocument: settings.newDocument,
+        aiComplete: settings.aiComplete,
+        extractError: settings.extractError,
+        pendingVerification: settings.pendingVerification,
+        routedToDepartment: settings.routedToDepartment,
+        lowConfidence: settings.lowConfidence,
+        routeError: settings.routeError,
+        overdueVerification: settings.overdueVerification,
+        updatedAt: settings.updatedAt,
+      };
+
+    } catch (error) {
+      await this.logger.log({
+        module: 'Settings',
+        type: 'GET',
+        url: '/settings/notifications',
+        action: 'получение настроек уведомлений',
+        status: 'error',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: error instanceof Error ? error.message : 'Ошибка сервера',
+      });
+
+      throw new HttpException(
+        'Ошибка сервера при получении настроек уведомлений',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updateNotificationSettings(
+    userId: number,
+    dto: UpdateNotificationSettingsDto,
+  ): Promise<NotificationSettingsResponseDto> {
+    try {
+      let settings = await this.userNotificationSettingsRepository.findOne({
+        where: { userId },
+      });
+
+      if (!settings) {
+        settings = this.userNotificationSettingsRepository.create({ userId });
+      }
+
+      if (dto.newDocument !== undefined) settings.newDocument = dto.newDocument;
+      if (dto.aiComplete !== undefined) settings.aiComplete = dto.aiComplete;
+      if (dto.extractError !== undefined) settings.extractError = dto.extractError;
+      if (dto.pendingVerification !== undefined) settings.pendingVerification = dto.pendingVerification;
+      if (dto.routedToDepartment !== undefined) settings.routedToDepartment = dto.routedToDepartment;
+      if (dto.lowConfidence !== undefined) settings.lowConfidence = dto.lowConfidence;
+      if (dto.routeError !== undefined) settings.routeError = dto.routeError;
+      if (dto.overdueVerification !== undefined) settings.overdueVerification = dto.overdueVerification;
+
+      settings.updatedAt = new Date();
+      const saved = await this.userNotificationSettingsRepository.save(settings);
+
+      await this.logger.log({
+        module: 'Settings',
+        type: 'PUT',
+        url: '/settings/notifications',
+        action: 'обновление настроек уведомлений',
+        status: 'success',
+        statusCode: 200,
+        message: `Настройки уведомлений для пользователя ${userId} обновлены`,
+      });
+
+      return {
+        id: saved.id,
+        userId: saved.userId,
+        newDocument: saved.newDocument,
+        aiComplete: saved.aiComplete,
+        extractError: saved.extractError,
+        pendingVerification: saved.pendingVerification,
+        routedToDepartment: saved.routedToDepartment,
+        lowConfidence: saved.lowConfidence,
+        routeError: saved.routeError,
+        overdueVerification: saved.overdueVerification,
+        updatedAt: saved.updatedAt,
+      };
+
+    } catch (error) {
+      await this.logger.log({
+        module: 'Settings',
+        type: 'PUT',
+        url: '/settings/notifications',
+        action: 'обновление настроек уведомлений',
+        status: 'error',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: error instanceof Error ? error.message : 'Ошибка сервера',
+      });
+
+      throw new HttpException(
+        'Ошибка сервера при обновлении настроек уведомлений',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getInterfaceSettings(userId: number): Promise<InterfaceSettingsResponseDto> {
+    try {
+      let settings = await this.userInterfaceSettingsRepository.findOne({
+        where: { userId },
+      });
+
+      if (!settings) {
+        settings = this.userInterfaceSettingsRepository.create({
+          userId,
+          compactView: false,
+          showConfidence: true,
+          defaultPageLimit: 10,
+          theme: 'light',
+        });
+        settings = await this.userInterfaceSettingsRepository.save(settings);
+      }
+
+      await this.logger.log({
+        module: 'Settings',
+        type: 'GET',
+        url: '/settings/interface',
+        action: 'получение настроек интерфейса',
+        status: 'success',
+        statusCode: 200,
+        message: `Настройки интерфейса для пользователя ${userId} получены`,
+      });
+
+      return {
+        id: settings.id,
+        userId: settings.userId,
+        compactView: settings.compactView,
+        showConfidence: settings.showConfidence,
+        defaultPageLimit: settings.defaultPageLimit,
+        theme: settings.theme,
+        updatedAt: settings.updatedAt,
+      };
+
+    } catch (error) {
+      await this.logger.log({
+        module: 'Settings',
+        type: 'GET',
+        url: '/settings/interface',
+        action: 'получение настроек интерфейса',
+        status: 'error',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: error instanceof Error ? error.message : 'Ошибка сервера',
+      });
+
+      throw new HttpException(
+        'Ошибка сервера при получении настроек интерфейса',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updateInterfaceSettings(
+    userId: number,
+    dto: UpdateInterfaceSettingsDto,
+  ): Promise<InterfaceSettingsResponseDto> {
+    try {
+      let settings = await this.userInterfaceSettingsRepository.findOne({
+        where: { userId },
+      });
+
+      if (!settings) {
+        settings = this.userInterfaceSettingsRepository.create({ userId });
+      }
+
+      if (dto.compactView !== undefined) settings.compactView = dto.compactView;
+      if (dto.showConfidence !== undefined) settings.showConfidence = dto.showConfidence;
+      if (dto.defaultPageLimit !== undefined) settings.defaultPageLimit = dto.defaultPageLimit;
+      if (dto.theme !== undefined) settings.theme = dto.theme;
+
+      settings.updatedAt = new Date();
+      const saved = await this.userInterfaceSettingsRepository.save(settings);
+
+      await this.logger.log({
+        module: 'Settings',
+        type: 'PUT',
+        url: '/settings/interface',
+        action: 'обновление настроек интерфейса',
+        status: 'success',
+        statusCode: 200,
+        message: `Настройки интерфейса для пользователя ${userId} обновлены`,
+      });
+
+      return {
+        id: saved.id,
+        userId: saved.userId,
+        compactView: saved.compactView,
+        showConfidence: saved.showConfidence,
+        defaultPageLimit: saved.defaultPageLimit,
+        theme: saved.theme,
+        updatedAt: saved.updatedAt,
+      };
+
+    } catch (error) {
+      await this.logger.log({
+        module: 'Settings',
+        type: 'PUT',
+        url: '/settings/interface',
+        action: 'обновление настроек интерфейса',
+        status: 'error',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: error instanceof Error ? error.message : 'Ошибка сервера',
+      });
+
+      throw new HttpException(
+        'Ошибка сервера при обновлении настроек интерфейса',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
