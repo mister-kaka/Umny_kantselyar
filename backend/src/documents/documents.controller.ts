@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Query, Body, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -16,6 +16,8 @@ import { VerifyDocumentDto } from './dto/verify-document.dto';
 import { RouteDocumentDto } from './dto/route-document.dto';
 import { RejectDocumentDto } from './dto/reject-document.dto';
 import { RoutingDocumentDto } from './dto/routing-document.dto';
+import { UpdateDocumentDto } from './dto/update-document.dto';
+import { AddCommentDto } from './dto/add-comment.dto';
 import { Request } from 'express';
 
 interface RequestWithUser extends Request {
@@ -64,9 +66,10 @@ export class DocumentsController {
     @Get('export')
     async exportDocuments(
         @Query() filters: GetDocumentsDto,
+        @Req() req: RequestWithUser,
         @Res() res: Response,
     ) {
-        const buffer = await this.listService.exportToExcel(filters);
+        const buffer = await this.listService.exportToExcel(filters, req.user.userId);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', 'attachment; filename=documents.xlsx');
         res.send(buffer);
@@ -101,24 +104,29 @@ export class DocumentsController {
     @Put(':id/verify')
     async verifyDocument(
         @Param('id', ParseIntPipe) id: number,
+        @Req() req: RequestWithUser,
         @Body() dto: VerifyDocumentDto,
     ) {
-        return this.crudService.verifyDocument(id, dto);
+        return this.crudService.verifyDocument(id, dto, req.user.userId);
     }
 
     @UseGuards(AuthGuard('jwt'))
     @Post(':id/route')
     async routeDocument(
         @Param('id', ParseIntPipe) id: number,
+        @Req() req: RequestWithUser,
         @Body() dto: RouteDocumentDto,
     ) {
-        return this.crudService.routeDocument(id, dto);
+        return this.crudService.routeDocument(id, dto, req.user.userId);
     }
 
     @UseGuards(AuthGuard('jwt'))
     @Delete(':id')
-    async deleteDocument(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
-        await this.crudService.delete(id);
+    async deleteDocument(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: RequestWithUser,
+    ): Promise<{ message: string }> {
+        await this.crudService.delete(id, req.user.userId);
         return { message: 'Документ удалён' };
     }
 
@@ -138,5 +146,41 @@ export class DocumentsController {
         @Req() req: RequestWithUser,
     ) {
         return this.crudService.rejectDocument(id, dto.comment, req.user.userId);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Put(':id')
+    async updateDocument(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: RequestWithUser,
+        @Body() dto: UpdateDocumentDto,
+    ) {
+        return this.crudService.updateDocument(id, req.user.userId, dto);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get(':id/comments')
+    async getComments(@Param('id', ParseIntPipe) id: number) {
+        return this.crudService.getComments(id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post(':id/comments')
+    async addComment(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: RequestWithUser,
+        @Body() dto: AddCommentDto,
+    ) {
+        return this.crudService.addComment(id, req.user.userId, dto);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete(':id/comments/:commentId')
+    async deleteComment(
+        @Param('id', ParseIntPipe) id: number,
+        @Param('commentId', ParseIntPipe) commentId: number,
+        @Req() req: RequestWithUser,
+    ) {
+        return this.crudService.deleteComment(id, commentId, req.user.userId);
     }
 }

@@ -8,6 +8,7 @@ import { ImageProcessorModule } from '../../image-processor/image-processor.modu
 import { DocumentsSearchModule } from '../search/documents-search.module';
 import { LoggerModule } from '../../logger/logger.module';
 import { NotificationsModule } from '../../notifications/notifications.module';
+import { AuditLogModule } from '../../audit/audit-log.module';
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import { NotificationsModule } from '../../notifications/notifications.module';
         DocumentsSearchModule,
         LoggerModule,
         NotificationsModule,
+        AuditLogModule,
     ],
     providers: [TextExtractionService],
     exports: [TextExtractionService],

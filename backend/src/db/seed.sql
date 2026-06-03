@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS document_types CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS departments CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
+DROP TABLE IF EXISTS user_sessions CASCADE;
 
 -- расширния
 
@@ -87,7 +88,7 @@ CREATE TABLE documents (
     rejected_at TIMESTAMP,
     current_department_id INTEGER REFERENCES departments(id),
     search_vector tsvector,
-    embedding vector(1536)
+    embedding vector(1536),
     CONSTRAINT chk_current_status CHECK (current_status IN ('in_review', 'pending_verification', 'verified', 'routed', 'rejected'))
 );
 
@@ -97,8 +98,7 @@ CREATE TABLE document_routes (
     department_id INTEGER REFERENCES departments(id),
     route_status VARCHAR(50) NOT NULL,
     route_reason TEXT,
-    routed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
+    routed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_route_status CHECK (route_status IN ('in_review', 'pending_verification', 'verified', 'routed', 'rejected'))
 );
 
@@ -249,7 +249,21 @@ CREATE TABLE notifications (
     message TEXT,
     document_id INTEGER REFERENCES documents(id) ON DELETE SET NULL,
     is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_notification_type CHECK (type IN (
+        'new_document',
+        'document_ready',
+        'ai_complete',
+        'extract_error',
+        'pending_verification',
+        'routed',
+        'rejected',
+        'comment_added',
+        'verified',
+        'low_confidence',
+        'route_error',
+        'overdue_verification'
+    ))
 );
 
 CREATE TABLE search_synonyms (
@@ -271,6 +285,16 @@ CREATE TABLE search_log (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE user_sessions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(500) NOT NULL UNIQUE,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL
+);
+
 -- индексы
 
 CREATE INDEX IF NOT EXISTS idx_search_log_created_at ON search_log (created_at DESC);
@@ -289,6 +313,10 @@ CREATE INDEX IF NOT EXISTS idx_ocr_embedding ON ocr_results USING ivfflat (embed
 CREATE INDEX IF NOT EXISTS idx_ai_results_embedding ON document_ai_results USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
 CREATE INDEX IF NOT EXISTS idx_search_synonyms_term ON search_synonyms (term);
+
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(token);
 
 -- функции и тригерры
 
@@ -460,7 +488,7 @@ INSERT INTO document_classifications (document_id, type_id, category_id, type_co
 (14, 5, 6, 0.985, 0.972, TRUE),
 (15, 6, 6, 0.855, 0.830, TRUE);
 
--- api_key (пока тестовый бесплатный ключ от OpenRouter)
+-- API key (пока тестовый бесплатный ключ от OpenRouter)
 INSERT INTO ai_settings (provider_code, model_name, api_key, base_url, is_active) VALUES
 ('deepseek', 'deepseek/deepseek-chat', '4558000b00d96913b37183c820b702dc:9b3d3789052db89c280d580d7b3d4c4adfaa6a90ed8356b407e67883d9a60f595b0cf04b586cfea26a76a62a199180d888d54d4bb5bd21b7117223e4df593feaba108edbff83660b1078b8ed02253af8', 'https://openrouter.ai/api/v1', TRUE);
 
@@ -530,7 +558,7 @@ INSERT INTO notifications (user_id, type, title, message, document_id, is_read, 
 (4, 'new_document', 'Новый документ загружен', 'Уведомление о проверке (ВХ-2026-004)', 4, FALSE, '2026-04-04 09:00:00'),
 (5, 'ai_complete', 'AI-анализ завершён', 'Документ ВХ-2026-013: низкая уверенность (78%)', 13, FALSE, '2026-04-10 11:00:00'),
 (1, 'overdue_verification', 'Просроченная проверка', 'Документ ВХ-2026-009 ожидает проверки более 24 часов', 9, FALSE, '2026-04-10 08:00:00'),
-(7, 'routed_to_department', 'Документ направлен в отдел', 'ВХ-2026-015 направлен в Бухгалтерию', 15, TRUE, '2026-04-11 14:00:00');
+(7, 'routed', 'Документ направлен в отдел', 'ВХ-2026-015 направлен в Бухгалтерию', 15, TRUE, '2026-04-11 14:00:00');
 
 -- синонимы для поиска
 

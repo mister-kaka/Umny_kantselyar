@@ -13,6 +13,7 @@ import { DocumentClassification } from '../entities/document-classification.enti
 import { DocumentSource } from '../entities/document-source.entity';
 import { LoggerModule } from '../logger/logger.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AuditLogModule } from '../audit/audit-log.module';
 
 @Module({
     imports: [
@@ -29,6 +30,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
         HttpModule,
         LoggerModule,
         NotificationsModule,
+        AuditLogModule,
     ],
     controllers: [AiController],
     providers: [AiService],

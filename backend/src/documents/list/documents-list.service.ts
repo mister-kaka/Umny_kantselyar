@@ -10,6 +10,7 @@ import { GetDocumentsDto } from '../dto/get-documents.dto';
 import { DocumentsListResponseDto, DocumentListItemDto } from '../dto/document-list.dto';
 import { AppLoggerService } from '../../logger/app-logger.service';
 import { decrypt } from '../../ai/ai-key.util';
+import { AuditLogService } from '../../audit/audit-log.service';
 
 @Injectable()
 export class DocumentsListService {
@@ -20,6 +21,7 @@ export class DocumentsListService {
         private aiSettingRepository: Repository<AiSetting>,
         private readonly httpService: HttpService,
         private readonly logger: AppLoggerService,
+        private readonly auditLogService: AuditLogService,
     ) {}
 
     async findAll(filters: GetDocumentsDto): Promise<DocumentsListResponseDto> {
@@ -340,7 +342,7 @@ export class DocumentsListService {
         } catch { }
     }
 
-    async exportToExcel(filters: GetDocumentsDto): Promise<Buffer> {
+    async exportToExcel(filters: GetDocumentsDto, userId?: number): Promise<Buffer> {
         const { items } = await this.findAll({ ...filters, limit: 10000, page: 1 });
 
         const workbook = new ExcelJS.Workbook();
@@ -370,6 +372,35 @@ export class DocumentsListService {
                 currentStatus: doc.currentStatus,
                 department: doc.department || '',
             });
+        });
+
+        if (userId) {
+            await this.auditLogService.log(
+                userId,
+                'export_excel',
+                null,
+                { 
+                    filters: {
+                        typeId: filters.typeId,
+                        categoryId: filters.categoryId,
+                        status: filters.status,
+                        dateFrom: filters.dateFrom,
+                        dateTo: filters.dateTo,
+                        searchQuery: filters.searchQuery,
+                    },
+                    recordsCount: items.length 
+                }
+            );
+        }
+
+        await this.logger.log({
+            module: 'Documents',
+            type: 'GET',
+            url: '/documents/export',
+            action: 'экспорт документов в Excel',
+            status: 'success',
+            statusCode: 200,
+            message: `Экспортировано ${items.length} документов`,
         });
 
         const buffer = await workbook.xlsx.writeBuffer();

@@ -18,6 +18,7 @@ import { AiResultResponseDto } from './dto/ai-result.dto';
 import { decrypt } from './ai-key.util';
 import { transliterate } from '../utils/transliterate';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AuditLogService } from '../audit/audit-log.service';
 
 const MAX_TEXT_LENGTH = 3000;
 const AI_TIMEOUT = 30000;
@@ -79,6 +80,7 @@ export class AiService {
         private readonly httpService: HttpService,
         private readonly logger: AppLoggerService,
         private readonly notificationsService: NotificationsService,
+        private readonly auditLogService: AuditLogService,
     ) {}
 
     async getActiveSettings(): Promise<AiSetting> {
@@ -102,7 +104,7 @@ export class AiService {
         try {
             const document = await this.documentRepository.findOne({
                 where: { id: documentId },
-                relations: ['ocrResult'],
+                relations: ['ocrResult', 'creator'],
             });
 
             if (!document) {
@@ -154,20 +156,20 @@ export class AiService {
                     throw updateError;
                 }
 
-                const totalConfidence = 85;
-                await this.notificationsService.createNotification(
+                const totalPercent = 85;
+
+                await this.auditLogService.log(
                     document.createdBy,
-                    'ai_complete',
-                    'AI завершил анализ',
-                    `Документ «${document.title}» обработан. Уверенность: ${totalConfidence}% (№${document.registrationNumber})`,
-                    document.id,
+                    'ai_analysis',
+                    documentId,
+                    { confidence: totalPercent, providerCode: 'mock', modelName: 'mock-model', isMock: true }
                 );
 
                 await this.notificationsService.createNotification(
                     document.createdBy,
-                    'pending_verification',
-                    'Требуется проверка',
-                    `Документ «${document.title}» ожидает проверки оператора (№${document.registrationNumber})`,
+                    'document_ready',
+                    'Документ готов к проверке',
+                    `Документ «${document.title}» загружен и проанализирован AI. Уверенность: ${totalPercent}% (№${document.registrationNumber})`,
                     document.id,
                 );
 
@@ -195,7 +197,7 @@ export class AiService {
                 categorySuggested: aiResponse.category,
                 summaryText: aiResponse.summary,
                 departmentSuggested: aiResponse.department,
-                confidenceScore: aiResponse.confidence,
+                confidenceScore: (aiResponse.confidence ?? 0) / 100,
                 providerCode: settings.providerCode,
                 modelName: settings.modelName,
                 extractedDate: aiResponse.date && !isNaN(Date.parse(aiResponse.date))
@@ -219,34 +221,39 @@ export class AiService {
                 throw updateError;
             }
 
-            const ocrConf = document.ocrResult?.ocrConfidence
-                ? Number(document.ocrResult.ocrConfidence)
-                : 0;
+            const ocrConf = document.ocrResult?.ocrConfidence ?? 0;
             const aiConf = (aiResponse.confidence ?? 0) / 100;
-            const totalConfidence = Math.round(ocrConf * 0.2 + aiConf * 0.8);
+            const totalPercent = Math.round((ocrConf * 0.2 + aiConf * 0.8) * 100);
+            document.confidenceScore = totalPercent / 100;
+            await this.documentRepository.save(document);
 
-            await this.notificationsService.createNotification(
+            await this.auditLogService.log(
                 document.createdBy,
-                'ai_complete',
-                'AI завершил анализ',
-                `Документ «${document.title}» обработан. Уверенность: ${totalConfidence}% (№${document.registrationNumber})`,
-                document.id,
+                'ai_analysis',
+                documentId,
+                { 
+                    confidence: totalPercent, 
+                    providerCode: settings.providerCode, 
+                    modelName: settings.modelName,
+                    documentType: aiResponse.documentType,
+                    category: aiResponse.category
+                }
             );
 
             await this.notificationsService.createNotification(
                 document.createdBy,
-                'pending_verification',
-                'Требуется проверка',
-                `Документ «${document.title}» ожидает проверки оператора (№${document.registrationNumber})`,
+                'document_ready',
+                'Документ готов к проверке',
+                `Документ «${document.title}» загружен и проанализирован AI. Уверенность: ${totalPercent}% (№${document.registrationNumber})`,
                 document.id,
             );
 
-            if (totalConfidence < 50) {
+            if (totalPercent < 50) {
                 await this.notificationsService.createNotification(
                     document.createdBy,
                     'low_confidence',
                     'Низкая уверенность',
-                    `Документ «${document.title}» распознан с низкой уверенностью (${totalConfidence}%) (№${document.registrationNumber})`,
+                    `Документ «${document.title}» распознан с низкой уверенностью (${totalPercent}%) (№${document.registrationNumber})`,
                     document.id,
                 );
             }
@@ -265,6 +272,19 @@ export class AiService {
 
         } catch (error) {
             if (error instanceof HttpException) throw error;
+
+            try {
+                const document = await this.documentRepository.findOne({ where: { id: documentId } });
+                if (document) {
+                    await this.auditLogService.log(
+                        document.createdBy,
+                        'ai_analysis_error',
+                        documentId,
+                        { error: error instanceof Error ? error.message : 'Ошибка сервера' }
+                    );
+                }
+            } catch (auditError) {
+            }
 
             await this.logger.log({
                 module: 'AI',
@@ -394,14 +414,11 @@ export class AiService {
             document.receivedDate = new Date(aiResponse.date);
         }
 
-        const ocrConf = document.ocrResult?.ocrConfidence
-            ? Number(document.ocrResult.ocrConfidence)
-            : 0;
+        const ocrConf = document.ocrResult?.ocrConfidence ?? 0;
         const aiConf = (aiResponse.confidence ?? 0) / 100;
-        const totalConfidence = Math.round(ocrConf * 0.2 + aiConf * 0.8);
-        document.confidenceScore = totalConfidence / 100;
-
-        document.currentStatus = 'pending_verification';
+        const totalPercent = Math.round((ocrConf * 0.2 + aiConf * 0.8) * 100);
+        document.confidenceScore = totalPercent / 100;
+        document.currentStatus = 'pending_verification'; 
 
         await this.documentRepository.save(document);
 
