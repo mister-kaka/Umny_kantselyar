@@ -12,6 +12,7 @@ import { AppLoggerService } from '../../logger/app-logger.service';
 import { ImageProcessorService } from '../../image-processor/image-processor.service';
 import { DocumentsSearchService } from '../search/documents-search.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { AuditLogService } from '../../audit/audit-log.service';
 
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
@@ -31,6 +32,7 @@ export class TextExtractionService {
         private readonly searchService: DocumentsSearchService,
         private readonly logger: AppLoggerService,
         private readonly notificationsService: NotificationsService,
+        private readonly auditLogService: AuditLogService,
     ) {}
 
     // POST /documents/:id/extract-text - извлечение текста из файла
@@ -132,6 +134,18 @@ export class TextExtractionService {
             ocrResult.processedAt = new Date();
             await this.ocrResultRepository.save(ocrResult);
 
+            await this.auditLogService.log(
+                document.createdBy,
+                'ocr_extract',
+                id,
+                { 
+                    fileName: file.fileName, 
+                    fileType: fileExtension,
+                    textLength: extractedText.length,
+                    ocrConfidence: ocrConfidence / 100
+                }
+            );
+
             try {
                 const embedding = await this.searchService.getEmbedding(
                     `Название: ${document.title}. Содержание: ${extractedText.trim().substring(0, 7000)}`
@@ -167,6 +181,13 @@ export class TextExtractionService {
                     const document = await this.documentRepository.findOne({ where: { id } });
                     const file = document?.files?.[0];
                     if (document && file) {
+                        await this.auditLogService.log(
+                            document.createdBy,
+                            'ocr_extract_error',
+                            id,
+                            { fileName: file.fileName, error: error.message }
+                        );
+
                         await this.notificationsService.createNotification(
                             document.createdBy,
                             'extract_error',
