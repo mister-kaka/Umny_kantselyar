@@ -225,4 +225,96 @@ export class NotificationsService {
             );
         }
     }
+
+    // Удаление одного уведомления
+    async deleteNotification(userId: number, id: number): Promise<{ message: string }> {
+        try {
+            const notification = await this.notificationRepository.findOne({
+                where: { id, userId },
+            });
+
+            if (!notification) {
+                throw new HttpException('Уведомление не найдено', HttpStatus.NOT_FOUND);
+            }
+
+            await this.notificationRepository.remove(notification);
+
+            await this.logger.log({
+                module: 'Notifications',
+                type: 'DELETE',
+                url: `/notifications/${id}`,
+                action: 'удаление уведомления',
+                status: 'success',
+                statusCode: 200,
+                message: `Уведомление ${id} удалено`,
+            });
+
+            return { message: 'Уведомление удалено' };
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.logger.log({
+                module: 'Notifications',
+                type: 'DELETE',
+                url: `/notifications/${id}`,
+                action: 'удаление уведомления',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при удалении уведомления',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    // Удаление всех прочитанных уведомлений
+    async deleteAllRead(userId: number): Promise<{ message: string; deletedCount: number }> {
+        try {
+            const notifications = await this.notificationRepository.find({
+                where: { userId, isRead: true },
+            });
+
+            const deletedCount = notifications.length;
+
+            if (deletedCount > 0) {
+                await this.notificationRepository.remove(notifications);
+            }
+
+            await this.logger.log({
+                module: 'Notifications',
+                type: 'DELETE',
+                url: '/notifications/read',
+                action: 'удаление всех прочитанных уведомлений',
+                status: 'success',
+                statusCode: 200,
+                message: `Удалено ${deletedCount} прочитанных уведомлений`,
+            });
+
+            return { message: 'Прочитанные уведомления удалены', deletedCount };
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
+
+            await this.logger.log({
+                module: 'Notifications',
+                type: 'DELETE',
+                url: '/notifications/read',
+                action: 'удаление всех прочитанных уведомлений',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: errorMessage,
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при удалении уведомлений',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
 }

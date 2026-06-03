@@ -420,43 +420,32 @@ export const addComment = async (documentId: number, text: string): Promise<Comm
 };
 
 //уведомления
-export const getNotifications = async (page?: number, limit?: number): Promise<AppNotification[]> => {
-  try {
+export const getNotifications = async (page?: number, limit?: number): Promise<{ items: AppNotification[]; total: number; page: number; limit: number; totalPages: number }> => {
     const params = page !== undefined ? { page, limit: limit || 20 } : {};
-    const response = await api.get<AppNotification[]>('/notifications', { params });
+    const response = await api.get('/notifications', { params });
     return response.data;
-  } catch (error) {
-    console.error('Ошибка получения уведомлений', error);
-    throw error;
-  }
 };
 
 export const getUnreadCount = async (): Promise<UnreadCount> => {
-  try {
-    const response = await api.get<UnreadCount>('/notifications/unread-count');
+    const response = await api.get('/notifications/unread-count');
     return response.data;
-  } catch (error) {
-    console.error('Ошибка получения количества непрочитанных уведомлений', error);
-    throw error;
-  }
 };
 
 export const markAsRead = async (notificationId: number): Promise<void> => {
-  try {
     await api.patch(`/notifications/${notificationId}/read`);
-  } catch (error) {
-    console.error('Ошибка отметки уведомления как прочитанного', error);
-    throw error;
-  }
 };
 
 export const markAllAsRead = async (): Promise<void> => {
-  try {
     await api.post('/notifications/mark-all-read');
-  } catch (error) {
-    console.error('Ошибка отметки всех уведомлений как прочитанных', error);
-    throw error;
-  }
+};
+
+export const deleteNotification = async (notificationId: number): Promise<void> => {
+    await api.delete(`/notifications/${notificationId}`);
+};
+
+export const deleteAllRead = async (): Promise<{ message: string; deletedCount: number }> => {
+    const response = await api.delete('/notifications/read');
+    return response.data;
 };
 
 //аналитика
