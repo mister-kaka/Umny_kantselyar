@@ -1,9 +1,17 @@
 import axios from 'axios';
-import { LoginResponse, DashboardData } from '../types';
-import { DocumentsListResponse, DocumentCard } from '../types';
-import { DocumentType, DocumentCategory } from '../types';
-import { Department, AiSettings, AiProvider, UpdateAiSettings, DocumentAiResult, DocumentListItem } from '../types';
-import {
+import { 
+  LoginResponse, 
+  DashboardData,
+  DocumentsListResponse, 
+  DocumentCard,
+  DocumentType, 
+  DocumentCategory,
+  Department, 
+  AiSettings, 
+  AiProvider, 
+  UpdateAiSettings, 
+  DocumentAiResult, 
+  DocumentListItem,
   VerifyDocumentData,
   RouteDocumentData,
   RoutingDocument,
@@ -11,11 +19,12 @@ import {
   UpdateDocumentData,
   Profile,
   UpdateProfileData,
+  ChangePasswordData,
   NotificationSettings,
   InterfaceSettings,
   Session,
-  LoginHistoryItem,
-  AuditLogItem,
+  LoginHistoryResponse,
+  AuditLogResponse,
   Comment,
   ExportFilters,
   UnreadCount,
@@ -23,7 +32,8 @@ import {
   UploadResponse,
   ExtractTextResponse,
   AiSearchResponse,
-  AnalyticsData
+  AnalyticsData,
+  RouteTemplate
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -62,6 +72,50 @@ export const login = async (email: string, password: string): Promise<LoginRespo
     return response.data;
   } catch (error) {
     console.error('Ошибка логина', error);
+    throw error;
+  }
+};
+
+export const getProfile = async (): Promise<Profile> => {
+  try {
+    const response = await api.get<Profile>('/auth/profile');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения профиля', error);
+    throw error;
+  }
+};
+
+export const updateProfile = async (data: UpdateProfileData): Promise<Profile> => {
+  try {
+    const response = await api.put<Profile>('/auth/profile', data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка обновления профиля', error);
+    throw error;
+  }
+};
+
+export const changePassword = async (data: ChangePasswordData): Promise<{ message: string }> => {
+  try {
+    const response = await api.post<{ message: string }>('/auth/change-password', data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка смены пароля', error);
+    throw error;
+  }
+};
+
+export const uploadAvatar = async (file: File): Promise<{ avatarUrl: string }> => {
+  try {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await api.post<{ avatarUrl: string }>('/auth/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка загрузки аватара', error);
     throw error;
   }
 };
@@ -120,6 +174,21 @@ export const updateDocument = async (id: number, data: UpdateDocumentData): Prom
     console.error('Ошибка обновления документа', error);
     throw error;
   }
+};
+
+export const verifyDocument = async (id: number, data: VerifyDocumentData): Promise<{ message: string }> => {
+  const res = await api.put<{ message: string }>(`/documents/${id}/verify`, data);
+  return res.data;
+};
+
+export const routeDocument = async (id: number, data: RouteDocumentData): Promise<{ message: string }> => {
+  const res = await api.post<{ message: string }>(`/documents/${id}/route`, data);
+  return res.data;
+};
+
+export const rejectDocument = async (id: number, comment?: string): Promise<{ message: string }> => {
+  const res = await api.post<{ message: string }>(`/documents/${id}/reject`, { comment });
+  return res.data;
 };
 
 //типы и категории
@@ -210,17 +279,6 @@ export const searchAi = async (q: string): Promise<AiSearchResponse> => {
   return response.data;
 };
 
-//проверрка, отправка, отклонение
-export const verifyDocument = async (id: number, data: VerifyDocumentData): Promise<{ message: string }> => {
-  const res = await api.put<{ message: string }>(`/documents/${id}/verify`, data);
-  return res.data;
-};
-
-export const routeDocument = async (id: number, data: RouteDocumentData): Promise<{ message: string }> => {
-  const res = await api.post<{ message: string }>(`/documents/${id}/route`, data);
-  return res.data;
-};
-
 //маршрутизация
 export const getRoutingDocuments = async (departmentId?: number): Promise<RoutingDocument[]> => {
   try {
@@ -242,7 +300,17 @@ export const updateRouteStatus = async (routeId: number, data: UpdateRouteStatus
   }
 };
 
-//загрузка и извлечение
+export const getRouteTemplates = async (): Promise<RouteTemplate[]> => {
+  try {
+    const response = await api.get<RouteTemplate[]>('/documents/route-templates');
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения шаблонов маршрутизации', error);
+    throw error;
+  }
+};
+
+//загрузка и извлечение текста
 export const uploadDocument = async (file: File): Promise<UploadResponse> => {
   try {
     const formData = new FormData();
@@ -281,42 +349,10 @@ export const exportDocuments = async (filters?: ExportFilters): Promise<Blob> =>
   }
 };
 
-//профиль
-export const getProfile = async (): Promise<Profile> => {
-  try {
-    const response = await api.get<Profile>('/auth/profile');
-    return response.data;
-  } catch (error) {
-    console.error('Ошибка получения профиля', error);
-    throw error;
-  }
-};
+// ========================================================================
+// НАСТРОЙКИ УВЕДОМЛЕНИЙ
+// ========================================================================
 
-export const updateProfile = async (data: UpdateProfileData): Promise<Profile> => {
-  try {
-    const response = await api.put<Profile>('/auth/profile', data);
-    return response.data;
-  } catch (error) {
-    console.error('Ошибка обновления профиля', error);
-    throw error;
-  }
-};
-
-export const uploadAvatar = async (file: File): Promise<{ avatarUrl: string }> => {
-  try {
-    const formData = new FormData();
-    formData.append('avatar', file);
-    const response = await api.post<{ avatarUrl: string }>('/auth/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Ошибка загрузки аватара', error);
-    throw error;
-  }
-};
-
-//настройки уведомлений
 export const getNotificationSettings = async (): Promise<NotificationSettings> => {
   try {
     const response = await api.get<NotificationSettings>('/settings/notifications');
@@ -361,7 +397,7 @@ export const updateInterfaceSettings = async (data: InterfaceSettings): Promise<
 //безопасность
 export const getSessions = async (): Promise<Session[]> => {
   try {
-    const response = await api.get<Session[]>('/settings/security/sessions');
+    const response = await api.get<Session[]>('/security/sessions');
     return response.data;
   } catch (error) {
     console.error('Ошибка получения сессий', error);
@@ -369,9 +405,12 @@ export const getSessions = async (): Promise<Session[]> => {
   }
 };
 
-export const getLoginHistory = async (): Promise<LoginHistoryItem[]> => {
+export const getLoginHistory = async (page?: number, limit?: number): Promise<LoginHistoryResponse> => {
   try {
-    const response = await api.get<LoginHistoryItem[]>('/settings/security/login-history');
+    const params: any = {};
+    if (page) params.page = page;
+    if (limit) params.limit = limit;
+    const response = await api.get<LoginHistoryResponse>('/security/login-history', { params });
     return response.data;
   } catch (error) {
     console.error('Ошибка получения истории входов', error);
@@ -379,18 +418,29 @@ export const getLoginHistory = async (): Promise<LoginHistoryItem[]> => {
   }
 };
 
-export const logoutAll = async (): Promise<void> => {
+export const logoutAll = async (): Promise<{ message: string }> => {
   try {
-    await api.post('/settings/security/logout-all');
+    const response = await api.post<{ message: string }>('/security/logout-all');
+    return response.data;
   } catch (error) {
     console.error('Ошибка выхода со всех устройств', error);
     throw error;
   }
 };
 
-export const getAuditLog = async (): Promise<AuditLogItem[]> => {
+export const getAuditLog = async (
+  page?: number, 
+  limit?: number, 
+  action?: string, 
+  documentId?: number
+): Promise<AuditLogResponse> => {
   try {
-    const response = await api.get<AuditLogItem[]>('/settings/security/audit-log');
+    const params: any = {};
+    if (page) params.page = page;
+    if (limit) params.limit = limit;
+    if (action) params.action = action;
+    if (documentId) params.documentId = documentId;
+    const response = await api.get<AuditLogResponse>('/security/audit-log', { params });
     return response.data;
   } catch (error) {
     console.error('Ошибка получения журнала действий', error);
@@ -419,6 +469,16 @@ export const addComment = async (documentId: number, text: string): Promise<Comm
   }
 };
 
+export const deleteComment = async (documentId: number, commentId: number): Promise<{ message: string }> => {
+  try {
+    const response = await api.delete<{ message: string }>(`/documents/${documentId}/comments/${commentId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка удаления комментария', error);
+    throw error;
+  }
+};
+
 //уведомления
 export const getNotifications = async (page?: number, limit?: number): Promise<{ items: AppNotification[]; total: number; page: number; limit: number; totalPages: number }> => {
     const params = page !== undefined ? { page, limit: limit || 20 } : {};
@@ -432,11 +492,11 @@ export const getUnreadCount = async (): Promise<UnreadCount> => {
 };
 
 export const markAsRead = async (notificationId: number): Promise<void> => {
-    await api.patch(`/notifications/${notificationId}/read`);
+    await api.put(`/notifications/${notificationId}/read`);
 };
 
 export const markAllAsRead = async (): Promise<void> => {
-    await api.post('/notifications/mark-all-read');
+    await api.put('/notifications/read-all');
 };
 
 export const deleteNotification = async (notificationId: number): Promise<void> => {
