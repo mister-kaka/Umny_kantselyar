@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import * as ExcelJS from 'exceljs';
 import { Document } from '../../entities/document.entity';
 import { AiSetting } from '../../entities/ai-setting.entity';
 import { GetDocumentsDto } from '../dto/get-documents.dto';
 import { DocumentsListResponseDto, DocumentListItemDto } from '../dto/document-list.dto';
 import { AppLoggerService } from '../../logger/app-logger.service';
 import { decrypt } from '../../ai/ai-key.util';
+import { AuditLogService } from '../../audit/audit-log.service';
 
 @Injectable()
 export class DocumentsListService {
@@ -19,6 +21,7 @@ export class DocumentsListService {
         private aiSettingRepository: Repository<AiSetting>,
         private readonly httpService: HttpService,
         private readonly logger: AppLoggerService,
+        private readonly auditLogService: AuditLogService,
     ) {}
 
     async findAll(filters: GetDocumentsDto): Promise<DocumentsListResponseDto> {
@@ -337,5 +340,70 @@ export class DocumentsListService {
                 [query, resultsCount, source]
             );
         } catch { }
+    }
+
+    async exportToExcel(filters: GetDocumentsDto, userId?: number): Promise<Buffer> {
+        const { items } = await this.findAll({ ...filters, limit: 10000, page: 1 });
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Документы');
+
+        worksheet.columns = [
+            { header: 'ID', key: 'id', width: 10 },
+            { header: 'Рег. номер', key: 'registrationNumber', width: 20 },
+            { header: 'Название', key: 'title', width: 40 },
+            { header: 'Отправитель', key: 'senderName', width: 30 },
+            { header: 'Дата загрузки', key: 'uploadedAt', width: 15 },
+            { header: 'Тип', key: 'documentType', width: 20 },
+            { header: 'Категория', key: 'category', width: 20 },
+            { header: 'Статус', key: 'currentStatus', width: 20 },
+            { header: 'Отдел', key: 'department', width: 20 },
+        ];
+
+        items.forEach(doc => {
+            worksheet.addRow({
+                id: doc.id,
+                registrationNumber: doc.registrationNumber,
+                title: doc.title,
+                senderName: doc.senderName,
+                uploadedAt: doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('ru-RU') : '',
+                documentType: doc.documentType,
+                category: doc.category || '',
+                currentStatus: doc.currentStatus,
+                department: doc.department || '',
+            });
+        });
+
+        if (userId) {
+            await this.auditLogService.log(
+                userId,
+                'export_excel',
+                null,
+                { 
+                    filters: {
+                        typeId: filters.typeId,
+                        categoryId: filters.categoryId,
+                        status: filters.status,
+                        dateFrom: filters.dateFrom,
+                        dateTo: filters.dateTo,
+                        searchQuery: filters.searchQuery,
+                    },
+                    recordsCount: items.length 
+                }
+            );
+        }
+
+        await this.logger.log({
+            module: 'Documents',
+            type: 'GET',
+            url: '/documents/export',
+            action: 'экспорт документов в Excel',
+            status: 'success',
+            statusCode: 200,
+            message: `Экспортировано ${items.length} документов`,
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        return buffer as unknown as Buffer;
     }
 }

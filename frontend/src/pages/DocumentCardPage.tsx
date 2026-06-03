@@ -92,6 +92,7 @@ const DocumentCardPage: React.FC = () => {
       case 'main': return 'На главную';
       case 'upload': return 'Назад к загрузке';
       case 'search': return 'Архив документов';
+      case 'notifications': return 'К уведомлениям';
       default: return 'Архив документов';
     }
   };
@@ -101,6 +102,7 @@ const DocumentCardPage: React.FC = () => {
       case 'main': return '/dashboard/main';
       case 'upload': return '/dashboard/incoming';
       case 'search': return '/dashboard/documents';
+      case 'notifications': return '/dashboard/notifications';
       default: return '/dashboard/documents';
     }
   };

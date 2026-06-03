@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Param, Query, UseGuards, Req, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Put, Delete, Param, Query, UseGuards, Req, ParseIntPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { NotificationsService } from './notifications.service';
 import { NotificationListResponseDto, UnreadCountDto } from './dto/notification.dto';
@@ -46,5 +46,20 @@ export class NotificationsController {
     async markAllAsRead(@Req() req: RequestWithUser): Promise<{ message: string }> {
         await this.notificationsService.markAllAsRead(req.user.userId);
         return { message: 'Все уведомления отмечены как прочитанные' };
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete(':id')
+    async deleteNotification(
+        @Req() req: RequestWithUser,
+        @Param('id', ParseIntPipe) id: number,
+    ): Promise<{ message: string }> {
+        return this.notificationsService.deleteNotification(req.user.userId, id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete('read')
+    async deleteAllRead(@Req() req: RequestWithUser): Promise<{ message: string; deletedCount: number }> {
+        return this.notificationsService.deleteAllRead(req.user.userId);
     }
 }

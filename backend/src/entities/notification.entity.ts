@@ -2,6 +2,20 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 't
 import { User } from './user.entity';
 import { Document } from './document.entity';
 
+export type NotificationType = 
+    | 'new_document'
+    | 'document_ready'
+    | 'ai_complete'
+    | 'extract_error'
+    | 'pending_verification'
+    | 'routed'
+    | 'rejected'
+    | 'comment_added'
+    | 'verified'
+    | 'low_confidence'
+    | 'route_error'
+    | 'overdue_verification';
+
 @Entity('notifications')
 export class Notification {
     @PrimaryGeneratedColumn()
@@ -10,8 +24,11 @@ export class Notification {
     @Column({ name: 'user_id' })
     userId!: number;
 
-    @Column({ length: 50 })
-    type!: string;
+    @Column({ 
+        type: 'varchar', 
+        length: 50 
+    })
+    type!: NotificationType;
 
     @Column({ length: 255 })
     title!: string;

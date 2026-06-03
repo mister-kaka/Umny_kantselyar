@@ -1,4 +1,3 @@
-// backend/src/documents/crud/documents-crud.service.ts
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,11 +9,20 @@ import { DocumentFile } from '../../entities/document-file.entity';
 import { OcrResult } from '../../entities/ocr-result.entity';
 import { DocumentSource } from '../../entities/document-source.entity';
 import { DocumentClassification } from '../../entities/document-classification.entity';
+import { DocumentComment } from '../../entities/document-comment.entity';
+import { DocumentAiResult } from '../../entities/document-ai-result.entity';
+import { User } from '../../entities/user.entity';
 import { DocumentCardDto } from '../dto/document-card.dto';
 import { UploadDocumentResponseDto } from '../dto/upload-document.dto';
 import { VerifyDocumentDto } from '../dto/verify-document.dto';
 import { RouteDocumentDto } from '../dto/route-document.dto';
+import { UpdateDocumentDto } from '../dto/update-document.dto';
+import { UpdateDocumentResponseDto } from '../dto/update-document-response.dto';
+import { AddCommentDto } from '../dto/add-comment.dto';
+import { CommentResponseDto } from '../dto/comment-response.dto';
 import { AppLoggerService } from '../../logger/app-logger.service';
+import { NotificationsService } from '../../notifications/notifications.service';
+import { AuditLogService } from '../../audit/audit-log.service';
 
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif'];
 
@@ -33,7 +41,15 @@ export class DocumentsCrudService {
         private documentSourceRepository: Repository<DocumentSource>,
         @InjectRepository(DocumentClassification)
         private classificationRepository: Repository<DocumentClassification>,
+        @InjectRepository(DocumentComment)
+        private documentCommentRepository: Repository<DocumentComment>,
+        @InjectRepository(DocumentAiResult)
+        private documentAiResultRepository: Repository<DocumentAiResult>,
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
         private readonly logger: AppLoggerService,
+        private readonly notificationsService: NotificationsService,
+        private readonly auditLogService: AuditLogService,
     ) {}
 
     // GET /documents/:id - карточка документа
@@ -45,7 +61,7 @@ export class DocumentsCrudService {
                     'documentType', 'category', 'creator', 'files',
                     'ocrResult', 'classifications', 'classifications.documentType',
                     'classifications.documentCategory', 'documentRoutes',
-                    'documentRoutes.department', 'sources', 'aiResults', 
+                    'documentRoutes.department', 'sources', 'aiResults',
                     'currentDepartment',
                 ],
             });
@@ -151,13 +167,16 @@ export class DocumentsCrudService {
     }
 
     // DELETE /documents/:id - удаление документа
-    async delete(id: number): Promise<void> {
+    async delete(id: number, userId: number): Promise<void> {
         try {
             const document = await this.documentRepository.findOne({ where: { id } });
 
             if (!document) {
                 throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
             }
+
+            const registrationNumber = document.registrationNumber;
+            const title = document.title;
 
             const docDir = path.join(process.cwd(), 'uploads', 'documents', String(id));
             if (fs.existsSync(docDir)) {
@@ -166,10 +185,17 @@ export class DocumentsCrudService {
 
             await this.documentRepository.remove(document);
 
+            await this.auditLogService.log(
+                userId,
+                'document_delete',
+                id,
+                { registrationNumber, title }
+            );
+
             await this.logger.log({
                 module: 'Documents', type: 'DELETE', url: `/documents/${id}`,
                 action: 'удаление документа', status: 'success', statusCode: 200,
-                message: `Документ ${document.registrationNumber} удалён`,
+                message: `Документ ${registrationNumber} удалён`,
             });
 
         } catch (error) {
@@ -246,6 +272,20 @@ export class DocumentsCrudService {
             });
             await this.documentSourceRepository.save(sourceRecord);
 
+            await this.auditLogService.log(
+                createdBy,
+                'document_upload',
+                savedDocument.id,
+                { fileName: safeFileName, fileSize: file.size, fileType: fileExtension, registrationNumber }
+            );
+
+            await this.notificationsService.createNotification(
+                createdBy,
+                'new_document',
+                'Новый документ',
+                `Поступил новый документ «${safeFileName}» от Загружен через сканирование (№${registrationNumber})`,
+                savedDocument.id,
+            );
 
             await this.logger.log({
                 module: 'Documents', type: 'POST', url: '/documents/upload',
@@ -281,18 +321,35 @@ export class DocumentsCrudService {
     }
 
     // PUT /documents/:id/verify - подтверждение оператором
-    async verifyDocument(id: number, dto: VerifyDocumentDto): Promise<{ message: string }> {
+    async verifyDocument(id: number, dto: VerifyDocumentDto, userId: number): Promise<{ message: string }> {
         try {
             const document = await this.documentRepository.findOne({ where: { id } });
             if (!document) {
                 throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
             }
 
-            if (dto.typeId) document.documentTypeId = dto.typeId;
-            if (dto.categoryId) document.categoryId = dto.categoryId;
-            if (dto.departmentId) document.currentDepartmentId = dto.departmentId;
-            if (dto.receivedDate) document.receivedDate = new Date(dto.receivedDate);
-            if (dto.senderName) document.senderName = dto.senderName;
+            const changes: Record<string, any> = {};
+
+            if (dto.typeId) {
+                changes.typeId = dto.typeId;
+                document.documentTypeId = dto.typeId;
+            }
+            if (dto.categoryId) {
+                changes.categoryId = dto.categoryId;
+                document.categoryId = dto.categoryId;
+            }
+            if (dto.departmentId) {
+                changes.departmentId = dto.departmentId;
+                document.currentDepartmentId = dto.departmentId;
+            }
+            if (dto.receivedDate) {
+                changes.receivedDate = dto.receivedDate;
+                document.receivedDate = new Date(dto.receivedDate);
+            }
+            if (dto.senderName) {
+                changes.senderName = dto.senderName;
+                document.senderName = dto.senderName;
+            }
 
             document.currentStatus = 'verified';
             document.verifiedAt = new Date();
@@ -307,6 +364,21 @@ export class DocumentsCrudService {
                 classification.isVerified = true;
                 await this.classificationRepository.save(classification);
             }
+
+            await this.auditLogService.log(
+                userId,
+                'document_verify',
+                id,
+                { changes, registrationNumber: document.registrationNumber }
+            );
+
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'verified',
+                'Документ проверен',
+                `Документ «${document.title}» проверен оператором (№${document.registrationNumber})`,
+                document.id,
+            );
 
             await this.logger.log({
                 module: 'Documents',
@@ -341,7 +413,7 @@ export class DocumentsCrudService {
     }
 
     // POST /documents/:id/route - направление в отдел
-    async routeDocument(id: number, dto: RouteDocumentDto): Promise<{ message: string }> {
+    async routeDocument(id: number, dto: RouteDocumentDto, userId: number): Promise<{ message: string }> {
         try {
             const document = await this.documentRepository.findOne({ where: { id } });
             if (!document) {
@@ -361,6 +433,29 @@ export class DocumentsCrudService {
             document.currentStatus = 'routed';
             document.routedAt = new Date();
             await this.documentRepository.save(document);
+
+            const department = await this.documentRepository.manager
+                .createQueryBuilder()
+                .select('d.name')
+                .from('departments', 'd')
+                .where('d.id = :id', { id: dto.departmentId })
+                .getRawOne();
+            const departmentName = department?.d_name || 'отдел';
+
+            await this.auditLogService.log(
+                userId,
+                'document_route',
+                id,
+                { departmentId: dto.departmentId, departmentName, comment: dto.comment, registrationNumber: document.registrationNumber }
+            );
+
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'routed',
+                'Направлен в отдел',
+                `Документ «${document.title}» направлен в отдел ${departmentName} (№${document.registrationNumber})`,
+                document.id,
+            );
 
             await this.logger.log({
                 module: 'Documents',
@@ -424,6 +519,23 @@ export class DocumentsCrudService {
             });
             await this.documentRouteRepository.save(route);
 
+            if (userId) {
+                await this.auditLogService.log(
+                    userId,
+                    'document_reject',
+                    id,
+                    { comment, registrationNumber: document.registrationNumber, title: document.title }
+                );
+            }
+
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'rejected',
+                'Документ отклонён',
+                `Документ «${document.title}» отклонён${comment ? `: ${comment}` : ''} (№${document.registrationNumber})`,
+                document.id,
+            );
+
             await this.logger.log({
                 module: 'Documents',
                 type: 'POST',
@@ -451,6 +563,382 @@ export class DocumentsCrudService {
 
             throw new HttpException(
                 'Ошибка сервера при отклонении документа',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    async updateDocument(
+        id: number,
+        userId: number,
+        dto: UpdateDocumentDto,
+    ): Promise<UpdateDocumentResponseDto> {
+        try {
+            const document = await this.documentRepository.findOne({
+                where: { id },
+                relations: ['creator'],
+            });
+
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            const updatedFields: string[] = [];
+
+            if (dto.title !== undefined && dto.title !== document.title) {
+                document.title = dto.title;
+                updatedFields.push('title');
+            }
+            if (dto.senderName !== undefined && dto.senderName !== document.senderName) {
+                document.senderName = dto.senderName;
+                updatedFields.push('senderName');
+            }
+            if (dto.documentTypeId !== undefined && dto.documentTypeId !== document.documentTypeId) {
+                document.documentTypeId = dto.documentTypeId;
+                updatedFields.push('documentTypeId');
+            }
+            if (dto.categoryId !== undefined && dto.categoryId !== document.categoryId) {
+                document.categoryId = dto.categoryId;
+                updatedFields.push('categoryId');
+            }
+            if (dto.receivedDate !== undefined) {
+                document.receivedDate = new Date(dto.receivedDate);
+                updatedFields.push('receivedDate');
+            }
+
+            await this.documentRepository.save(document);
+
+            const hasAiFields = dto.extractedAmount !== undefined ||
+                dto.extractedDate !== undefined ||
+                dto.extractedCounterparty !== undefined ||
+                dto.sourceTypeSuggested !== undefined ||
+                dto.sourceOrganizationSuggested !== undefined ||
+                dto.sourceSenderSuggested !== undefined ||
+                dto.sourceContactSuggested !== undefined ||
+                dto.keyPhrases !== undefined;
+
+            if (hasAiFields) {
+                let aiResult = await this.documentAiResultRepository.findOne({
+                    where: { documentId: id },
+                    order: { createdAt: 'DESC' },
+                });
+
+                if (!aiResult) {
+                    aiResult = this.documentAiResultRepository.create({
+                        documentId: id,
+                        providerCode: 'manual',
+                        modelName: 'manual_edit',
+                    });
+                }
+
+                if (dto.extractedAmount !== undefined) {
+                    aiResult.extractedAmount = dto.extractedAmount;
+                    updatedFields.push('extractedAmount');
+                }
+                if (dto.extractedDate !== undefined) {
+                    aiResult.extractedDate = new Date(dto.extractedDate);
+                    updatedFields.push('extractedDate');
+                }
+                if (dto.extractedCounterparty !== undefined) {
+                    aiResult.extractedCounterparty = dto.extractedCounterparty;
+                    updatedFields.push('extractedCounterparty');
+                }
+                if (dto.sourceTypeSuggested !== undefined) {
+                    aiResult.sourceTypeSuggested = dto.sourceTypeSuggested;
+                    updatedFields.push('sourceTypeSuggested');
+                }
+                if (dto.sourceOrganizationSuggested !== undefined) {
+                    aiResult.sourceOrganizationSuggested = dto.sourceOrganizationSuggested;
+                    updatedFields.push('sourceOrganizationSuggested');
+                }
+                if (dto.sourceSenderSuggested !== undefined) {
+                    aiResult.sourceSenderSuggested = dto.sourceSenderSuggested;
+                    updatedFields.push('sourceSenderSuggested');
+                }
+                if (dto.sourceContactSuggested !== undefined) {
+                    aiResult.sourceContactSuggested = dto.sourceContactSuggested;
+                    updatedFields.push('sourceContactSuggested');
+                }
+                if (dto.keyPhrases !== undefined) {
+                    aiResult.keyPhrases = dto.keyPhrases;
+                    updatedFields.push('keyPhrases');
+                }
+
+                await this.documentAiResultRepository.save(aiResult);
+            }
+
+            if (updatedFields.length > 0) {
+                await this.auditLogService.log(
+                    userId,
+                    'document_update',
+                    id,
+                    { updatedFields, registrationNumber: document.registrationNumber }
+                );
+            }
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'PUT',
+                url: `/documents/${id}`,
+                action: 'редактирование документа',
+                status: 'success',
+                statusCode: 200,
+                message: `Документ ${document.registrationNumber} обновлён пользователем ${userId}`,
+            });
+
+            const updatedAiResult = await this.documentAiResultRepository.findOne({
+                where: { documentId: id },
+                order: { createdAt: 'DESC' },
+            });
+
+            return {
+                id: document.id,
+                registrationNumber: document.registrationNumber,
+                title: document.title,
+                senderName: document.senderName,
+                receivedDate: document.receivedDate,
+                documentTypeId: document.documentTypeId,
+                categoryId: document.categoryId,
+                extractedAmount: updatedAiResult?.extractedAmount || null,
+                extractedDate: updatedAiResult?.extractedDate || null,
+                extractedCounterparty: updatedAiResult?.extractedCounterparty || null,
+                sourceTypeSuggested: updatedAiResult?.sourceTypeSuggested || null,
+                sourceOrganizationSuggested: updatedAiResult?.sourceOrganizationSuggested || null,
+                sourceSenderSuggested: updatedAiResult?.sourceSenderSuggested || null,
+                sourceContactSuggested: updatedAiResult?.sourceContactSuggested || null,
+                keyPhrases: updatedAiResult?.keyPhrases || null,
+                updatedAt: new Date(),
+            };
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'PUT',
+                url: `/documents/${id}`,
+                action: 'редактирование документа',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при обновлении документа',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    async getComments(documentId: number): Promise<CommentResponseDto[]> {
+        try {
+            const document = await this.documentRepository.findOne({
+                where: { id: documentId },
+            });
+
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            const comments = await this.documentCommentRepository.find({
+                where: { documentId },
+                relations: ['user'],
+                order: { createdAt: 'ASC' },
+            });
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'GET',
+                url: `/documents/${documentId}/comments`,
+                action: 'получение комментариев',
+                status: 'success',
+                statusCode: 200,
+                message: `Получено ${comments.length} комментариев для документа ${documentId}`,
+            });
+
+            return comments.map(comment => ({
+                id: comment.id,
+                documentId: comment.documentId,
+                userId: comment.userId,
+                userName: comment.user?.fullName || 'Неизвестный',
+                text: comment.text,
+                createdAt: comment.createdAt,
+            }));
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'GET',
+                url: `/documents/${documentId}/comments`,
+                action: 'получение комментариев',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при получении комментариев',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    async addComment(
+        documentId: number,
+        userId: number,
+        dto: AddCommentDto,
+    ): Promise<CommentResponseDto> {
+        try {
+            const document = await this.documentRepository.findOne({
+                where: { id: documentId },
+            });
+
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            const user = await this.userRepository.findOne({
+                where: { id: userId },
+                select: ['fullName'],
+            });
+
+            const userName = user?.fullName || 'Пользователь';
+
+            const comment = this.documentCommentRepository.create({
+                documentId,
+                userId,
+                text: dto.text,
+            });
+
+            const saved = await this.documentCommentRepository.save(comment);
+
+            await this.auditLogService.log(
+                userId,
+                'comment_added',
+                documentId,
+                { commentId: saved.id, textPreview: dto.text.substring(0, 100) }
+            );
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: `/documents/${documentId}/comments`,
+                action: 'добавление комментария',
+                status: 'success',
+                statusCode: 201,
+                message: `Комментарий добавлен к документу ${documentId} пользователем ${userName}`,
+            });
+
+            if (document.createdBy !== userId) {
+                await this.notificationsService.createNotification(
+                    document.createdBy,
+                    'comment_added',
+                    'Новый комментарий',
+                    `Пользователь ${userName} оставил комментарий к документу «${document.title}»`,
+                    documentId,
+                );
+            }
+
+            return {
+                id: saved.id,
+                documentId: saved.documentId,
+                userId: saved.userId,
+                userName: userName,
+                text: saved.text,
+                createdAt: saved.createdAt,
+            };
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'POST',
+                url: `/documents/${documentId}/comments`,
+                action: 'добавление комментария',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при добавлении комментария',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    async deleteComment(
+        documentId: number,
+        commentId: number,
+        userId: number,
+    ): Promise<{ message: string }> {
+        try {
+            const document = await this.documentRepository.findOne({
+                where: { id: documentId },
+            });
+
+            if (!document) {
+                throw new HttpException('Документ не найден', HttpStatus.NOT_FOUND);
+            }
+
+            const comment = await this.documentCommentRepository.findOne({
+                where: { id: commentId, documentId },
+            });
+
+            if (!comment) {
+                throw new HttpException('Комментарий не найден', HttpStatus.NOT_FOUND);
+            }
+
+            if (comment.userId !== userId) {
+                const user = await this.userRepository.findOne({
+                    where: { id: userId },
+                    select: ['roleId'],
+                });
+
+                if (user?.roleId !== 1) {
+                    throw new HttpException('Нет прав для удаления комментария', HttpStatus.FORBIDDEN);
+                }
+            }
+
+            await this.documentCommentRepository.remove(comment);
+
+            await this.auditLogService.log(
+                userId,
+                'comment_deleted',
+                documentId,
+                { commentId, commentText: comment.text.substring(0, 100) }
+            );
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'DELETE',
+                url: `/documents/${documentId}/comments/${commentId}`,
+                action: 'удаление комментария',
+                status: 'success',
+                statusCode: 200,
+                message: `Комментарий ${commentId} удалён`,
+            });
+
+            return { message: 'Комментарий удалён' };
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.logger.log({
+                module: 'Documents',
+                type: 'DELETE',
+                url: `/documents/${documentId}/comments/${commentId}`,
+                action: 'удаление комментария',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при удалении комментария',
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }

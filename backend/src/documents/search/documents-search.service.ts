@@ -1,4 +1,3 @@
-// backend/src/documents/search/documents-search.service.ts
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

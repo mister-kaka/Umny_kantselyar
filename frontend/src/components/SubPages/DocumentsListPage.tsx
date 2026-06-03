@@ -6,7 +6,7 @@ import "../../styles/Dashboard.css";
 import "../../styles/DocumentsListPage.css";
 import "../../styles/Settings.css";
 import { DocumentsListResponse, DocumentListItem, DocumentType, DocumentCategory } from "../../types";
-import { getDocuments, getDocumentTypes, getDocumentCategories, deleteDocument } from "../../services/api";
+import { getDocuments, getDocumentTypes, getDocumentCategories, deleteDocument, exportDocuments } from "../../services/api";
 import { useNavigate } from 'react-router-dom';
 import { translateStatus, getStatusColorClass, getAllStatusesForFilter } from "../../constants/statuses";
 import { DateFilterDropdown } from "../DropdownButton";
@@ -23,6 +23,7 @@ const DocumentsListPage = () => {
   const [filtersError, setFiltersError] = useState('');
   const [page, setPage] = useState(1);
   const [Plimit, setPLimit] = useState(10);
+  const [isExporting, setIsExporting] = useState(false);
 
   const [types, setTypes] = useState<DocumentType[]>([]);
   const [categories, setCategories] = useState<DocumentCategory[]>([]);
@@ -104,6 +105,39 @@ const DocumentsListPage = () => {
     }
 
     fetchDocuments();
+  };
+
+  const handleExport = async () => {
+    if (!data?.total || data.total === 0) {
+      alert('Нет документов для экспорта');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const blob = await exportDocuments({
+        typeId: filters.typeId,
+        categoryId: filters.categoryId,
+        status: filters.status,
+        dateFrom: dateFilter.from ?? undefined,
+        dateTo: dateFilter.to ?? undefined,
+        dateField: 'upload',
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `documents_export_${new Date().toISOString().slice(0, 19)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Ошибка экспорта:', error);
+      alert('Не удалось экспортировать документы');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   useEffect(() => {
@@ -224,6 +258,7 @@ const DocumentsListPage = () => {
             isOpen={activeFilter === 'category'}
             onToggle={() => toggleFilter('category')}/>
         </Tooltip>
+
         <Tooltip text="Показать документы с выбранным статусом">
           <DropdownButton
             options={statusOptions}
@@ -273,6 +308,18 @@ const DocumentsListPage = () => {
             Сбросить фильтры
           </button>
         </Tooltip>
+
+        <Tooltip text="Экспортировать документы в Excel">
+          <button 
+            className="apply-button"
+            onClick={handleExport}
+            disabled={isExporting}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            {isExporting ? 'Экспорт...' : 'Экспорт'}
+          </button>
+        </Tooltip>
+
         {selectedIds.size > 0 && (
           <Tooltip text="Удалить выбранные документы. Действие необратимо">
             <button

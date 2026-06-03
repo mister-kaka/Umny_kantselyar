@@ -1,4 +1,3 @@
-// backend/src/documents/extraction/text-extraction.service.ts
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
@@ -12,6 +11,8 @@ import { ExtractTextResponseDto } from '../dto/extract-text-response.dto';
 import { AppLoggerService } from '../../logger/app-logger.service';
 import { ImageProcessorService } from '../../image-processor/image-processor.service';
 import { DocumentsSearchService } from '../search/documents-search.service';
+import { NotificationsService } from '../../notifications/notifications.service';
+import { AuditLogService } from '../../audit/audit-log.service';
 
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
@@ -30,6 +31,8 @@ export class TextExtractionService {
         private readonly imageProcessor: ImageProcessorService,
         private readonly searchService: DocumentsSearchService,
         private readonly logger: AppLoggerService,
+        private readonly notificationsService: NotificationsService,
+        private readonly auditLogService: AuditLogService,
     ) {}
 
     // POST /documents/:id/extract-text - извлечение текста из файла
@@ -127,9 +130,21 @@ export class TextExtractionService {
             ocrResult.rawText = extractedText;
             ocrResult.normalizedText = extractedText.trim();
             ocrResult.language = 'ru';
-            ocrResult.ocrConfidence = ocrConfidence;
+            ocrResult.ocrConfidence = ocrConfidence / 100;
             ocrResult.processedAt = new Date();
             await this.ocrResultRepository.save(ocrResult);
+
+            await this.auditLogService.log(
+                document.createdBy,
+                'ocr_extract',
+                id,
+                { 
+                    fileName: file.fileName, 
+                    fileType: fileExtension,
+                    textLength: extractedText.length,
+                    ocrConfidence: ocrConfidence / 100
+                }
+            );
 
             try {
                 const embedding = await this.searchService.getEmbedding(
@@ -160,6 +175,32 @@ export class TextExtractionService {
 
         } catch (error) {
             console.error('extractText error:', error);
+
+            if (error instanceof HttpException && error.getStatus() !== HttpStatus.NOT_FOUND) {
+                try {
+                    const document = await this.documentRepository.findOne({ where: { id } });
+                    const file = document?.files?.[0];
+                    if (document && file) {
+                        await this.auditLogService.log(
+                            document.createdBy,
+                            'ocr_extract_error',
+                            id,
+                            { fileName: file.fileName, error: error.message }
+                        );
+
+                        await this.notificationsService.createNotification(
+                            document.createdBy,
+                            'extract_error',
+                            'Ошибка извлечения',
+                            `Не удалось распознать текст в файле «${file.fileName}» (№${document.registrationNumber})`,
+                            document.id,
+                        );
+                    }
+                } catch (notifError) {
+                    console.error('Ошибка при создании уведомления:', notifError);
+                }
+            }
+
             if (error instanceof HttpException) throw error;
 
             const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';

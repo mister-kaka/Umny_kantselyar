@@ -5,46 +5,57 @@
   padding: 20px;
 }
 
-/* Карточки-статистики как на MainMenu */
-.stats-cards-container {
+/* Карточки-статистики в стиле аналитики */
+.notifications-stats-cards-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  gap: 24px;
   margin-bottom: 24px;
 }
 
-.stat-card {
+.notifications-stat-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 30px 20px !important;
+  gap: 20px;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+  border-top: 3px solid var(--color-accent);
 }
 
-.stat-card-icon {
-  font-size: 32px;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
+.notifications-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  border-color: var(--color-accent);
 }
 
-.stat-card-content {
+.notifications-stat-card-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.notifications-stat-card-content {
   flex: 1;
 }
 
-.stat-card-value {
-  font-size: 28px;
-  font-weight: 600;
+.notifications-stat-card-value {
+  font-size: 32px;
+  font-weight: 700;
   color: var(--text-primary);
-  margin: 0;
   line-height: 1.2;
+  margin-bottom: 4px;
 }
 
-.stat-card-label {
+.notifications-stat-card-label {
   font-size: 13px;
-  margin: 4px 0 0 0;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 /* Карточка со списком уведомлений */
@@ -205,7 +216,7 @@
   color: var(--text-tertiary);
 }
 
-
+/* Скелетоны */
 .skeleton-card {
   padding: 20px !important;
 }
@@ -270,18 +281,17 @@
 
 /* Адаптив */
 @media (max-width: 1024px) {
-  .stats-cards-container {
+  .notifications-stats-cards-container {
     gap: 16px;
   }
 
-  .stat-card-value {
-    font-size: 24px;
+  .notifications-stat-card-value {
+    font-size: 28px;
   }
 
-  .stat-card-icon {
-    font-size: 28px;
-    width: 48px;
-    height: 48px;
+  .notifications-stat-card-icon {
+    width: 40px;
+    height: 40px;
   }
 }
 
@@ -290,23 +300,27 @@
     padding: 16px;
   }
 
-  .stats-cards-container {
+  .notifications-stats-cards-container {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
 
-  .stat-card {
+  .notifications-stat-card {
     padding: 16px !important;
+    gap: 16px;
   }
 
-  .stat-card-icon {
-    width: 44px;
-    height: 44px;
+  .notifications-stat-card-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .notifications-stat-card-value {
     font-size: 24px;
   }
 
-  .stat-card-value {
-    font-size: 22px;
+  .notifications-stat-card-label {
+    font-size: 12px;
   }
 
   .notification-item {
@@ -330,27 +344,26 @@
     padding: 12px;
   }
 
-  .stats-cards-container {
+  .notifications-stats-cards-container {
     gap: 10px;
   }
 
-  .stat-card {
+  .notifications-stat-card {
     padding: 12px !important;
-    gap: 10px;
+    gap: 12px;
   }
 
-  .stat-card-icon {
-    width: 36px;
-    height: 36px;
+  .notifications-stat-card-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .notifications-stat-card-value {
     font-size: 20px;
   }
 
-  .stat-card-value {
-    font-size: 18px;
-  }
-
-  .stat-card-label {
-    font-size: 10px;
+  .notifications-stat-card-label {
+    font-size: 11px;
   }
 
   .notifications-title {
@@ -383,11 +396,11 @@
 }
 
 @media (max-width: 375px) {
-  .stats-cards-container {
+  .notifications-stats-cards-container {
     grid-template-columns: 1fr;
   }
 
-  .stat-card {
+  .notifications-stat-card {
     width: 100%;
   }
 }

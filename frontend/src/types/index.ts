@@ -44,7 +44,7 @@ export interface DocumentListItem {
   title: string;
   senderName: string;
   receivedDate: string;
-  uploadedAt?: string;
+  uploadedAt: string;
   documentType: string;
   category: string;
   currentStatus: string;
@@ -74,7 +74,7 @@ export interface OcrResult {
   rawText: string;
   normalizedText: string;
   language: string;
-  ocrConfidence: number;
+  ocrConfidence: number | null;
 }
 
 export interface DocumentClassification {
@@ -134,7 +134,7 @@ export interface DocumentCard {
     source: DocumentSource | null;  
     aiResult: DocumentAiResult | null;
     uploadedAt?: string | null;
-    currentDepartment?: string | null;
+    currentDepartment: string | null;
 }
 
 export interface DocumentsFilters {
@@ -228,7 +228,7 @@ export interface ExtractTextResponse {
   rawText: string;
   normalizedText: string;
   language: string;
-  ocrConfidence: number;
+  ocrConfidence: number | null;
   processedAt: string;
 }
 
@@ -257,9 +257,179 @@ export interface RouteDocumentData {
   comment?: string;
 }
 
+export interface RoutingDocument {
+  id: number;
+  registrationNumber: string;
+  title: string;
+  currentDepartment: string;
+  suggestedDepartment: string;
+  routeStatus: string;
+}
+
+export interface UpdateRouteStatusData {
+  status: 'delivered' | 'read' | 'rejected';
+  comment?: string;
+}
+
+export interface UpdateDocumentData {
+  title?: string;
+  senderName?: string;
+  documentTypeId?: number;
+  categoryId?: number;
+  receivedDate?: string;
+  extractedAmount?: number;
+  extractedDate?: string;
+  extractedCounterparty?: string;
+  keyPhrases?: string[];
+}
+
+export interface Profile {
+  id: number;
+  fullName: string;
+  email: string;
+  role: string;
+  department: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+}
+
+export interface UpdateProfileData {
+  fullName?: string;
+  email?: string;
+}
+
+export interface ChangePasswordData {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface NotificationSettings {
+  newDocument: boolean;
+  aiComplete: boolean;
+  extractError: boolean;
+  pendingVerification: boolean;
+  routedToDepartment: boolean;
+  lowConfidence: boolean;
+  routeError: boolean;
+  overdueVerification: boolean;
+}
+
+export interface InterfaceSettings {
+  compactView: boolean;
+  showConfidence: boolean;
+  defaultPageLimit: number;
+  theme: 'light' | 'dark';
+}
+
+export interface Session {
+  id: number;
+  userId: number;
+  token: string;
+  createdAt: string;
+  expiresAt: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+}
+
+export interface LoginHistoryItem {
+  id: number;
+  userId: number;
+  ipAddress: string | null;
+  userAgent: string | null;
+  loginTime: string;
+}
+
+export interface LoginHistoryResponse {
+  items: LoginHistoryItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface AuditLogItem {
+  id: number;
+  userId: number;
+  userName: string;
+  action: string;
+  documentId: number | null;
+  details: any;
+  createdAt: string;
+}
+
+export interface AuditLogResponse {
+  items: AuditLogItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface Comment {
+  id: number;
+  documentId: number;
+  userId: number;
+  userName: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface ExportFilters {
+  typeId?: number;
+  categoryId?: number;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  dateField?: string;
+}
+
+export type AppNotificationType = 
+  | 'new_document'
+  | 'document_ready'
+  | 'ai_complete'
+  | 'extract_error'
+  | 'pending_verification'
+  | 'routed'
+  | 'rejected'
+  | 'comment_added'
+  | 'verified'
+  | 'low_confidence'
+  | 'route_error'
+  | 'overdue_verification';
+
+export interface AppNotification {
+  id: number;
+  type: AppNotificationType;
+  title: string;
+  message: string;
+  documentId?: number;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface UnreadCount {
+  total: number;
+  newDocument: number;
+  aiComplete: number;
+  extractError: number;
+  pendingVerification: number;
+  routedToDepartment: number;
+  lowConfidence: number;
+  routeError: number;
+  overdueVerification: number;
+}
+
 export interface AnalyticsData {
   totalDocuments: number;
   avgConfidence: number;
   rejectedCount: number;
   last7Days: number;
+  pendingVerificationCount: number;
+  aiProcessedCount: number;
+}
+
+export interface RouteTemplate {
+  id: number;
+  name: string;
+  description: string | null;
+  departmentIds: number[];
+  isActive: boolean;
 }
