@@ -349,10 +349,7 @@ export const exportDocuments = async (filters?: ExportFilters): Promise<Blob> =>
   }
 };
 
-// ========================================================================
-// НАСТРОЙКИ УВЕДОМЛЕНИЙ
-// ========================================================================
-
+//настройки уведомлений
 export const getNotificationSettings = async (): Promise<NotificationSettings> => {
   try {
     const response = await api.get<NotificationSettings>('/settings/notifications');
@@ -517,4 +514,4 @@ export const getAnalyticsData = async (): Promise<AnalyticsData> => {
     console.error('Ошибка получения данных аналитики', error);
     throw error;
   }
-};
+}; 
