@@ -93,6 +93,7 @@ const DocumentCardPage: React.FC = () => {
       case 'upload': return 'Назад к загрузке';
       case 'search': return 'Архив документов';
       case 'notifications': return 'К уведомлениям';
+      case 'verification': return 'В очередь проверки';
       default: return 'Архив документов';
     }
   };
@@ -103,6 +104,7 @@ const DocumentCardPage: React.FC = () => {
       case 'upload': return '/dashboard/incoming';
       case 'search': return '/dashboard/documents';
       case 'notifications': return '/dashboard/notifications';
+      case 'verification': return '/dashboard/verification';
       default: return '/dashboard/documents';
     }
   };

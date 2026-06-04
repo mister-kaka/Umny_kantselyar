@@ -61,7 +61,7 @@ const Verification = () => {
   const hasActiveFilters = !!(filters.typeId || filters.categoryId);
 
   const handleRowClick = (id: number) => {
-    navigate(`/dashboard/documents/${id}`);
+    navigate(`/dashboard/documents/${id}`, { state: { from: 'verification' } });
   };
 
   useEffect(() => {
@@ -153,10 +153,13 @@ const Verification = () => {
     setTakingId(docId);
     
     try {
-      // TODO: API вызов для взятия документа в проверку
-      // При нажатии "Взять в проверку" открываем карточку документа на вкладке "Проверка"
       await new Promise(resolve => setTimeout(resolve, 300));
-      navigate(`/dashboard/documents/${docId}`, { state: { openVerificationTab: true } });
+      navigate(`/dashboard/documents/${docId}`, { 
+        state: { 
+          openVerificationTab: true,
+          from: 'verification'
+        } 
+      });
     } catch (err) {
       console.error("Ошибка:", err);
     } finally {
@@ -164,18 +167,14 @@ const Verification = () => {
     }
   };
 
-  // Форматирование уверенности (0-100%)
   const formatConfidence = (score?: number): number => {
     if (score === undefined || score === null) return 0;
-    // Если score уже в процентах (0-100), возвращаем как есть
     if (score > 1) return Math.round(score);
-    // Если в долях (0-1), переводим в проценты
     return Math.round(score * 100);
   };
 
   return (
     <div>
-      {/* Панель фильтров */}
       <Card className="filtersButtsWrapper">
         <Tooltip text="Показать документы только выбранного типа">
           <DropdownButton
@@ -237,7 +236,6 @@ const Verification = () => {
         </Tooltip>
       </Card>
 
-      {/* Таблица */}
       <Card className="cuttinPaddin">
         <Table
           title={<h4>Очередь проверки ({data?.total ?? 0})</h4>}
@@ -264,19 +262,19 @@ const Verification = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px' }}>Загрузка...</td>               </tr>
+              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px' }}>Загрузка...</td></tr>
             ) : error ? (
               <tr>
                 <td colSpan={9} style={{ textAlign: 'center', color: 'var(--color-status-rejected)', padding: '20px' }}>
                   {error} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
-               </tr>
+              </tr>
             ) : filtersError && !types.length && !categories.length ? (
               <tr>
                 <td colSpan={9} style={{ textAlign: 'center', color: 'var(--color-status-rejected)', padding: '20px' }}>
                   {filtersError} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
-               </tr>
+              </tr>
             ) : data?.items?.length ? (
               data.items.map((doc) => (
                 <tr key={doc.id} onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
@@ -327,7 +325,7 @@ const Verification = () => {
                 <td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
                   Нет документов, ожидающих проверки
                 </td>
-               </tr>
+              </tr>
             )}
           </tbody>
         </Table>
