@@ -1,3 +1,101 @@
-@import url('../styles/global.css');
+@import url("../styles/global.css");
+@import url("../styles/Dashboard.css");
 
-/* очередь проверки */
+.verification-header {
+  margin-bottom: 24px;
+}
+
+.verification-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+/* Confidence bar (как в архиве) */
+.confidence-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confidence-bar {
+  width: 60px;
+  height: 6px;
+  background-color: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.confidence-fill.status-loaded {
+  background-color: var(--color-status-loaded);
+}
+
+.confidence-fill.status-low-confidence {
+  background-color: var(--color-status-low-confidence);
+}
+
+.confidence-fill.status-rejected {
+  background-color: var(--color-status-rejected);
+}
+
+.confidence-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 45px;
+}
+
+/* Кнопка "Взять в проверку" */
+.take-btn {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--radius-button);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.take-btn:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.in-review-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.verified-label {
+  font-size: 12px;
+  color: var(--color-status-loaded);
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+  .verification-header h2 {
+    font-size: 20px;
+  }
+
+  .take-btn {
+    padding: 8px 12px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .verification-header h2 {
+    font-size: 18px;
+  }
+
+  .confidence-bar {
+    width: 40px;
+  }
+}
