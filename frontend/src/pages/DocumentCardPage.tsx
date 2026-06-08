@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
-import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument, verifyDocument, routeDocument, getDocumentTypes, getDocumentCategories, getDepartments, createDocumentType, createDocumentCategory, extractText } from '../services/api';
-import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult, DocumentType, DocumentCategory, Department } from '../types/';
+import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument, verifyDocument, routeDocument, getDocumentTypes, getDocumentCategories, getDepartments, createDocumentType, createDocumentCategory, extractText, updateDocument, getComments, addComment, deleteComment } from '../services/api';
+import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult, DocumentType, DocumentCategory, Department, Comment } from '../types/';
 import Card from '../components/Card';
+import Tooltip from '../components/Tooltip';
 import { translateStatus, getStatusColorClass } from '../constants/statuses';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
@@ -41,7 +42,7 @@ const DocumentCardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from;
-  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "verification" | "ocr" | "history">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "verification" | "ocr" | "history" | "discussion">("overview");
 
   const [data, setData] = useState<DocumentCardType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,6 +69,14 @@ const DocumentCardPage: React.FC = () => {
   const [verifyStatus, setVerifyStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [verifyMessage, setVerifyMessage] = useState('');
 
+  const [userEdited, setUserEdited] = useState({
+    type: false,
+    category: false,
+    department: false,
+    date: false,
+    sender: false,
+  });
+
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectComment, setRejectComment] = useState('');
   const [rejectLoading, setRejectLoading] = useState(false);
@@ -78,11 +87,30 @@ const DocumentCardPage: React.FC = () => {
   const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
 
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    senderName: '',
+    documentTypeId: undefined as number | undefined,
+    documentTypeName: '',
+    categoryId: undefined as number | undefined,
+    categoryName: '',
+    receivedDate: '',
+    sourceType: '',
+    sourceContactInfo: '',
+    extractedAmount: undefined as number | undefined,
+  });
+
   useEffect(() => {
     const shouldOpenVerification = (location.state as any)?.openVerificationTab;
     if (shouldOpenVerification) {
       setActiveTab("verification");
-
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location, navigate]);
@@ -148,7 +176,151 @@ const DocumentCardPage: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    if (data) {
+    if (id && activeTab === "discussion") {
+      loadComments();
+    }
+  }, [id, activeTab]);
+
+  const loadComments = async () => {
+    if (!id) return;
+    setCommentsLoading(true);
+    try {
+      const commentsData = await getComments(Number(id));
+      setComments(commentsData);
+    } catch (error) {
+      console.error('Ошибка загрузки комментариев:', error);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!id || !newCommentText.trim()) return;
+    setSubmittingComment(true);
+    try {
+      const newComment = await addComment(Number(id), newCommentText.trim());
+      setComments(prev => [...prev, newComment]);
+      setNewCommentText('');
+    } catch (error) {
+      console.error('Ошибка добавления комментария:', error);
+      alert('Не удалось добавить комментарий');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!id) return;
+    if (!confirm('Удалить комментарий?')) return;
+    try {
+      await deleteComment(Number(id), commentId);
+      setComments(prev => prev.filter(c => c.id !== commentId));
+    } catch (error) {
+      console.error('Ошибка удаления комментария:', error);
+      alert('Не удалось удалить комментарий');
+    }
+  };
+
+  const openEditModal = () => {
+    if (!data) return;
+    
+    const typeName = data.classification?.type || aiResult?.documentTypeSuggested || '';
+    const categoryName = data.classification?.category || aiResult?.categorySuggested || '';
+    const foundType = documentTypes.find(t => t.name === typeName);
+    const foundCategory = documentCategories.find(c => c.name === categoryName);
+    
+    setEditForm({
+      title: data.title || '',
+      senderName: data.senderName || '',
+      documentTypeId: foundType?.id,
+      documentTypeName: foundType ? '' : typeName,
+      categoryId: foundCategory?.id,
+      categoryName: foundCategory ? '' : categoryName,
+      receivedDate: data.receivedDate ? new Date(data.receivedDate).toISOString().split('T')[0] : '',
+      sourceType: data.source?.sourceType || '',
+      sourceContactInfo: data.source?.contactInfo || '',
+      extractedAmount: aiResult?.extractedAmount || undefined,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!id) return;
+    setEditLoading(true);
+    try {
+      const updateData: any = {
+        title: editForm.title,
+        senderName: editForm.senderName,
+        receivedDate: editForm.receivedDate || undefined,
+      };
+
+      if (editForm.documentTypeId) {
+        updateData.documentTypeId = editForm.documentTypeId;
+      } else if (editForm.documentTypeName) {
+        updateData.documentTypeName = editForm.documentTypeName;
+      }
+
+      if (editForm.categoryId) {
+        updateData.categoryId = editForm.categoryId;
+      } else if (editForm.categoryName) {
+        updateData.categoryName = editForm.categoryName;
+      }
+
+      if (editForm.sourceType) {
+        updateData.sourceType = editForm.sourceType;
+      }
+      if (editForm.sourceContactInfo) {
+        updateData.contactInfo = editForm.sourceContactInfo;
+      }
+
+      if (editForm.extractedAmount !== undefined) {
+        updateData.extractedAmount = editForm.extractedAmount;
+      }
+
+      await updateDocument(Number(id), updateData);
+      
+      const updatedData = await getDocumentById(Number(id));
+      setData(updatedData);
+      
+      if (updatedData.aiResult) {
+        setAiResult(updatedData.aiResult);
+        setAiAnalyzed(true);
+      } else {
+        const result = await getDocumentAiResult(Number(id));
+        if (result) {
+          setAiResult(result);
+          setAiAnalyzed(true);
+        }
+      }
+      
+      setUserEdited({ type: false, category: false, department: false, date: false, sender: false });
+      
+      const typeName = updatedData.classification?.type || updatedData.aiResult?.documentTypeSuggested || '';
+      const categoryName = updatedData.classification?.category || updatedData.aiResult?.categorySuggested || '';
+      const deptName = updatedData.currentDepartment || updatedData.routes?.[0]?.departmentName;
+
+      setVerifyTypeId(documentTypes.find(t => t.name === typeName)?.id);
+      setVerifyTypeText(typeName);
+      setVerifyCategoryId(documentCategories.find(c => c.name === categoryName)?.id);
+      setVerifyCategoryText(categoryName);
+      setVerifyDepartmentId(deptName ? departments.find(d => d.name === deptName)?.id : undefined);
+      setVerifyReceivedDate(updatedData.receivedDate ? new Date(updatedData.receivedDate).toISOString().split('T')[0] : '');
+      setVerifySenderName(updatedData.senderName || '');
+      
+      setShowEditModal(false);
+      setVerifyStatus('success');
+      setVerifyMessage('Документ обновлён');
+      setTimeout(() => setVerifyStatus('idle'), 3000);
+    } catch (error) {
+      console.error('Ошибка сохранения:', error);
+      alert('Не удалось сохранить изменения');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (data && !userEdited.type && !userEdited.category && !userEdited.department && !userEdited.date && !userEdited.sender) {
       const typeName = data.classification?.type || aiResult?.documentTypeSuggested || '';
       const categoryName = data.classification?.category || aiResult?.categorySuggested || '';
       const deptName = data.currentDepartment || data.routes?.[0]?.departmentName;
@@ -274,7 +446,14 @@ const DocumentCardPage: React.FC = () => {
   };
 
   const handleRoute = async () => {
-    if (!id || !verifyDepartmentId) return;
+    if (!id) return;
+    
+    if (!verifyDepartmentId) {
+      setVerifyStatus('error');
+      setVerifyMessage('Выберите отдел для направления');
+      return;
+    }
+    
     setRouteLoading(true);
     setVerifyStatus('idle');
     setVerifyMessage('');
@@ -390,6 +569,16 @@ const DocumentCardPage: React.FC = () => {
 
   const canReject = data.currentStatus !== 'rejected' && data.currentStatus !== 'routed';
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <div className="document-page">
       <div className="doc-topbar">
@@ -406,11 +595,19 @@ const DocumentCardPage: React.FC = () => {
           <h1 className="doc-title">Карточка документа</h1>
           <span className="doc-number">{data.registrationNumber}</span>
         </div>
-        <div
-          className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}
-          data-tooltip="Общая уверенность: OCR (качество распознавания) × 20% + AI-анализ × 80%"
-        >
-          Уверенность: {overallConfidence}% <span className="confidence-info-symbol">ⓘ</span>
+        <div className="doc-header-right">
+          <button className="edit-doc-btn" onClick={openEditModal}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M9.5 2.5L11.5 4.5M2 9L8.5 2.5L11.5 5.5L5 12H2V9Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Редактировать
+          </button>
+          <div
+            className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}
+            data-tooltip="Общая уверенность: OCR (качество распознавания) × 20% + AI-анализ × 80%"
+          >
+            Уверенность: {overallConfidence}% <span className="confidence-info-symbol">ⓘ</span>
+          </div>
         </div>
       </div>
 
@@ -467,10 +664,11 @@ const DocumentCardPage: React.FC = () => {
       <div className="doc-tabs-wrapper">
         <div className="tabs">
           <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Обзор</button>
+          <button className={`tab ${activeTab === "ocr" ? "active" : ""}`} onClick={() => setActiveTab("ocr")}>Текст OCR</button>
           <button className={`tab ${activeTab === "ai" ? "active" : ""}`} onClick={() => setActiveTab("ai")}>AI-анализ</button>
           <button className={`tab ${activeTab === "verification" ? "active" : ""}`} onClick={() => setActiveTab("verification")}>Проверка</button>
-          <button className={`tab ${activeTab === "ocr" ? "active" : ""}`} onClick={() => setActiveTab("ocr")}>Текст OCR</button>
           <button className={`tab ${activeTab === "history" ? "active" : ""}`} onClick={() => setActiveTab("history")}>История маршрутов</button>
+          <button className={`tab ${activeTab === "discussion" ? "active" : ""}`} onClick={() => setActiveTab("discussion")}>Обсуждение</button>
         </div>
 
         <div className="tab-content">
@@ -638,6 +836,34 @@ const DocumentCardPage: React.FC = () => {
             </div>
           )}
 
+          {activeTab === "ocr" && (
+            <Card>
+              <div className="ocr-header">
+                <h3 className="card-section-title">Распознанный текст</h3>
+                <div className="ocr-header-right">
+                  {data.ocrResult && (
+                    <span
+                      className={`confidence-chip ${getConfidenceClass(formatConfidence(data.ocrResult.ocrConfidence))}`}
+                      data-tooltip="Качество извлечения текста из файла. Зависит от качества исходного изображения или PDF."
+                    >
+                      Точность: {formatConfidence(data.ocrResult.ocrConfidence)}%
+                      <span className="confidence-info-symbol">ⓘ</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+              <pre className="ocr-text">{data.ocrResult?.rawText || 'Текст не распознан'}</pre>
+              <div className="ocr-footer">
+                <button className="ocr-copy-btn" onClick={handleCopyOcr} disabled={!data.ocrResult?.rawText}>
+                  {copied ? 'Скопировано' : 'Копировать'}
+                </button>
+                <button className="ocr-retry-btn" onClick={handleReExtractText} disabled={ocrLoading}>
+                  {ocrLoading ? 'Распознавание...' : 'Повторить распознавание'}
+                </button>
+              </div>
+            </Card>
+          )}
+
           {activeTab === "ai" && (
             <div className="ai-tab-layout">
               <Card>
@@ -794,7 +1020,7 @@ const DocumentCardPage: React.FC = () => {
 
               <div className="verification-form">
                 <div className="verification-group">
-                  <h4 className="verification-group-title">Классификация</h4>
+                  <div className="verification-group-title">Классификация</div>
                   <div className="verification-row">
                     <label className="verification-label">Тип документа</label>
                     <input
@@ -806,6 +1032,7 @@ const DocumentCardPage: React.FC = () => {
                         setVerifyTypeText(e.target.value);
                         const found = documentTypes.find(t => t.name.toLowerCase() === e.target.value.toLowerCase());
                         setVerifyTypeId(found?.id);
+                        setUserEdited(prev => ({ ...prev, type: true }));
                       }}
                       placeholder="Выберите или введите новый тип"
                     />
@@ -814,7 +1041,7 @@ const DocumentCardPage: React.FC = () => {
                         <option key={t.id} value={t.name} />
                       ))}
                     </datalist>
-                    {aiResult?.documentTypeSuggested && !verifyTypeId && (
+                    {aiResult?.documentTypeSuggested && !verifyTypeId && !userEdited.type && (
                       <span className="verification-ai-hint">
                         AI предложил: {aiResult.documentTypeSuggested}
                       </span>
@@ -832,6 +1059,7 @@ const DocumentCardPage: React.FC = () => {
                         setVerifyCategoryText(e.target.value);
                         const found = documentCategories.find(c => c.name.toLowerCase() === e.target.value.toLowerCase());
                         setVerifyCategoryId(found?.id);
+                        setUserEdited(prev => ({ ...prev, category: true }));
                       }}
                       placeholder="Выберите или введите новую категорию"
                     />
@@ -840,7 +1068,7 @@ const DocumentCardPage: React.FC = () => {
                         <option key={c.id} value={c.name} />
                       ))}
                     </datalist>
-                    {aiResult?.categorySuggested && !verifyCategoryId && (
+                    {aiResult?.categorySuggested && !verifyCategoryId && !userEdited.category && (
                       <span className="verification-ai-hint">
                         AI предложил: {aiResult.categorySuggested}
                       </span>
@@ -849,22 +1077,30 @@ const DocumentCardPage: React.FC = () => {
                 </div>
 
                 <div className="verification-group">
-                  <h4 className="verification-group-title">Маршрутизация</h4>
+                  <div className="verification-group-title">Маршрутизация</div>
                   <div className="verification-row">
                     <label className="verification-label">Отдел</label>
                     <select
                       className="verification-select"
                       value={verifyDepartmentId ?? ''}
-                      onChange={e => setVerifyDepartmentId(e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={e => {
+                        setVerifyDepartmentId(e.target.value ? Number(e.target.value) : undefined);
+                        setUserEdited(prev => ({ ...prev, department: true }));
+                      }}
                     >
                       <option value="">— Выберите отдел —</option>
                       {departments.map(d => (
                         <option key={d.id} value={d.id}>{d.name}</option>
                       ))}
                     </select>
-                    {aiResult?.departmentSuggested && (
+                    {aiResult?.departmentSuggested && !verifyDepartmentId && !userEdited.department && (
                       <span className="verification-ai-hint">
                         AI предложил: {aiResult.departmentSuggested}
+                      </span>
+                    )}
+                    {!verifyDepartmentId && (
+                      <span className="verification-field-warning">
+                        Выберите отдел перед отправкой!
                       </span>
                     )}
                   </div>
@@ -875,7 +1111,10 @@ const DocumentCardPage: React.FC = () => {
                       type="date"
                       className="verification-select"
                       value={verifyReceivedDate}
-                      onChange={e => setVerifyReceivedDate(e.target.value)}
+                      onChange={e => {
+                        setVerifyReceivedDate(e.target.value);
+                        setUserEdited(prev => ({ ...prev, date: true }));
+                      }}
                     />
                   </div>
 
@@ -885,7 +1124,10 @@ const DocumentCardPage: React.FC = () => {
                       type="text"
                       className="verification-select"
                       value={verifySenderName}
-                      onChange={e => setVerifySenderName(e.target.value)}
+                      onChange={e => {
+                        setVerifySenderName(e.target.value);
+                        setUserEdited(prev => ({ ...prev, sender: true }));
+                      }}
                       placeholder="Отправитель"
                     />
                   </div>
@@ -906,13 +1148,15 @@ const DocumentCardPage: React.FC = () => {
                   <button className="ai-btn" onClick={handleVerify} disabled={verifyLoading}>
                     {verifyLoading ? 'Сохранение...' : 'Подтвердить'}
                   </button>
-                  <button
-                    className="ai-btn-secondary"
-                    onClick={handleRoute}
-                    disabled={routeLoading || !verifyDepartmentId}
-                  >
-                    {routeLoading ? 'Отправка...' : 'Направить в отдел'}
-                  </button>
+                  <Tooltip text={!verifyDepartmentId ? 'Сначала выберите отдел' : 'Направить документ в выбранный отдел'}>
+                    <button
+                      className="ai-btn-secondary"
+                      onClick={handleRoute}
+                      disabled={routeLoading || !verifyDepartmentId}
+                    >
+                      {routeLoading ? 'Отправка...' : 'Направить в отдел'}
+                    </button>
+                  </Tooltip>
                   {canReject && (
                     <button
                       className="ai-btn-danger"
@@ -930,34 +1174,6 @@ const DocumentCardPage: React.FC = () => {
                     {verifyMessage}
                   </div>
                 )}
-              </div>
-            </Card>
-          )}
-
-          {activeTab === "ocr" && (
-            <Card>
-              <div className="ocr-header">
-                <h3 className="card-section-title">Распознанный текст</h3>
-                <div className="ocr-header-right">
-                  {data.ocrResult && (
-                    <span
-                      className={`confidence-chip ${getConfidenceClass(formatConfidence(data.ocrResult.ocrConfidence))}`}
-                      data-tooltip="Качество извлечения текста из файла. Зависит от качества исходного изображения или PDF."
-                    >
-                      Точность: {formatConfidence(data.ocrResult.ocrConfidence)}%
-                      <span className="confidence-info-symbol">ⓘ</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-              <pre className="ocr-text">{data.ocrResult?.rawText || 'Текст не распознан'}</pre>
-              <div className="ocr-footer">
-                <button className="ocr-copy-btn" onClick={handleCopyOcr} disabled={!data.ocrResult?.rawText}>
-                  {copied ? 'Скопировано' : 'Копировать'}
-                </button>
-                <button className="ocr-retry-btn" onClick={handleReExtractText} disabled={ocrLoading}>
-                  {ocrLoading ? 'Распознавание...' : 'Повторить распознавание'}
-                </button>
               </div>
             </Card>
           )}
@@ -1005,6 +1221,62 @@ const DocumentCardPage: React.FC = () => {
               )}
             </Card>
           )}
+
+          {activeTab === "discussion" && (
+            <Card>
+              <h3 className="card-section-title">Обсуждение</h3>
+              
+              <div className="comment-form">
+                <textarea
+                  className="comment-textarea"
+                  placeholder="Написать комментарий..."
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  rows={3}
+                />
+                <div className="comment-form-actions">
+                  <button 
+                    className="comment-submit-btn" 
+                    onClick={handleAddComment}
+                    disabled={!newCommentText.trim() || submittingComment}
+                  >
+                    {submittingComment ? 'Отправка...' : 'Отправить'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="comments-list">
+                {commentsLoading ? (
+                  <div className="comments-loading">Загрузка комментариев...</div>
+                ) : comments.length === 0 ? (
+                  <div className="comments-empty">
+                    <p>Нет комментариев. Будьте первым, кто оставит комментарий!</p>
+                  </div>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="comment-item">
+                      <div className="comment-header">
+                        <div className="comment-author">
+                          <span className="comment-author-name">{comment.userName}</span>
+                          <span className="comment-date">{formatDate(comment.createdAt)}</span>
+                        </div>
+                        <button 
+                          className="comment-delete-btn"
+                          onClick={() => handleDeleteComment(comment.id)}
+                          title="Удалить комментарий"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M2 3h10M5 3V1.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V3M11 3v9a1 1 0 01-1 1H4a1 1 0 01-1-1V3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="comment-text">{comment.text}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
 
@@ -1022,6 +1294,166 @@ const DocumentCardPage: React.FC = () => {
               <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </a>
+        </div>
+      )}
+
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content modal-content--large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Редактирование документа</h3>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="edit-form">
+                <div className="edit-form-group">
+                  <h4 className="edit-form-group-title">Основная информация</h4>
+                  <div className="edit-form-row">
+                    <label>Название документа</label>
+                    <input
+                      type="text"
+                      value={editForm.title}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                    />
+                  </div>
+                  <div className="edit-form-row">
+                    <label>Тип документа</label>
+                    <input
+                      type="text"
+                      list="edit-document-types"
+                      value={editForm.documentTypeId 
+                        ? documentTypes.find(t => t.id === editForm.documentTypeId)?.name || '' 
+                        : editForm.documentTypeName}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const found = documentTypes.find(t => t.name === value);
+                        if (found) {
+                          setEditForm(prev => ({ 
+                            ...prev, 
+                            documentTypeId: found.id, 
+                            documentTypeName: '' 
+                          }));
+                        } else {
+                          setEditForm(prev => ({ 
+                            ...prev, 
+                            documentTypeId: undefined, 
+                            documentTypeName: value 
+                          }));
+                        }
+                      }}
+                      placeholder="Выберите или введите новый тип"
+                    />
+                    <datalist id="edit-document-types">
+                      {documentTypes.map(t => (
+                        <option key={t.id} value={t.name} />
+                      ))}
+                    </datalist>
+                    <div className="edit-form-hint">например, «Договор», «Жалоба» или новый тип</div>
+                  </div>
+                  <div className="edit-form-row">
+                    <label>Категория</label>
+                    <input
+                      type="text"
+                      list="edit-document-categories"
+                      value={editForm.categoryId 
+                        ? documentCategories.find(c => c.id === editForm.categoryId)?.name || '' 
+                        : editForm.categoryName}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const found = documentCategories.find(c => c.name === value);
+                        if (found) {
+                          setEditForm(prev => ({ 
+                            ...prev, 
+                            categoryId: found.id, 
+                            categoryName: '' 
+                          }));
+                        } else {
+                          setEditForm(prev => ({ 
+                            ...prev, 
+                            categoryId: undefined, 
+                            categoryName: value 
+                          }));
+                        }
+                      }}
+                      placeholder="Выберите или введите новую категорию"
+                    />
+                    <datalist id="edit-document-categories">
+                      {documentCategories.map(c => (
+                        <option key={c.id} value={c.name} />
+                      ))}
+                    </datalist>
+                    <div className="edit-form-hint">например, «Финансы», «Транспорт» или новая категория</div>
+                  </div>
+                  <div className="edit-form-row">
+                    <label>Дата документа</label>
+                    <input
+                      type="date"
+                      value={editForm.receivedDate}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, receivedDate: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="edit-form-group">
+                  <h4 className="edit-form-group-title">Источник документа</h4>
+                  <div className="edit-form-row">
+                    <label>Тип источника</label>
+                    <select
+                      value={editForm.sourceType}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, sourceType: e.target.value }))}
+                    >
+                      <option value="">— Выберите тип —</option>
+                      <option value="organization">Организация</option>
+                      <option value="individual">Физическое лицо</option>
+                      <option value="department">Подразделение</option>
+                    </select>
+                    <div className="edit-form-hint">например, «Физическое лицо»</div>
+                  </div>
+                  <div className="edit-form-row">
+                    <label>Отправитель</label>
+                    <input
+                      type="text"
+                      value={editForm.senderName}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, senderName: e.target.value }))}
+                      placeholder="ФИО или название организации"
+                    />
+                    <div className="edit-form-hint">например, «Иванов Иван Иванович»</div>
+                  </div>
+                  <div className="edit-form-row">
+                    <label>Контакты</label>
+                    <input
+                      type="text"
+                      value={editForm.sourceContactInfo}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, sourceContactInfo: e.target.value }))}
+                      placeholder="Телефон, email, адрес"
+                    />
+                    <div className="edit-form-hint">например, «+7 (999) 123-45-67, email@example.com»</div>
+                  </div>
+                </div>
+
+                <div className="edit-form-group">
+                  <h4 className="edit-form-group-title">Данные из AI</h4>
+                  <div className="edit-form-row">
+                    <label>Сумма</label>
+                    <input
+                      type="number"
+                      value={editForm.extractedAmount || ''}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, extractedAmount: e.target.value ? Number(e.target.value) : undefined }))}
+                      placeholder="Сумма в рублях"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="modal-btn-cancel" onClick={() => setShowEditModal(false)}>
+                Отмена
+              </button>
+              <button className="modal-btn-confirm" onClick={handleSaveEdit} disabled={editLoading}>
+                {editLoading ? 'Сохранение...' : 'Сохранить'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

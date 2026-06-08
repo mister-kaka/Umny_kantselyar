@@ -16,13 +16,29 @@ export class UpdateDocumentDto {
     documentTypeId?: number;
 
     @IsOptional()
+    @IsString()
+    documentTypeName?: string;
+
+    @IsOptional()
     @IsInt()
     @Type(() => Number)
     categoryId?: number;
 
     @IsOptional()
+    @IsString()
+    categoryName?: string;
+
+    @IsOptional()
     @IsDateString()
     receivedDate?: string;
+
+    @IsOptional()
+    @IsString()
+    sourceType?: string;
+
+    @IsOptional()
+    @IsString()
+    contactInfo?: string;
 
     @IsOptional()
     @IsNumber()

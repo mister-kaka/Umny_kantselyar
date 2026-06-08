@@ -10,6 +10,8 @@ import { DocumentClassification } from '../../entities/document-classification.e
 import { DocumentComment } from '../../entities/document-comment.entity';
 import { DocumentAiResult } from '../../entities/document-ai-result.entity';
 import { User } from '../../entities/user.entity';
+import { DocumentType } from '../../entities/document-type.entity';
+import { DocumentCategory } from '../../entities/document-category.entity';
 import { LoggerModule } from '../../logger/logger.module';
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { AuditLogModule } from '../../audit/audit-log.module';
@@ -26,6 +28,8 @@ import { AuditLogModule } from '../../audit/audit-log.module';
             DocumentComment,
             DocumentAiResult,
             User,
+            DocumentType,
+            DocumentCategory,
         ]),
         LoggerModule,
         NotificationsModule,

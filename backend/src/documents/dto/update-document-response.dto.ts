@@ -6,6 +6,8 @@ export class UpdateDocumentResponseDto {
     receivedDate!: Date | null;
     documentTypeId!: number | null;
     categoryId!: number | null;
+    sourceType?: string | null;
+    contactInfo?: string | null;
     extractedAmount!: number | null;
     extractedDate!: Date | null;
     extractedCounterparty!: string | null;

@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Document } from '../../entities/document.entity';
@@ -12,6 +12,8 @@ import { DocumentClassification } from '../../entities/document-classification.e
 import { DocumentComment } from '../../entities/document-comment.entity';
 import { DocumentAiResult } from '../../entities/document-ai-result.entity';
 import { User } from '../../entities/user.entity';
+import { DocumentType } from '../../entities/document-type.entity';
+import { DocumentCategory } from '../../entities/document-category.entity';
 import { DocumentCardDto } from '../dto/document-card.dto';
 import { UploadDocumentResponseDto } from '../dto/upload-document.dto';
 import { VerifyDocumentDto } from '../dto/verify-document.dto';
@@ -23,6 +25,7 @@ import { CommentResponseDto } from '../dto/comment-response.dto';
 import { AppLoggerService } from '../../logger/app-logger.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AuditLogService } from '../../audit/audit-log.service';
+import { transliterate } from '../../utils/transliterate';
 
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif'];
 
@@ -47,6 +50,10 @@ export class DocumentsCrudService {
         private documentAiResultRepository: Repository<DocumentAiResult>,
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        @InjectRepository(DocumentType)
+        private documentTypeRepository: Repository<DocumentType>,
+        @InjectRepository(DocumentCategory)
+        private documentCategoryRepository: Repository<DocumentCategory>,
         private readonly logger: AppLoggerService,
         private readonly notificationsService: NotificationsService,
         private readonly auditLogService: AuditLogService,
@@ -568,6 +575,7 @@ export class DocumentsCrudService {
         }
     }
 
+    // PUT /documents/:id - редактирование документа
     async updateDocument(
         id: number,
         userId: number,
@@ -585,6 +593,7 @@ export class DocumentsCrudService {
 
             const updatedFields: string[] = [];
 
+            // === Основные поля документа ===
             if (dto.title !== undefined && dto.title !== document.title) {
                 document.title = dto.title;
                 updatedFields.push('title');
@@ -593,21 +602,132 @@ export class DocumentsCrudService {
                 document.senderName = dto.senderName;
                 updatedFields.push('senderName');
             }
-            if (dto.documentTypeId !== undefined && dto.documentTypeId !== document.documentTypeId) {
-                document.documentTypeId = dto.documentTypeId;
-                updatedFields.push('documentTypeId');
-            }
-            if (dto.categoryId !== undefined && dto.categoryId !== document.categoryId) {
-                document.categoryId = dto.categoryId;
-                updatedFields.push('categoryId');
-            }
             if (dto.receivedDate !== undefined) {
                 document.receivedDate = new Date(dto.receivedDate);
                 updatedFields.push('receivedDate');
             }
 
+            // === Тип документа ===
+            if (dto.documentTypeName) {
+                let type = await this.documentTypeRepository.findOne({
+                    where: { name: ILike(dto.documentTypeName) }
+                });
+                if (!type) {
+                    type = this.documentTypeRepository.create({
+                        name: dto.documentTypeName,
+                        code: transliterate(dto.documentTypeName).toLowerCase().replace(/\s+/g, '_'),
+                    });
+                    await this.documentTypeRepository.save(type);
+                    await this.logger.log({
+                        module: 'Documents',
+                        type: 'PUT',
+                        url: `/documents/${id}`,
+                        action: 'создание нового типа документа',
+                        status: 'success',
+                        statusCode: 201,
+                        message: `Тип "${dto.documentTypeName}" создан (id: ${type.id})`,
+                    });
+                }
+                document.documentTypeId = type.id;
+                updatedFields.push('documentType');
+            } else if (dto.documentTypeId !== undefined && dto.documentTypeId !== document.documentTypeId) {
+                document.documentTypeId = dto.documentTypeId;
+                updatedFields.push('documentTypeId');
+            }
+
+            // === Категория ===
+            if (dto.categoryName) {
+                let category = await this.documentCategoryRepository.findOne({
+                    where: { name: ILike(dto.categoryName) }
+                });
+                if (!category) {
+                    category = this.documentCategoryRepository.create({
+                        name: dto.categoryName,
+                        code: transliterate(dto.categoryName).toLowerCase().replace(/\s+/g, '_'),
+                    });
+                    await this.documentCategoryRepository.save(category);
+                    await this.logger.log({
+                        module: 'Documents',
+                        type: 'PUT',
+                        url: `/documents/${id}`,
+                        action: 'создание новой категории документа',
+                        status: 'success',
+                        statusCode: 201,
+                        message: `Категория "${dto.categoryName}" создана (id: ${category.id})`,
+                    });
+                }
+                document.categoryId = category.id;
+                updatedFields.push('category');
+            } else if (dto.categoryId !== undefined && dto.categoryId !== document.categoryId) {
+                document.categoryId = dto.categoryId;
+                updatedFields.push('categoryId');
+            }
+
+            // Сохраняем основные поля документа
             await this.documentRepository.save(document);
 
+            // === Обновление классификации (document_classifications) ===
+            if (dto.documentTypeId !== undefined || dto.documentTypeName || 
+                dto.categoryId !== undefined || dto.categoryName) {
+                
+                let classification = await this.classificationRepository.findOne({
+                    where: { documentId: id },
+                    order: { createdAt: 'DESC' },
+                });
+
+                if (!classification) {
+                    classification = this.classificationRepository.create({
+                        documentId: id,
+                        isVerified: true,
+                    });
+                }
+
+                if (dto.documentTypeId !== undefined || dto.documentTypeName) {
+                    classification.typeId = document.documentTypeId;
+                    classification.typeConfidence = 1.0;
+                }
+                if (dto.categoryId !== undefined || dto.categoryName) {
+                    classification.categoryId = document.categoryId;
+                    classification.categoryConfidence = 1.0;
+                }
+                classification.isVerified = true;
+
+                await this.classificationRepository.save(classification);
+                updatedFields.push('classification');
+            }
+
+            // === Сохранение ИСТОЧНИКА (document_sources) ===
+            if (dto.sourceType !== undefined || dto.contactInfo !== undefined || dto.senderName !== undefined) {
+                let source = await this.documentSourceRepository.findOne({
+                    where: { documentId: id },
+                });
+
+                if (!source) {
+                    source = this.documentSourceRepository.create({
+                        documentId: id,
+                        sourceType: dto.sourceType || 'scan',
+                        senderName: dto.senderName || document.senderName || 'Загружен через сканирование',
+                        contactInfo: dto.contactInfo || null,
+                    });
+                } else {
+                    if (dto.sourceType !== undefined) {
+                        source.sourceType = dto.sourceType;
+                        updatedFields.push('sourceType');
+                    }
+                    if (dto.contactInfo !== undefined) {
+                        source.contactInfo = dto.contactInfo;
+                        updatedFields.push('contactInfo');
+                    }
+                    if (dto.senderName !== undefined) {
+                        source.senderName = dto.senderName;
+                        updatedFields.push('sourceSenderName');
+                    }
+                }
+
+                await this.documentSourceRepository.save(source);
+            }
+
+            // === AI-поля (сохраняем в document_ai_results) ===
             const hasAiFields = dto.extractedAmount !== undefined ||
                 dto.extractedDate !== undefined ||
                 dto.extractedCounterparty !== undefined ||
@@ -667,6 +787,7 @@ export class DocumentsCrudService {
                 await this.documentAiResultRepository.save(aiResult);
             }
 
+            // === Аудит ===
             if (updatedFields.length > 0) {
                 await this.auditLogService.log(
                     userId,
@@ -686,9 +807,14 @@ export class DocumentsCrudService {
                 message: `Документ ${document.registrationNumber} обновлён пользователем ${userId}`,
             });
 
+            // === Получаем обновлённые данные для ответа ===
             const updatedAiResult = await this.documentAiResultRepository.findOne({
                 where: { documentId: id },
                 order: { createdAt: 'DESC' },
+            });
+
+            const updatedSource = await this.documentSourceRepository.findOne({
+                where: { documentId: id },
             });
 
             return {
@@ -699,6 +825,10 @@ export class DocumentsCrudService {
                 receivedDate: document.receivedDate,
                 documentTypeId: document.documentTypeId,
                 categoryId: document.categoryId,
+                // === Поля источника ===
+                sourceType: updatedSource?.sourceType || null,
+                contactInfo: updatedSource?.contactInfo || null,
+                // === AI-поля ===
                 extractedAmount: updatedAiResult?.extractedAmount || null,
                 extractedDate: updatedAiResult?.extractedDate || null,
                 extractedCounterparty: updatedAiResult?.extractedCounterparty || null,
@@ -730,6 +860,7 @@ export class DocumentsCrudService {
         }
     }
 
+    // GET /documents/:id/comments - получение комментариев
     async getComments(documentId: number): Promise<CommentResponseDto[]> {
         try {
             const document = await this.documentRepository.findOne({
@@ -785,6 +916,7 @@ export class DocumentsCrudService {
         }
     }
 
+    // POST /documents/:id/comments - добавление комментария
     async addComment(
         documentId: number,
         userId: number,
@@ -870,6 +1002,7 @@ export class DocumentsCrudService {
         }
     }
 
+    // DELETE /documents/:id/comments/:commentId - удаление комментария
     async deleteComment(
         documentId: number,
         commentId: number,
