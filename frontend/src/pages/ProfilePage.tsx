@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getProfile, updateProfile, uploadAvatar, changePassword, logoutAll, getSessions, getLoginHistory } from '../services/api';
+import { getProfile, updateProfile, uploadAvatar, changePassword, logoutAll, getSessions, getLoginHistory, deleteSession } from '../services/api';
 import type { Profile, UpdateProfileData, ChangePasswordData, Session, LoginHistoryItem } from '../types';
 import Card from '../components/Card';
 import '../styles/ProfilePage.css';
@@ -223,13 +223,7 @@ const ProfilePage = () => {
         try {
             setLoggingOutSessionId(sessionId);
             setError('');
-            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/security/sessions/${sessionId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Content-Type': 'application/json',
-                },
-            });
+            await deleteSession(sessionId);
             setSessions(prev => prev.filter(s => s.id !== sessionId));
             setSuccessMessage('Сессия завершена');
         } catch (err: any) {
