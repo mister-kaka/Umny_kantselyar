@@ -445,6 +445,10 @@ export const getAuditLog = async (
   }
 };
 
+export const deleteSession = async (sessionId: number): Promise<void> => {
+    await api.delete(`/security/sessions/${sessionId}`);
+};
+
 //комментарии
 export const getComments = async (documentId: number): Promise<Comment[]> => {
   try {
