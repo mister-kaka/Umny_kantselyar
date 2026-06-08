@@ -275,7 +275,9 @@ export interface UpdateDocumentData {
   title?: string;
   senderName?: string;
   documentTypeId?: number;
+  documentTypeName?: string;
   categoryId?: number;
+  categoryName?: string;
   receivedDate?: string;
   extractedAmount?: number;
   extractedDate?: string;
