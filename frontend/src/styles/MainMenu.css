@@ -121,8 +121,8 @@
 
 .data-table th,
 .data-table td {
-  height: var(--table-row-height);
-  padding: 0 var(--spacing-element);
+  height: 52px !important;
+  padding: 12px 16px !important;
   border-bottom: 1px solid var(--table-border);
   text-align: left;
   vertical-align: middle;

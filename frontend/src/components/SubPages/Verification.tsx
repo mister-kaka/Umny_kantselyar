@@ -251,10 +251,8 @@ const Verification = () => {
             <tr>
               <th>Рег. номер</th>
               <th>Название</th>
-              <th>Отправитель</th>
               <th>Дата загрузки</th>
               <th>Тип (AI)</th>
-              <th>Категория (AI)</th>
               <th>Уверенность</th>
               <th>Статус</th>
               <th></th>
@@ -280,10 +278,8 @@ const Verification = () => {
                 <tr key={doc.id} onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
                   <td>{doc.registrationNumber}</td>
                   <td>{doc.title}</td>
-                  <td>{doc.senderName}</td>
                   <td>{new Date(doc.receivedDate).toLocaleDateString()}</td>
                   <td>{doc.aiDocumentType || doc.documentType || '-'}</td>
-                  <td>{doc.aiCategory || doc.category || '-'}</td>
                   <td>
                     <div className="confidence-cell">
                       <div className="confidence-bar">

@@ -78,6 +78,19 @@
   color: var(--color-status-loaded);
 }
 
+.verification-page .data-table td:nth-child(2) {
+  font-weight: 400 !important;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+
+.verification-table td:nth-child(2) {
+  max-width: 250px;
+  white-space: normal;
+  word-break: break-word;
+}
+
 /* Адаптив */
 @media (max-width: 768px) {
   .verification-header h2 {

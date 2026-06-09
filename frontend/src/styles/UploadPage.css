@@ -22,9 +22,10 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 4px;
+  margin-bottom: 1px;
   flex-wrap: wrap;
   gap: 12px;
+  padding: 4px 4px;
 }
 
 .upload-title {
@@ -32,6 +33,7 @@
   font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 0;
+  padding-top: 8px;
 }
 
 .upload-scan-btn--header {
@@ -60,6 +62,7 @@
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: 18px;
+  padding: 0px 4px;
 }
 
 .upload-area {

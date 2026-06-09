@@ -288,6 +288,29 @@
   cursor: not-allowed;
 }
 
+.data-table td:nth-child(2) {
+  white-space: nowrap;
+}
+
+ /* правим табличку */
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.data-table {
+  width: 100%;
+  min-width: auto;
+  table-layout: auto;
+}
+
+.data-table td:nth-child(3) {
+  white-space: normal;
+  word-break: break-word;
+  min-width: 120px;
+  max-width: 250px;
+}
+
 
 
 @media (max-width: 1024px) {
