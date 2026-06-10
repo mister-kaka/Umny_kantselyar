@@ -187,13 +187,19 @@ CREATE TABLE user_notification_settings (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     new_document BOOLEAN DEFAULT TRUE,
-    ai_complete BOOLEAN DEFAULT TRUE,
+    document_ready BOOLEAN DEFAULT TRUE,
     extract_error BOOLEAN DEFAULT TRUE,
     pending_verification BOOLEAN DEFAULT TRUE,
     routed_to_department BOOLEAN DEFAULT TRUE,
+    rejected BOOLEAN DEFAULT TRUE,
+    verified BOOLEAN DEFAULT TRUE,
     low_confidence BOOLEAN DEFAULT FALSE,
-    route_error BOOLEAN DEFAULT TRUE,
-    overdue_verification BOOLEAN DEFAULT FALSE,
+    password_changed BOOLEAN DEFAULT TRUE,
+    profile_updated BOOLEAN DEFAULT TRUE,
+    settings_changed BOOLEAN DEFAULT FALSE,
+    new_login BOOLEAN DEFAULT TRUE,
+    comment_added BOOLEAN DEFAULT TRUE,
+    document_deleted BOOLEAN DEFAULT FALSE,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -249,7 +255,7 @@ CREATE TABLE notifications (
     message TEXT,
     document_id INTEGER REFERENCES documents(id) ON DELETE SET NULL,
     is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_notification_type CHECK (type IN (
         'new_document',
         'document_ready',
@@ -262,7 +268,12 @@ CREATE TABLE notifications (
         'verified',
         'low_confidence',
         'route_error',
-        'overdue_verification'
+        'overdue_verification',
+        'password_changed',
+        'profile_updated',
+        'settings_changed',
+        'new_login',
+        'document_deleted'
     ))
 );
 
@@ -492,14 +503,14 @@ INSERT INTO document_classifications (document_id, type_id, category_id, type_co
 INSERT INTO ai_settings (provider_code, model_name, api_key, base_url, is_active) VALUES
 ('deepseek', 'deepseek/deepseek-chat', '4558000b00d96913b37183c820b702dc:9b3d3789052db89c280d580d7b3d4c4adfaa6a90ed8356b407e67883d9a60f595b0cf04b586cfea26a76a62a199180d888d54d4bb5bd21b7117223e4df593feaba108edbff83660b1078b8ed02253af8', 'https://openrouter.ai/api/v1', TRUE);
 
-INSERT INTO user_notification_settings (user_id, new_document, ai_complete, extract_error, pending_verification, routed_to_department, low_confidence, route_error, overdue_verification) VALUES
-(1, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
-(2, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, FALSE),
-(3, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE),
-(4, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE),
-(5, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
-(6, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE),
-(7, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
+INSERT INTO user_notification_settings (user_id, new_document, document_ready, extract_error, pending_verification, routed_to_department, rejected, verified, low_confidence, password_changed, profile_updated, settings_changed, new_login, comment_added, document_deleted) VALUES
+(1, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE),
+(2, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE),
+(3, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE),
+(4, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE),
+(5, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+(6, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE),
+(7, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
 
 INSERT INTO user_interface_settings (user_id, compact_view, show_confidence, default_page_limit, theme) VALUES
 (1, FALSE, TRUE, 20, 'light'),

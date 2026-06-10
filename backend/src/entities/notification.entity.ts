@@ -5,16 +5,18 @@ import { Document } from './document.entity';
 export type NotificationType = 
     | 'new_document'
     | 'document_ready'
-    | 'ai_complete'
     | 'extract_error'
     | 'pending_verification'
     | 'routed'
     | 'rejected'
-    | 'comment_added'
     | 'verified'
     | 'low_confidence'
-    | 'route_error'
-    | 'overdue_verification';
+    | 'password_changed'
+    | 'profile_updated'
+    | 'settings_changed'
+    | 'new_login'
+    | 'comment_added'
+    | 'document_deleted';
 
 @Entity('notifications')
 export class Notification {
@@ -42,7 +44,7 @@ export class Notification {
     @Column({ name: 'is_read', default: false })
     isRead!: boolean;
 
-    @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     createdAt!: Date;
 
     @ManyToOne(() => User)
