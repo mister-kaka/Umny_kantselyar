@@ -143,6 +143,14 @@
   background: var(--color-bg-page);
 }
 
+.calendarik {
+  color: var(--text-primary)
+}
+
+[data-theme="dark"] .calendarik::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 .paginationWrapper{
     display: flex;
     align-items: center;
