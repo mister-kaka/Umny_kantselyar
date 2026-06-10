@@ -111,7 +111,7 @@ const DocumentCardPage: React.FC = () => {
     const shouldOpenVerification = (location.state as any)?.openVerificationTab;
     if (shouldOpenVerification) {
       setActiveTab("verification");
-      navigate(location.pathname, { replace: true, state: {} });
+      navigate(location.pathname, { replace: true, state: { from } });
     }
   }, [location, navigate]);
 

@@ -56,8 +56,6 @@ const Verification = () => {
     setActiveFilter(prev => (prev === filterId ? null : filterId));
   };
 
-  const [takingId, setTakingId] = useState<number | null>(null);
-
   const hasActiveFilters = !!(filters.typeId || filters.categoryId);
 
   const handleRowClick = (id: number) => {
@@ -146,23 +144,14 @@ const Verification = () => {
     return Math.round(score * 100);
   };
 
-  const handleTakeToReview = async (docId: number, e: React.MouseEvent) => {
+  const handleTakeToReview = (docId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setTakingId(docId);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      navigate(`/dashboard/documents/${docId}`, { 
-        state: { 
-          openVerificationTab: true,
-          from: 'verification'
-        } 
-      });
-    } catch (err) {
-      console.error("Ошибка:", err);
-    } finally {
-      setTakingId(null);
-    }
+    navigate(`/dashboard/documents/${docId}`, { 
+      state: { 
+        openVerificationTab: true,
+        from: 'verification'
+      } 
+    });
   };
 
   return (
@@ -297,9 +286,8 @@ const Verification = () => {
                       <button
                         className="apply-button verification-take-btn"
                         onClick={(e) => handleTakeToReview(doc.id, e)}
-                        disabled={takingId === doc.id}
                       >
-                        {takingId === doc.id ? '...' : 'Взять в проверку'}
+                        Взять в проверку
                       </button>
                     )}
                     {doc.currentStatus === "in_review" && (
