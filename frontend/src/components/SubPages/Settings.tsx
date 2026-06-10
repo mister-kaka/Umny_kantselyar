@@ -5,10 +5,14 @@ import Card from "../Card";
 import DropdownButton from "../DropdownButton";
 import Table from "../Table";
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getAiProviders, getAiSettings, updateAiSettings, testAiConnection} from "../../services/api";
 import { AiProvider, AiSettings } from "../../types";
 
 const Settings = () => {
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+
   const [activeTab, setActiveTab] = useState<
     "provider" | "interface" | "notifications" | "security"
   >("provider");
@@ -73,6 +77,12 @@ const Settings = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (tabFromUrl === "notifications") {
+      setActiveTab("notifications");
+    }
+  }, [tabFromUrl]);
 
   useEffect(() => {
     if (!settingsStatus) return;
