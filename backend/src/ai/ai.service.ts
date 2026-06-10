@@ -120,7 +120,6 @@ export class AiService {
                 );
             }
 
-            // Мок-режим
             if (process.env.AI_MOCK_MODE === 'true') {
                 const mockResult = this.aiResultRepository.create({
                     documentId: documentId,
@@ -165,11 +164,21 @@ export class AiService {
                     { confidence: totalPercent, providerCode: 'mock', modelName: 'mock-model', isMock: true }
                 );
 
+                await this.notificationsService.upsertDocumentNotification(
+                    document.createdBy,
+                    document.id,
+                    'document_ready',
+                    'Документ обработан',
+                    `Документ «${document.title}» загружен, текст распознан, AI выполнил анализ.\nУверенность: ${totalPercent}%\nТип: Договор\nКатегория: Финансовые документы\nОтдел: Юридический отдел\nРег. номер: ${document.registrationNumber}`,
+                );
+
+                const pendingVerificationMessage = `Документ «${document.title}» ожидает проверки оператором.\n\nРег. номер: ${document.registrationNumber}\nТип: Договор\nКатегория: Финансовые документы\nУверенность AI: ${totalPercent}%`;
+
                 await this.notificationsService.createNotification(
                     document.createdBy,
-                    'document_ready',
-                    'Документ готов к проверке',
-                    `Документ «${document.title}» загружен и проанализирован AI. Уверенность: ${totalPercent}% (№${document.registrationNumber})`,
+                    'pending_verification',
+                    'Требуется проверка',
+                    pendingVerificationMessage,
                     document.id,
                 );
 
@@ -240,11 +249,40 @@ export class AiService {
                 }
             );
 
+            const messageParts: string[] = [];
+            messageParts.push(`Документ «${document.title}» загружен, текст распознан, AI выполнил анализ.`);
+            messageParts.push(`Уверенность: ${totalPercent}%`);
+            if (aiResponse.documentType) messageParts.push(`Тип: ${aiResponse.documentType}`);
+            if (aiResponse.category) messageParts.push(`Категория: ${aiResponse.category}`);
+            if (aiResponse.department) messageParts.push(`Отдел: ${aiResponse.department}`);
+            if (aiResponse.summary) messageParts.push(`Сводка: ${aiResponse.summary}`);
+            if (aiResponse.sender) messageParts.push(`Отправитель: ${aiResponse.sender}`);
+            messageParts.push(`Рег. номер: ${document.registrationNumber}`);
+
+            const message = messageParts.join('\n');
+
+            await this.notificationsService.upsertDocumentNotification(
+                document.createdBy,
+                document.id,
+                'document_ready',
+                'Документ обработан',
+                message,
+            );
+
+            const pendingParts: string[] = [];
+            pendingParts.push(`Документ «${document.title}» ожидает проверки оператором.`);
+            pendingParts.push(`Рег. номер: ${document.registrationNumber}`);
+            if (aiResponse.documentType) pendingParts.push(`Тип: ${aiResponse.documentType}`);
+            if (aiResponse.category) pendingParts.push(`Категория: ${aiResponse.category}`);
+            pendingParts.push(`Уверенность AI: ${totalPercent}%`);
+
+            const pendingMessage = pendingParts.join('\n');
+
             await this.notificationsService.createNotification(
                 document.createdBy,
-                'document_ready',
-                'Документ готов к проверке',
-                `Документ «${document.title}» загружен и проанализирован AI. Уверенность: ${totalPercent}% (№${document.registrationNumber})`,
+                'pending_verification',
+                'Требуется проверка',
+                pendingMessage,
                 document.id,
             );
 
@@ -252,8 +290,8 @@ export class AiService {
                 await this.notificationsService.createNotification(
                     document.createdBy,
                     'low_confidence',
-                    'Низкая уверенность',
-                    `Документ «${document.title}» распознан с низкой уверенностью (${totalPercent}%) (№${document.registrationNumber})`,
+                    'Низкая уверенность AI',
+                    `Документ «${document.title}» распознан с низкой уверенностью (${totalPercent}%). Требуется ручная проверка.\nРег. номер: ${document.registrationNumber}`,
                     document.id,
                 );
             }
@@ -281,6 +319,14 @@ export class AiService {
                         'ai_analysis_error',
                         documentId,
                         { error: error instanceof Error ? error.message : 'Ошибка сервера' }
+                    );
+
+                    await this.notificationsService.upsertDocumentNotification(
+                        document.createdBy,
+                        document.id,
+                        'document_ready',
+                        'Документ загружен (без AI)',
+                        `Документ «${document.title}» загружен, текст распознан.\nAI-анализ не выполнен — попробуйте позже.\nРег. номер: ${document.registrationNumber}`,
                     );
                 }
             } catch (auditError) {
@@ -507,6 +553,7 @@ export class AiService {
 Текст документа:
 ${documentText.substring(0, MAX_TEXT_LENGTH)}`;
     }
+
     private async callDeepSeek(
         prompt: string,
         settings: AiSetting,
