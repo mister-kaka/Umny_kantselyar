@@ -149,14 +149,13 @@
     gap: 1rem;
 }
 
-/* Активные кнопки пагинации (можно нажать) — прозрачные с голубым шрифтом */
+
 .paginationWrapper button:not(:disabled) {
   background: transparent !important;
   color: var(--color-accent) !important;
 
 }
 
-/* Неактивные кнопки пагинации (нельзя нажать) — серые, бледные */
 .paginationWrapper button:disabled {
   color: var(--text-tertiary) !important;
   opacity: 0.6;
@@ -275,6 +274,7 @@
   padding: 0 6px;
 }
 
+
 .mass-delete-btn {
   display: flex;
   align-items: center;
@@ -302,9 +302,6 @@
   cursor: not-allowed;
 }
 
-.data-table td:nth-child(2) {
-  white-space: nowrap;
-}
 
  /* правим табличку */
 .table-wrapper {

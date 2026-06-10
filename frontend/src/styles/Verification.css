@@ -78,18 +78,19 @@
   color: var(--color-status-loaded);
 }
 
-.verification-page .data-table td:nth-child(2) {
-  font-weight: 400 !important;
-  color: var(--text-secondary);
-  white-space: nowrap;
+
+/* правим табличку как в архиве */
+.verification-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
 }
 
-
-.verification-table td:nth-child(2) {
-  max-width: 250px;
-  white-space: normal;
-  word-break: break-word;
+.verification-table {
+  width: 100%;
+  min-width: auto;
+  table-layout: auto;
 }
+
 
 /* Адаптив */
 @media (max-width: 768px) {
@@ -113,13 +114,3 @@
   }
 }
 
-/* Фиксация таблицы */
-.verification-table {
-  table-layout: fixed;
-  width: 100%;
-}
-.verification-table td:nth-child(2) {
-  max-width: 150px;
-  word-break: break-word;
-  white-space: normal;
-}

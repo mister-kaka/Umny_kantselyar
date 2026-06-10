@@ -311,7 +311,7 @@ const Verification = () => {
                       <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>В работе</span>
                     )}
                     {doc.currentStatus === "verified" && (
-                      <span style={{ fontSize: "12px", color: "var(--color-status-loaded)" }}>✓ Проверено</span>
+                      <span style={{ fontSize: "12px", color: "var(--color-status-loaded)" }}>Проверено</span>
                     )}
                   </td>
                 </tr>
