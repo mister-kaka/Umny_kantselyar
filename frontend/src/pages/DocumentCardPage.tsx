@@ -789,7 +789,31 @@ const DocumentCardPage: React.FC = () => {
                     {data.source.contactInfo && (
                       <div className="info-row">
                         <span>Контакты</span>
-                        <strong>{data.source.contactInfo}</strong>
+                        <div className="source-contacts">
+                          {(() => {
+                            const text = data.source.contactInfo;
+                            // Ищем телефон и email
+                            const phoneMatch = text.match(/тел?:?\s*([\+\(]?\d[\d\s\-\(\)\+]+)/i);
+                            const emailMatch = text.match(/email:\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+                            
+                            // Адрес — всё, что до телефона или email
+                            let address = text;
+                            if (phoneMatch && phoneMatch.index !== undefined) {
+                              address = text.substring(0, phoneMatch.index).trim();
+                            } else if (emailMatch && emailMatch.index !== undefined) {
+                              address = text.substring(0, emailMatch.index).trim();
+                            }
+                            address = address.replace(/,\s*$/, '');
+                            
+                            return (
+                              <>
+                                {address && <div className="source-contact-line">{address}</div>}
+                                {phoneMatch && <div className="source-contact-line">{phoneMatch[0]}</div>}
+                                {emailMatch && <div className="source-contact-line">email: {emailMatch[1]}</div>}
+                              </>
+                            );
+                          })()}
+                        </div>
                       </div>
                     )}
                   </div>
