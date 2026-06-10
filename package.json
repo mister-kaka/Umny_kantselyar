@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "@nestjs/axios": "^4.0.1",
-    "axios": "^1.16.1",
-    "chart.js": "^4.5.1",
-    "react-chartjs-2": "^5.3.1"
-  }
-}
