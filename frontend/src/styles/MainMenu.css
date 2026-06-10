@@ -31,30 +31,66 @@
   line-height: 1;
 }
 
-.main-card {
-  overflow-wrap: break-word;
-  word-break: break-word;
-  transition: 0.15s;
-}
-
-.main-card:hover {
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
-  transition: 0.15s;
-}
-
-.main-card > * {
-  margin: 5px;
-}
-
-.Main-cards-container {
+/* карточки */
+.stats-cards-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
-.Main-cards-image {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+  border-top: 3px solid var(--color-accent);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  border-color: var(--color-accent);
+}
+
+.stat-card-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.stat-card-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.stat-card-content {
+  flex: 1;
+}
+
+.stat-card-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.stat-card-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .card-title {
