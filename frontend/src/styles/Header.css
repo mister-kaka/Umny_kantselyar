@@ -525,6 +525,7 @@
   background-color: rgba(232, 115, 115, 0.08);
 }
 
+/* Планшеты */
 @media (max-width: 1024px) {
   .header-notifications-badge {
     top: -3px;
@@ -535,8 +536,13 @@
     line-height: 16px;
     padding: 0 4px;
   }
+
+  .notifications-dropdown {
+    min-width: 300px;
+  }
 }
 
+/* Мобильные устройства */
 @media (max-width: 768px) {
   .header {
     left: 0 !important;
@@ -561,10 +567,10 @@
 
   .header-action-btn {
     display: flex;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     margin: 2px;
   }
 
@@ -583,28 +589,44 @@
     padding: 0 3px;
   }
 
+  /* Дропдаун уведомлений */
   .notifications-dropdown {
     right: -50px;
     min-width: 280px;
     max-width: 320px;
   }
 
+  .notifications-dropdown-item {
+    padding: 12px 16px;
+    min-height: 44px;
+  }
+
+  .notifications-dropdown-all-btn {
+    min-height: 44px;
+  }
+
+  /* Дропдаун профиля */
   .profile-dropdown-menu {
     right: -8px;
     min-width: 240px;
   }
+
+  .profile-dropdown-item {
+    min-height: 44px;
+  }
 }
 
+/* Маленькие телефоны (480px) */
 @media (max-width: 480px) {
   .header {
     padding: 0 8px;
   }
 
   .header-action-btn {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     margin: 1px;
   }
 
@@ -626,11 +648,30 @@
   .Search {
     margin-right: 4px;
   }
+  
+  .Search-input {
+    font-size: 16px; /* Предотвращает масштабирование */
+  }
 
   .notifications-dropdown {
     right: -40px;
     min-width: 260px;
     max-width: 300px;
+  }
+
+  .notifications-dropdown-header {
+    padding: 12px 14px;
+  }
+
+  .notifications-dropdown-item {
+    padding: 12px 14px;
+    min-height: 44px;
+  }
+
+  .notifications-dropdown-all-btn {
+    min-height: 44px;
+    font-size: 12px;
+    padding: 8px 20px;
   }
 
   .profile-dropdown-menu {
@@ -645,15 +686,17 @@
   .profile-dropdown-item {
     padding: 8px 12px;
     font-size: 13px;
+    min-height: 44px;
   }
 }
 
+/* Очень маленькие (375px) */
 @media (max-width: 375px) {
   .header-action-btn {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .header-action-btn .Casual-icon {
@@ -670,14 +713,21 @@
     line-height: 10px;
     padding: 0 2px;
   }
+
+  .notifications-dropdown {
+    right: -30px;
+    min-width: 240px;
+    max-width: 280px;
+  }
 }
 
+/* Экстремально маленькие (320px) */
 @media (max-width: 320px) {
   .header-action-btn {
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    min-height: 26px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .header-action-btn .Casual-icon {
@@ -685,13 +735,40 @@
     height: 16px;
   }
 
-  .header-notifications-badge {
-    top: -1px;
-    right: -2px;
-    min-width: 10px;
-    height: 10px;
-    font-size: 6px;
-    line-height: 10px;
-    padding: 0 2px;
+  .notifications-dropdown {
+    right: -20px;
+    min-width: 220px;
+    max-width: 260px;
+  }
+}
+
+/* Сенсорные устройства */
+@media (hover: none) and (pointer: coarse) {
+  .header-action-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+
+  .notifications-dropdown-item:active {
+    background-color: rgba(129, 216, 208, 0.1);
+    transform: scale(0.99);
+  }
+
+  .notifications-dropdown-all-btn:active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+
+  .profile-dropdown-item:active {
+    background-color: rgba(129, 216, 208, 0.1);
+    transform: scale(0.99);
+  }
+
+  .header-action-btn,
+  .notifications-dropdown-item,
+  .notifications-dropdown-all-btn,
+  .notifications-dropdown-mark-all-btn,
+  .profile-dropdown-item {
+    -webkit-tap-highlight-color: transparent;
   }
 }
