@@ -5,7 +5,6 @@
   --Filter-Hover: #f5f5f5;
 }
 
-/*      кнопки со списком       */
 .filtersButtsWrapper{
   display: flex;
   align-items: center;
@@ -60,6 +59,8 @@
   min-width: 160px;
   z-index: 10;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .dropdown-menu li {
@@ -121,7 +122,6 @@
   margin: 0;
 }
 
-/*    отдельные стили для кнопки даты    */
 .date-filter-dropdown {
   position: relative;
   display: inline-block;
@@ -143,8 +143,6 @@
   background: var(--color-bg-page);
 }
 
-/*      пагинация      */
-
 .paginationWrapper{
     display: flex;
     align-items: center;
@@ -159,6 +157,18 @@
   padding: 6px 12px;
   cursor: pointer;
   transition: all 0.2s ease;
+  height: var(--sidebarButtAndHeaderButt-height);
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.compact-view .apply-button {
+  height: 35px
 }
 
 .apply-button:hover {
@@ -177,11 +187,23 @@
   grid-template-columns: auto auto;
 }
 
-.apply-button-cuttin{
-  height: 35px;
+.apply-button-disabled{
+  background-color: transparent;
+  color: var(--color-accent-hover);
+  border: none;
+  border-radius: var(--radius-button);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: var(--sidebarButtAndHeaderButt-height);
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
 }
-
-/*    кнопка сброса фильтров   */
 
 .removeFiltersButt {
   display: flex;
@@ -195,6 +217,9 @@
   cursor: pointer;
   margin: 5px;
   transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .removeFiltersButt:hover {
@@ -202,12 +227,86 @@
   transition: all 0.2s ease;
 }
 
-.removeFiltersButt:disabled{
+.removeFiltersButt.disabled {
   background-color: transparent;
   color: var(--color-accent-hover);
+  cursor: default;
 }
 
-/* Адаптив */
+.file-queue-checkbox {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  margin: 0 auto;
+}
+
+.file-queue-checkbox input {
+  display: none;
+}
+
+.file-queue-checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.file-queue-checkbox input:checked + .file-queue-checkmark {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.file-queue-checkbox input:checked + .file-queue-checkmark::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -1px;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  width: 44px;
+  min-width: 44px;
+  text-align: center;
+  padding: 0 6px;
+}
+
+.mass-delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-status-rejected);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-button);
+  padding: 0px 16px;
+  height: var(--sidebarButtAndHeaderButt-height);
+  cursor: pointer;
+  margin: 5px;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mass-delete-btn:hover:not(:disabled) {
+  background-color: #d35f5f;
+}
+
+.mass-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
 
 @media (max-width: 1024px) {
   .filtersButtsWrapper {
@@ -239,6 +338,12 @@
   .data-table td {
     padding: 0 10px;
     font-size: 13px;
+  }
+
+  .data-table th:first-child,
+  .data-table td:first-child {
+    width: 40px;
+    min-width: 40px;
   }
 }
 
@@ -288,6 +393,18 @@
     padding: 0 8px;
     height: 40px;
     white-space: nowrap;
+  }
+
+  .data-table th:first-child,
+  .data-table td:first-child {
+    width: 36px;
+    min-width: 36px;
+    padding: 0 4px;
+  }
+
+  .file-queue-checkmark {
+    width: 16px;
+    height: 16px;
   }
 
   .paginationWrapper {
@@ -353,6 +470,14 @@
     color: var(--color-accent);
   }
 
+  .mass-delete-btn {
+    width: 100%;
+    justify-content: center;
+    height: 40px;
+    font-size: 12px;
+    order: 9;
+  }
+
   .dropdown-menu {
     left: 0;
     right: 0;
@@ -379,6 +504,18 @@
   .data-table td {
     padding: 0 4px;
     height: 36px;
+  }
+
+  .data-table th:first-child,
+  .data-table td:first-child {
+    width: 32px;
+    min-width: 32px;
+    padding: 0 2px;
+  }
+
+  .file-queue-checkmark {
+    width: 16px;
+    height: 16px;
   }
 
   .status-badge {
@@ -444,6 +581,17 @@
     height: 32px;
   }
 
+  .data-table th:first-child,
+  .data-table td:first-child {
+    width: 28px;
+    min-width: 28px;
+  }
+
+  .file-queue-checkmark {
+    width: 14px;
+    height: 14px;
+  }
+
   .status-badge {
     padding: 2px 6px;
     font-size: 9px;
@@ -480,6 +628,12 @@
   .data-table td {
     padding: 0 2px;
     height: 28px;
+  }
+
+  .data-table th:first-child,
+  .data-table td:first-child {
+    width: 24px;
+    min-width: 24px;
   }
 
   .status-badge {
