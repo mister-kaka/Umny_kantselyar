@@ -307,13 +307,19 @@ export interface ChangePasswordData {
 
 export interface NotificationSettings {
   newDocument: boolean;
-  aiComplete: boolean;
+  documentReady: boolean;
   extractError: boolean;
   pendingVerification: boolean;
   routedToDepartment: boolean;
+  rejected: boolean;
+  verified: boolean;
   lowConfidence: boolean;
-  routeError: boolean;
-  overdueVerification: boolean;
+  passwordChanged: boolean;
+  profileUpdated: boolean;
+  settingsChanged: boolean;
+  newLogin: boolean;
+  commentAdded: boolean;
+  documentDeleted: boolean;
 }
 
 export interface InterfaceSettings {
@@ -386,16 +392,18 @@ export interface ExportFilters {
 export type AppNotificationType = 
   | 'new_document'
   | 'document_ready'
-  | 'ai_complete'
   | 'extract_error'
   | 'pending_verification'
   | 'routed'
   | 'rejected'
-  | 'comment_added'
   | 'verified'
   | 'low_confidence'
-  | 'route_error'
-  | 'overdue_verification';
+  | 'password_changed'
+  | 'profile_updated'
+  | 'settings_changed'
+  | 'new_login'
+  | 'comment_added'
+  | 'document_deleted';
 
 export interface AppNotification {
   id: number;
@@ -410,13 +418,13 @@ export interface AppNotification {
 export interface UnreadCount {
   total: number;
   newDocument: number;
-  aiComplete: number;
+  documentReady: number;
   extractError: number;
   pendingVerification: number;
   routedToDepartment: number;
+  rejected: number;
+  verified: number;
   lowConfidence: number;
-  routeError: number;
-  overdueVerification: number;
 }
 
 export interface AnalyticsData {

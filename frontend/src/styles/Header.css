@@ -200,6 +200,199 @@
   height: 26px;
 }
 
+.header-notifications-wrapper {
+  position: relative;
+}
+
+.header-notifications-btn {
+  position: relative;
+}
+
+.header-notifications-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background-color: var(--color-status-rejected);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 9px;
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+  animation: badgePop 0.3s ease;
+}
+
+@keyframes badgePop {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.notifications-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 320px;
+  max-width: 380px;
+  z-index: 1000;
+  padding: 8px 0;
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+.notifications-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.notifications-dropdown-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notifications-dropdown-mark-all-btn {
+  background: none;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.notifications-dropdown-mark-all-btn:hover {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.notifications-dropdown-mark-all-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.notifications-dropdown-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-accent);
+  background-color: rgba(129, 216, 208, 0.12);
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.notifications-dropdown-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notifications-dropdown-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: 'Inter', sans-serif;
+  text-align: left;
+}
+
+.notifications-dropdown-item:hover {
+  background-color: rgba(129, 216, 208, 0.06);
+}
+
+.notifications-dropdown-item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.notifications-dropdown-item-type {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.notifications-dropdown-item-text {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notifications-dropdown-item-time {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.notifications-dropdown-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.notifications-dropdown-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.notifications-dropdown-footer {
+  padding: 8px 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.notifications-dropdown-all-btn {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-button);
+  padding: 8px 24px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.2s ease;
+}
+
+.notifications-dropdown-all-btn:hover {
+  background-color: var(--color-accent-hover);
+}
+
 .profile-menu-container {
   position: relative;
   display: inline-flex;
@@ -332,6 +525,24 @@
   background-color: rgba(232, 115, 115, 0.08);
 }
 
+/* Планшеты */
+@media (max-width: 1024px) {
+  .header-notifications-badge {
+    top: -3px;
+    right: -5px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 9px;
+    line-height: 16px;
+    padding: 0 4px;
+  }
+
+  .notifications-dropdown {
+    min-width: 300px;
+  }
+}
+
+/* Мобильные устройства */
 @media (max-width: 768px) {
   .header {
     left: 0 !important;
@@ -356,10 +567,10 @@
 
   .header-action-btn {
     display: flex;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     margin: 2px;
   }
 
@@ -368,22 +579,54 @@
     height: 22px;
   }
 
+  .header-notifications-badge {
+    top: -2px;
+    right: -4px;
+    min-width: 14px;
+    height: 14px;
+    font-size: 8px;
+    line-height: 14px;
+    padding: 0 3px;
+  }
+
+  /* Дропдаун уведомлений */
+  .notifications-dropdown {
+    right: -50px;
+    min-width: 280px;
+    max-width: 320px;
+  }
+
+  .notifications-dropdown-item {
+    padding: 12px 16px;
+    min-height: 44px;
+  }
+
+  .notifications-dropdown-all-btn {
+    min-height: 44px;
+  }
+
+  /* Дропдаун профиля */
   .profile-dropdown-menu {
     right: -8px;
     min-width: 240px;
   }
+
+  .profile-dropdown-item {
+    min-height: 44px;
+  }
 }
 
+/* Маленькие телефоны (480px) */
 @media (max-width: 480px) {
   .header {
     padding: 0 8px;
   }
 
   .header-action-btn {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     margin: 1px;
   }
 
@@ -392,8 +635,43 @@
     height: 20px;
   }
 
+  .header-notifications-badge {
+    top: -2px;
+    right: -3px;
+    min-width: 12px;
+    height: 12px;
+    font-size: 7px;
+    line-height: 12px;
+    padding: 0 2px;
+  }
+
   .Search {
     margin-right: 4px;
+  }
+  
+  .Search-input {
+    font-size: 16px; /* Предотвращает масштабирование */
+  }
+
+  .notifications-dropdown {
+    right: -40px;
+    min-width: 260px;
+    max-width: 300px;
+  }
+
+  .notifications-dropdown-header {
+    padding: 12px 14px;
+  }
+
+  .notifications-dropdown-item {
+    padding: 12px 14px;
+    min-height: 44px;
+  }
+
+  .notifications-dropdown-all-btn {
+    min-height: 44px;
+    font-size: 12px;
+    padding: 8px 20px;
   }
 
   .profile-dropdown-menu {
@@ -408,33 +686,89 @@
   .profile-dropdown-item {
     padding: 8px 12px;
     font-size: 13px;
+    min-height: 44px;
   }
 }
 
+/* Очень маленькие (375px) */
 @media (max-width: 375px) {
   .header-action-btn {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .header-action-btn .Casual-icon {
     width: 18px;
     height: 18px;
   }
+
+  .header-notifications-badge {
+    top: -1px;
+    right: -2px;
+    min-width: 10px;
+    height: 10px;
+    font-size: 6px;
+    line-height: 10px;
+    padding: 0 2px;
+  }
+
+  .notifications-dropdown {
+    right: -30px;
+    min-width: 240px;
+    max-width: 280px;
+  }
 }
 
+/* Экстремально маленькие (320px) */
 @media (max-width: 320px) {
   .header-action-btn {
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    min-height: 26px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .header-action-btn .Casual-icon {
     width: 16px;
     height: 16px;
+  }
+
+  .notifications-dropdown {
+    right: -20px;
+    min-width: 220px;
+    max-width: 260px;
+  }
+}
+
+/* Сенсорные устройства */
+@media (hover: none) and (pointer: coarse) {
+  .header-action-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+
+  .notifications-dropdown-item:active {
+    background-color: rgba(129, 216, 208, 0.1);
+    transform: scale(0.99);
+  }
+
+  .notifications-dropdown-all-btn:active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+
+  .profile-dropdown-item:active {
+    background-color: rgba(129, 216, 208, 0.1);
+    transform: scale(0.99);
+  }
+
+  .header-action-btn,
+  .notifications-dropdown-item,
+  .notifications-dropdown-all-btn,
+  .notifications-dropdown-mark-all-btn,
+  .profile-dropdown-item {
+    -webkit-tap-highlight-color: transparent;
   }
 }
