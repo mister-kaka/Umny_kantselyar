@@ -52,7 +52,7 @@
 
 .settings-form-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
 }
@@ -106,6 +106,7 @@
   word-break: keep-all;
   flex: 1;
   min-width: 150px;
+  max-width: 350px;
 }
 
 .settings-status.success {
@@ -404,7 +405,7 @@ input:checked + .slider:before {
 /* Большие экраны (1400px+) */
 @media (min-width: 1400px) {
   .settings-form {
-    max-width: 800px;
+    max-width: none;
   }
 
   .settings-form-row {
