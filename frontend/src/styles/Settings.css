@@ -97,16 +97,23 @@
 
 /* Статус-сообщения */
 .settings-status {
+  display: flex;
   padding: 8px 16px;
   border-radius: var(--radius-button, 8px);
   font-size: 13px;
   font-weight: 500;
   text-align: center;
+  align-items: center;
+  justify-content: center;
   white-space: normal;
   word-break: keep-all;
   flex: 1;
   min-width: 150px;
   max-width: 350px;
+}
+
+.compact-view .settings-status {
+  max-height: 35px;
 }
 
 .settings-status.success {
