@@ -6,12 +6,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from '../entities/user.entity';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { LoginHistory } from '../entities/login-history.entity';
+import { SecurityModule } from '../security/security.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { AuditLogModule } from '../audit/audit-log.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
-    PassportModule,
+    TypeOrmModule.forFeature([User, LoginHistory]),
     JwtModule.registerAsync({           
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -20,6 +23,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }),
       inject: [ConfigService],
     }),
+    SecurityModule,
+    AuditLogModule,
+    NotificationsModule,
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController]

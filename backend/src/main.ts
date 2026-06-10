@@ -4,6 +4,8 @@ import { AppModule } from './app.module';
 import * as express from 'express';
 
 async function bootstrap() {
+  process.env.TZ = 'Europe/Moscow';
+
   const app = await NestFactory.create(AppModule);
   app.enableCors(); 
 

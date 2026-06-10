@@ -3,20 +3,37 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
-import { Document } from '../entities/document.entity';
-import { DocumentAiResult } from '../entities/document-ai-result.entity';
 import { AiSetting } from '../entities/ai-setting.entity';
+import { DocumentAiResult } from '../entities/document-ai-result.entity';
+import { Document } from '../entities/document.entity';
+import { DocumentType } from '../entities/document-type.entity';
+import { DocumentCategory } from '../entities/document-category.entity';
+import { Department } from '../entities/department.entity';
+import { DocumentClassification } from '../entities/document-classification.entity';
+import { DocumentSource } from '../entities/document-source.entity';
+import { LoggerModule } from '../logger/logger.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { AuditLogModule } from '../audit/audit-log.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([
-            Document,
-            DocumentAiResult,
             AiSetting,
+            DocumentAiResult,
+            Document,
+            DocumentType,
+            DocumentCategory,
+            Department,
+            DocumentClassification,
+            DocumentSource,
         ]),
         HttpModule,
+        LoggerModule,
+        NotificationsModule,
+        AuditLogModule,
     ],
     controllers: [AiController],
     providers: [AiService],
+    exports: [AiService],
 })
 export class AiModule {}

@@ -94,6 +94,11 @@
   overflow: hidden;
 }
 
+.out-button{
+  outline: none;
+  border: none; 
+}
+
 .sidebar-footer.collapsed {
   width: 78px;
   transition: 0.2s ease;

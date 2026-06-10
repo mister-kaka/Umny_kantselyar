@@ -47,22 +47,26 @@ export class DocumentCardDto {
     registrationNumber!: string;
     title!: string;
     senderName!: string;
-    receivedDate!: Date;
+    receivedDate!: Date | null;
+    uploadedAt?: Date | null;
     currentStatus!: string;
     confidenceScore!: number | null;
-  
+
     documentType!: string | null;
     category!: string | null;
-  
+    
     createdBy!: string;
     createdAt!: Date;
+    currentDepartment?: string | null;
 
     files!: DocumentFileDto[];
     ocrResult!: OcrResultDto | null;
     classification!: DocumentClassificationDto | null;
     routes!: DocumentRouteDto[];
 
-     source!: DocumentSourceDto | null;
+    source!: DocumentSourceDto | null;
 
-     aiResult!: AiResultResponseDto | null;
+    aiResult!: AiResultResponseDto | null;
+
+    rejectedAt?: Date | null;
 }

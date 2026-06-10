@@ -1,0 +1,199 @@
+@import url("../styles/global.css");
+@import url("../styles/Dashboard.css");
+
+.confidence-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confidence-bar {
+  width: 60px;
+  height: 6px;
+  background-color: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.confidence-fill.high {
+  background-color: var(--color-status-loaded);
+}
+
+.confidence-fill.medium {
+  background-color: var(--color-status-low-confidence);
+}
+
+.confidence-fill.low {
+  background-color: var(--color-status-rejected);
+}
+
+.confidence-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 45px;
+}
+
+.verification-take-btn {
+  white-space: nowrap;
+}
+
+.verification-status-text {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.verification-status-done {
+  color: var(--color-status-loaded);
+}
+
+.table-status-cell {
+  text-align: center;
+  padding: 40px;
+}
+
+.table-error-cell {
+  text-align: center;
+  color: var(--color-status-rejected);
+  padding: 20px;
+}
+
+.table-empty-cell {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-tertiary);
+}
+
+/* Планшеты */
+@media (max-width: 1024px) {
+  .confidence-bar {
+    width: 50px;
+  }
+
+  .confidence-text {
+    font-size: 11px;
+    min-width: 40px;
+  }
+  
+  .verification-take-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Мобильные устройства */
+@media (max-width: 768px) {
+  .confidence-cell {
+    gap: 6px;
+  }
+
+  .confidence-bar {
+    width: 44px;
+    height: 5px;
+  }
+
+  .confidence-text {
+    font-size: 11px;
+    min-width: 38px;
+  }
+
+  .verification-take-btn {
+    padding: 10px 14px;
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  .verification-status-text {
+    font-size: 12px;
+    display: inline-block;
+    padding: 4px 0;
+  }
+  
+  .status-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .table-status-cell,
+  .table-error-cell,
+  .table-empty-cell {
+    padding: 30px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Маленькие телефоны (480px) */
+@media (max-width: 480px) {
+  .confidence-bar {
+    width: 36px;
+    height: 4px;
+  }
+
+  .confidence-text {
+    font-size: 10px;
+    min-width: 34px;
+  }
+
+  .verification-take-btn {
+    padding: 8px 12px;
+    min-height: 44px;
+    font-size: 12px;
+  }
+
+  .verification-status-text {
+    font-size: 11px;
+  }
+  
+  .status-badge {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+}
+
+/* Очень маленькие (375px) */
+@media (max-width: 375px) {
+  .confidence-bar {
+    width: 30px;
+    height: 4px;
+  }
+
+  .confidence-text {
+    font-size: 10px;
+    min-width: 30px;
+  }
+  
+  .verification-take-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Экстремально маленькие (320px) */
+@media (max-width: 320px) {
+  .confidence-bar {
+    width: 24px;
+    height: 3px;
+  }
+
+  .confidence-text {
+    font-size: 9px;
+    min-width: 28px;
+  }
+}
+
+/* Сенсорные устройства */
+@media (hover: none) and (pointer: coarse) {
+  .verification-take-btn:active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+  
+  .verification-take-btn {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

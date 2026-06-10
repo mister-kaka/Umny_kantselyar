@@ -8,10 +8,10 @@ import { DashboardResponseDto } from './dto/dashboard.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
 
 interface DepartmentRouteRaw {
-  departmentId: string;
-  departmentName: string;
-  routeStatus: string;
-  count: string;
+    departmentId: string;
+    departmentName: string;
+    routeStatus: string;
+    count: string;
 }
 
 @Injectable()
@@ -45,12 +45,14 @@ export class DashboardService {
                 totalDocuments,
                 inProgress,
                 pendingCheck,
+                routedCount,
                 recentDocumentsRaw,
                 departmentRouteStatusesRaw
             ] = await Promise.all([
                 this.getTotalDocuments(),
                 this.getInProgressCount(),
                 this.getPendingCheckCount(),
+                this.getRoutedCount(),
                 this.getRecentDocuments(),
                 this.getDepartmentRouteStatuses()
             ]);
@@ -71,6 +73,7 @@ export class DashboardService {
                 title: doc.title,
                 status: doc.currentStatus,
                 date: doc.receivedDate,
+                uploadedAt: doc.uploadedAt,
             }));
 
             const departmentRouteStatuses = departmentRouteStatusesRaw.map(item => ({
@@ -84,6 +87,7 @@ export class DashboardService {
                 totalDocuments,
                 inProgress,
                 pendingCheck,
+                routedCount,
                 recentDocuments,
                 departmentRouteStatuses,
             };
@@ -121,16 +125,22 @@ export class DashboardService {
 
     private async getPendingCheckCount(): Promise<number> {
         return this.documentRepository.count({
-            where: { currentStatus: 'pending' },
+            where: { currentStatus: 'pending_verification' },
         });
     }
 
-    private async getRecentDocuments(): Promise<Pick<Document, 'id' | 'registrationNumber' | 'title' | 'currentStatus' | 'receivedDate'>[]> {
+    private async getRoutedCount(): Promise<number> {
+        return this.documentRepository.count({
+            where: { currentStatus: 'routed' },
+        });
+    }
+
+    private async getRecentDocuments(): Promise<Pick<Document, 'id' | 'registrationNumber' | 'title' | 'currentStatus' | 'receivedDate' | 'uploadedAt'>[]> {
         return this.documentRepository.find({
-            order: { receivedDate: 'DESC', id: 'DESC' },
+            order: { uploadedAt: 'DESC', id: 'DESC' },
             take: 5,
-            select: ['id', 'registrationNumber', 'title', 'currentStatus', 'receivedDate'],
-        }) as Promise<Pick<Document, 'id' | 'registrationNumber' | 'title' | 'currentStatus' | 'receivedDate'>[]>;
+            select: ['id', 'registrationNumber', 'title', 'currentStatus', 'receivedDate', 'uploadedAt'],
+        }) as Promise<Pick<Document, 'id' | 'registrationNumber' | 'title' | 'currentStatus' | 'receivedDate' | 'uploadedAt'>[]>;
     }
 
     private async getDepartmentRouteStatuses(): Promise<DepartmentRouteRaw[]> {

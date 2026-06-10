@@ -2,6 +2,22 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 't
 import { User } from './user.entity';
 import { Document } from './document.entity';
 
+export type NotificationType = 
+    | 'new_document'
+    | 'document_ready'
+    | 'extract_error'
+    | 'pending_verification'
+    | 'routed'
+    | 'rejected'
+    | 'verified'
+    | 'low_confidence'
+    | 'password_changed'
+    | 'profile_updated'
+    | 'settings_changed'
+    | 'new_login'
+    | 'comment_added'
+    | 'document_deleted';
+
 @Entity('notifications')
 export class Notification {
     @PrimaryGeneratedColumn()
@@ -10,8 +26,11 @@ export class Notification {
     @Column({ name: 'user_id' })
     userId!: number;
 
-    @Column({ length: 50 })
-    type!: string;
+    @Column({ 
+        type: 'varchar', 
+        length: 50 
+    })
+    type!: NotificationType;
 
     @Column({ length: 255 })
     title!: string;
@@ -25,7 +44,7 @@ export class Notification {
     @Column({ name: 'is_read', default: false })
     isRead!: boolean;
 
-    @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     createdAt!: Date;
 
     @ManyToOne(() => User)

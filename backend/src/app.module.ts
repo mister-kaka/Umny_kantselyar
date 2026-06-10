@@ -25,6 +25,7 @@ import { RouteTemplate } from './entities/route-template.entity';
 import { DocumentComment } from './entities/document-comment.entity';
 import { AuditLog } from './entities/audit-log.entity';
 import { Notification } from './entities/notification.entity';
+import { UserSession } from './entities/user-session.entity';
 
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
@@ -33,6 +34,9 @@ import { DepartmentsModule } from './departments/departments.module';
 import { DocumentTypesModule } from './document-types/document-types.module';
 import { DocumentCategoriesModule } from './document-categories/document-categories.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { SecurityModule } from './security/security.module';
+import { AuditLogModule } from './audit/audit-log.module';
 
 import { AiModule } from './ai/ai.module';
 import { SettingsModule } from './settings/settings.module';
@@ -79,10 +83,12 @@ import { memoryStorage } from 'multer';
           DocumentComment,
           AuditLog,
           Notification,
+          UserSession,
         ],
         synchronize: false, 
         logging: ['error'],  
         timezone: 'Europe/Moscow',
+        dateStrings: true,
       }),
       inject: [ConfigService],
     }),
@@ -103,6 +109,9 @@ import { memoryStorage } from 'multer';
     SettingsModule,
     AiModule,
     NotificationsModule,
+    AnalyticsModule,
+    SecurityModule,
+    AuditLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
