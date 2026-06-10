@@ -11,7 +11,7 @@ export class NotificationSettingsResponseDto {
     newDocument!: boolean;
 
     @Expose()
-    aiComplete!: boolean;
+    documentReady!: boolean;
 
     @Expose()
     extractError!: boolean;
@@ -23,13 +23,31 @@ export class NotificationSettingsResponseDto {
     routedToDepartment!: boolean;
 
     @Expose()
+    rejected!: boolean;
+
+    @Expose()
+    verified!: boolean;
+
+    @Expose()
     lowConfidence!: boolean;
 
     @Expose()
-    routeError!: boolean;
+    passwordChanged!: boolean;
 
     @Expose()
-    overdueVerification!: boolean;
+    profileUpdated!: boolean;
+
+    @Expose()
+    settingsChanged!: boolean;
+
+    @Expose()
+    newLogin!: boolean;
+
+    @Expose()
+    commentAdded!: boolean;
+
+    @Expose()
+    documentDeleted!: boolean;
 
     @Expose()
     updatedAt!: Date;

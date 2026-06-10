@@ -88,6 +88,7 @@ import { memoryStorage } from 'multer';
         synchronize: false, 
         logging: ['error'],  
         timezone: 'Europe/Moscow',
+        dateStrings: true,
       }),
       inject: [ConfigService],
     }),

@@ -84,6 +84,7 @@ interface DateFilterDropdownProps {
   icon?: React.ReactNode;
   isOpen: boolean;
   onToggle: () => void;
+  selectedLabel?: string;
 }
 
 export const DateFilterDropdown: React.FC<DateFilterDropdownProps> = ({
@@ -92,6 +93,7 @@ export const DateFilterDropdown: React.FC<DateFilterDropdownProps> = ({
   icon,
   isOpen,
   onToggle,
+  selectedLabel,
 }) => {
   const [activePreset, setActivePreset] = useState<Preset | null>(null);
   const [customFrom, setCustomFrom] = useState('');
@@ -174,6 +176,7 @@ export const DateFilterDropdown: React.FC<DateFilterDropdownProps> = ({
   }, [isOpen, onToggle]);
 
   const getCurrentLabel = () => {
+    if (selectedLabel) return selectedLabel;
     if (!activePreset) return defaultLabel;
     if (activePreset === 'custom') return 'Диапазон';
     return presets[activePreset].label;

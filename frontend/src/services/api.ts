@@ -445,6 +445,10 @@ export const getAuditLog = async (
   }
 };
 
+export const deleteSession = async (sessionId: number): Promise<void> => {
+    await api.delete(`/security/sessions/${sessionId}`);
+};
+
 //комментарии
 export const getComments = async (documentId: number): Promise<Comment[]> => {
   try {
@@ -477,8 +481,16 @@ export const deleteComment = async (documentId: number, commentId: number): Prom
 };
 
 //уведомления
-export const getNotifications = async (page?: number, limit?: number): Promise<{ items: AppNotification[]; total: number; page: number; limit: number; totalPages: number }> => {
-    const params = page !== undefined ? { page, limit: limit || 20 } : {};
+export const getNotifications = async (page?: number, limit?: number, extraParams?: any): Promise<{ items: AppNotification[]; total: number; page: number; limit: number; totalPages: number }> => {
+    const params: any = {};
+    if (page !== undefined) params.page = page;
+    if (limit !== undefined) params.limit = limit;
+    if (extraParams) {
+        if (extraParams.type) params.type = extraParams.type;
+        if (extraParams.isRead) params.isRead = extraParams.isRead;
+        if (extraParams.dateFrom) params.dateFrom = extraParams.dateFrom;
+        if (extraParams.dateTo) params.dateTo = extraParams.dateTo;
+    }
     const response = await api.get('/notifications', { params });
     return response.data;
 };

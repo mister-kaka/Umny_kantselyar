@@ -10,6 +10,7 @@ import { LoginHistory } from '../entities/login-history.entity';
 import { SecurityModule } from '../security/security.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuditLogModule } from '../audit/audit-log.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuditLogModule } from '../audit/audit-log.module';
     }),
     SecurityModule,
     AuditLogModule,
+    NotificationsModule,
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController]

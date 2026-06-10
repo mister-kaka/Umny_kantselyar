@@ -14,6 +14,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
 import { SecurityService } from '../security/security.service';
 import { AuditLogService } from '../audit/audit-log.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +27,7 @@ export class AuthService {
     private readonly logger: AppLoggerService,
     private readonly securityService: SecurityService,
     private readonly auditLogService: AuditLogService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async login(req: any, loginDto: LoginDto) {
@@ -85,6 +87,18 @@ export class AuthService {
       null,
       { ipAddress, userAgent, email: user.email }
     );
+
+    try {
+      const now = new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+      await this.notificationsService.createNotification(
+        user.id,
+        'new_login',
+        'Новый вход в систему',
+        `Выполнен вход в учётную запись.\n\nВремя: ${now}\nIP: ${ipAddress || 'неизвестно'}\nУстройство: ${userAgent || 'неизвестно'}\nЕсли это были не вы - обратитесь к администратору.`,
+      );
+    } catch (notifError) {
+      console.error('Ошибка создания уведомления о входе:', notifError);
+    }
 
     return { access_token: token };
   }
@@ -180,6 +194,24 @@ export class AuthService {
           null,
           changes
         );
+
+        try {
+          const now = new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+          const profileParts: string[] = [];
+          profileParts.push('Данные профиля были изменены.');
+          if (changes.newFullName) profileParts.push(`Новое ФИО: ${changes.newFullName}`);
+          if (changes.newEmail) profileParts.push(`Новый email: ${changes.newEmail}`);
+          profileParts.push(`Время: ${now}`);
+
+          await this.notificationsService.createNotification(
+            userId,
+            'profile_updated',
+            'Профиль обновлён',
+            profileParts.join('\n'),
+          );
+        } catch (notifError) {
+          console.error('Ошибка создания уведомления о профиле:', notifError);
+        }
       }
 
       await this.logger.log({
@@ -256,6 +288,18 @@ export class AuthService {
         null,
         { message: 'Пароль успешно изменён' }
       );
+
+      try {
+        const now = new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+        await this.notificationsService.createNotification(
+          userId,
+          'password_changed',
+          'Пароль изменён',
+          `Пароль учётной записи был изменён.\n\nВремя: ${now}\nЕсли это были не вы - немедленно обратитесь к администратору.`,
+        );
+      } catch (notifError) {
+        console.error('Ошибка создания уведомления о смене пароля:', notifError);
+      }
 
       await this.logger.log({
         module: 'Auth',
