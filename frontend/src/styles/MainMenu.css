@@ -53,12 +53,6 @@
   border-top: 3px solid var(--color-accent);
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-  border-color: var(--color-accent);
-}
-
 .stat-card-icon-wrap {
   display: flex;
   align-items: center;
@@ -72,10 +66,6 @@
   width: 44px !important;
   height: 44px !important;
   object-fit: contain;
-}
-
-.stat-card-content {
-  flex: 1;
 }
 
 .stat-card-value {
