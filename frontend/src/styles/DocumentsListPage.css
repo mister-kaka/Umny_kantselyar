@@ -189,7 +189,7 @@
 }
 
 .compact-view .apply-button {
-  height: 35px
+  height: 35px;
 }
 
 .apply-button:hover {
@@ -208,22 +208,8 @@
   grid-template-columns: auto auto;
 }
 
-.apply-button-disabled{
-  background-color: transparent;
-  color: var(--color-accent-hover);
-  border: none;
-  border-radius: var(--radius-button);
-  padding: 6px 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  height: var(--sidebarButtAndHeaderButt-height);
-  padding: 0 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+.apply-button-cuttin{
+  height: 35px;
 }
 
 .removeFiltersButt {
@@ -300,6 +286,7 @@
   padding: 0 6px;
 }
 
+
 .mass-delete-btn {
   display: flex;
   align-items: center;
@@ -325,6 +312,26 @@
 .mass-delete-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+
+ /* правим табличку */
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.data-table {
+  width: 100%;
+  min-width: auto;
+  table-layout: auto;
+}
+
+.data-table td:nth-child(3) {
+  white-space: normal;
+  word-break: break-word;
+  min-width: 120px;
+  max-width: 250px;
 }
 
 
