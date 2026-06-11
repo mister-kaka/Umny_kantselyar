@@ -1,9 +1,9 @@
 import "../../styles/global.css";
 import "../../styles/UploadPage.css";
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Card from "../Card";
-import { uploadDocument, extractText, analyzeDocument } from "../../services/api";
+import { uploadDocument, extractText, analyzeDocument, deleteDocument } from "../../services/api";
 import * as mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import type { FileItem, UploadStep } from "../../types";
@@ -83,8 +83,41 @@ const UploadPage: React.FC<UploadPageProps> = ({
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [dragItemId, setDragItemId] = useState<string | null>(null);
+  const [scanHover, setScanHover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cancelRef = useRef(false);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const savedScan = localStorage.getItem("pending_scan");
+    if (savedScan) {
+      try {
+        const scanData = JSON.parse(savedScan);
+
+        const base64Data = scanData.fileData.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "image/jpeg" });
+        const file = new File([blob], scanData.fileName, { type: "image/jpeg" });
+
+        const newFileItem: FileItem = {
+          id: generateFileId(),
+          file: file,
+          status: "waiting" as const,
+          selected: true,
+        };
+
+        setFiles(prev => [newFileItem, ...prev]);
+        localStorage.removeItem("pending_scan");
+      } catch (e) {
+        console.error("Ошибка восстановления файла из localStorage:", e);
+      }
+    }
+  }, [location.pathname, setFiles]);
 
   const validateFile = (f: File): string | null => {
     if (!f.type || !ALLOWED_MIME.includes(f.type)) return "Неподдерживаемый формат";
@@ -146,8 +179,21 @@ const UploadPage: React.FC<UploadPageProps> = ({
     setFiles(prev => prev.map(f => (f.status === "waiting" || f.status === "cancelled") ? { ...f, selected: !allSelected } : f));
   };
 
-  const removeFile = (fileId: string) => {
+  const removeFile = async (fileId: string) => {
+    const file = files.find(f => f.id === fileId);
+    if (file?.documentId) {
+      try { await deleteDocument(file.documentId); } catch {}
+    }
     setFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+
+  const cancelFile = async (fileId: string) => {
+    const file = files.find(f => f.id === fileId);
+    if (file?.documentId) {
+      try { await deleteDocument(file.documentId); } catch {}
+    }
+    setFiles(prev => prev.filter(f => f.id !== fileId));
+    setTotalToProcess(prev => Math.max(0, prev - 1));
   };
 
   const removeProcessed = () => {
@@ -187,31 +233,42 @@ const UploadPage: React.FC<UploadPageProps> = ({
   };
 
   const processFile = async (fileItem: FileItem) => {
-    if (cancelRef.current) return;
+    let documentId: number | null = null;
+    let hasError = false;
     try {
-      setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: "extracting" } : f));
+      setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: "uploading" } : f));
       const uploadResponse = await uploadDocument(fileItem.file);
-      if (cancelRef.current) return;
-      setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: "analyzing", documentId: uploadResponse.id } : f));
-      await extractText(uploadResponse.id);
-      if (cancelRef.current) return;
-      await analyzeDocument(uploadResponse.id);
-      if (cancelRef.current) return;
+      documentId = uploadResponse.id;
+
+      setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: "extracting", documentId: documentId ?? undefined } : f));
+      await extractText(documentId);
+
+      setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: "analyzing" } : f));
+      await analyzeDocument(documentId);
+
       setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: "done" } : f));
     } catch (error: unknown) {
+      hasError = true;
       const err = error as { response?: { data?: { message?: string } } };
+      if (documentId && fileItem.status === "uploading") {
+        try { await deleteDocument(documentId); } catch {}
+      }
       setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: "error", errorMessage: err.response?.data?.message || "Ошибка обработки" } : f));
     }
-    setProcessedCount(prev => prev + 1);
+    if (!hasError) {
+      setProcessedCount(prev => prev + 1);
+    }
   };
 
   const handleUpload = async () => {
+    setFiles(prev => prev.filter(f => f.status !== "done" && f.status !== "error" && f.status !== "cancelled"));
+
     const selectedFiles = files.filter(f => f.selected && (f.status === "waiting" || f.status === "cancelled"));
     if (selectedFiles.length === 0) return;
-    cancelRef.current = false;
     setIsProcessing(true);
     setProcessedCount(0);
     setTotalToProcess(selectedFiles.length);
+    setStep("processing");
     setErrorMessage("");
 
     setFiles(prev => {
@@ -225,14 +282,18 @@ const UploadPage: React.FC<UploadPageProps> = ({
     });
 
     for (const fileItem of selectedFiles) {
-      if (cancelRef.current) break;
       await processFile(fileItem);
     }
     setIsProcessing(false);
 
-    setFiles(prev => prev.map(f => f.status === "cancelled" ? { ...f, status: "waiting" } : f));
+    setFiles(prev => {
+      const doneCount = prev.filter(f => f.status === "done").length;
+      setProcessedCount(doneCount);
+      return prev.map(f => f.status === "cancelled" ? { ...f, status: "waiting" } : f);
+    });
 
-    const hasErrors = files.some(f => f.status === "error");
+    const currentFiles = files;
+    const hasErrors = currentFiles.some(f => f.status === "error");
     setStep(hasErrors ? "error" : "success");
   };
 
@@ -241,10 +302,18 @@ const UploadPage: React.FC<UploadPageProps> = ({
       const fileItem = files.find(f => f.id === fileId);
       if (fileItem) {
         setFiles(prev => prev.map(f => f.id === fileId ? { ...f, status: "waiting", selected: true, errorMessage: undefined } : f));
-        processFile({ ...fileItem, status: "waiting", selected: true });
+        setStep("processing");
+        setIsProcessing(true);
+        setProcessedCount(0);
+        setTotalToProcess(1);
+        processFile({ ...fileItem, status: "waiting", selected: true, documentId: undefined }).then(() => {
+          setIsProcessing(false);
+          setStep("success");
+        });
       }
     } else {
-      files.filter(f => f.status === "error").forEach(f => {
+      const errorFiles = files.filter(f => f.status === "error");
+      errorFiles.forEach(f => {
         setFiles(prev => prev.map(p => p.id === f.id ? { ...p, status: "waiting", selected: true, errorMessage: undefined } : p));
       });
       handleUpload();
@@ -258,7 +327,6 @@ const UploadPage: React.FC<UploadPageProps> = ({
     setProcessedCount(0);
     setTotalToProcess(0);
     setIsProcessing(false);
-    cancelRef.current = false;
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -309,7 +377,6 @@ const UploadPage: React.FC<UploadPageProps> = ({
   };
 
   const getStatusText = (): string => {
-    if (step === "processing") return `Обработано ${processedCount} из ${totalToProcess}`;
     if (step === "success") return `Обработано ${processedCount} документов`;
     if (step === "error") return errorMessage || "Произошла ошибка";
     return "";
@@ -380,7 +447,25 @@ const UploadPage: React.FC<UploadPageProps> = ({
     <div className="upload-page">
       <div className="upload-main-col">
         <Card className="upload-card">
-          <h1 className="upload-title">Загрузка документов</h1>
+          <div className="upload-header">
+            <h1 className="upload-title">Загрузка документов</h1>
+            {canAddMore && !isProcessing && (
+              <button
+                className="upload-scan-btn upload-scan-btn--header"
+                onClick={() => navigate('/dashboard/scan')}
+                title="Сканировать документ с камеры"
+                onMouseEnter={() => setScanHover(true)}
+                onMouseLeave={() => setScanHover(false)}
+              >
+                <img 
+                  src={scanHover ? "/icons/upload/Scan_active.png" : "/icons/upload/Scan.png"} 
+                  className="Casual-icon" 
+                  alt="Сканировать" 
+                />
+                Сканировать
+              </button>
+            )}
+          </div>
           <p className="upload-subtitle">Можно загрузить до {MAX_FILES} файлов одновременно</p>
 
           {canAddMore && !isProcessing && (
@@ -392,11 +477,6 @@ const UploadPage: React.FC<UploadPageProps> = ({
               <div className="upload-icon-wrap"><img src="/icons/upload/UploadIcon.png" className="upload-icon-img" alt="" /></div>
               <p className="upload-text">Перетащите файлы в эту область</p>
               <p className="upload-hint">PDF, DOCX, TXT, XLSX, JPG, PNG, TIFF - до {MAX_SIZE_MB} МБ каждый</p>
-              <div className="upload-actions-row">
-                <button className="upload-scan-btn" onClick={(e) => { e.stopPropagation(); navigate('/dashboard/scan'); }}>
-                  Сканировать
-                </button>
-              </div>
             </div>
           )}
 
@@ -473,6 +553,11 @@ const UploadPage: React.FC<UploadPageProps> = ({
                           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7a6 6 0 0111.47-2.5M13 7a6 6 0 01-11.47 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><path d="M11 2.5V5H8.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         </button>
                       )}
+                      {isProcessing && ["uploading", "extracting", "analyzing"].includes(item.status) && (
+                        <button className="file-queue-remove-btn" onClick={() => cancelFile(item.id)} title="Удалить">
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                        </button>
+                      )}
                       {!isProcessing && (item.status === "waiting" || item.status === "error" || item.status === "cancelled") && (
                         <button className="file-queue-remove-btn" onClick={() => removeFile(item.id)} title="Удалить">
                           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
@@ -518,10 +603,9 @@ const UploadPage: React.FC<UploadPageProps> = ({
             </>
           )}
 
-          {(step === "processing" || step === "success" || step === "error") && (
+          {(step === "success" || step === "error") && (
             <div className={`status-container ${getStatusClass()}`}>
               <span className="status-text">{getStatusText()}</span>
-              {isProcessing && <div className="loader" />}
             </div>
           )}
 
@@ -562,6 +646,7 @@ const UploadPage: React.FC<UploadPageProps> = ({
           <div className="sidebar-ai-row"><span className="sidebar-ai-label">Категория</span><span className="sidebar-ai-desc">Тематика документа (Финансы, Кадры, Логистика, Закупки и тд.)</span></div>
           <div className="sidebar-ai-row"><span className="sidebar-ai-label">Краткая сводка</span><span className="sidebar-ai-desc">Суть документа в нескольких предложениях</span></div>
           <div className="sidebar-ai-row"><span className="sidebar-ai-label">Рекомендуемый отдел</span><span className="sidebar-ai-desc">Отдел для направления документа (Бухгалтерия, Юридический, HR и тд.)</span></div>
+          <div className="sidebar-ai-row"><span className="sidebar-ai-label">Расширенный анализ</span><span className="sidebar-ai-desc">Дата документа, сумма, источник и ключевые фразы</span></div>
           <div className="sidebar-ai-row"><span className="sidebar-ai-label">Уверенность</span><span className="sidebar-ai-desc">Насколько модель уверена в результатах анализа (0-100%)</span></div>
         </Card>
       </aside>

@@ -11,10 +11,14 @@ import { DocumentType } from '../entities/document-type.entity';
 import { DocumentCategory } from '../entities/document-category.entity';
 import { Department } from '../entities/department.entity';
 import { DocumentClassification } from '../entities/document-classification.entity';
+import { DocumentSource } from '../entities/document-source.entity';
 import { AppLoggerService } from '../logger/app-logger.service';
 import { AnalyzeAiResponseDto } from './dto/analyze-ai.dto';
 import { AiResultResponseDto } from './dto/ai-result.dto';
 import { decrypt } from './ai-key.util';
+import { transliterate } from '../utils/transliterate';
+import { NotificationsService } from '../notifications/notifications.service';
+import { AuditLogService } from '../audit/audit-log.service';
 
 const MAX_TEXT_LENGTH = 3000;
 const AI_TIMEOUT = 30000;
@@ -40,6 +44,10 @@ interface ParsedAiResponse {
     amount: number | null;
     counterparty: string | null;
     keyPhrases: string[] | null;
+    sourceType: string | null;
+    sourceOrganizationName: string | null;
+    sourceSenderName: string | null;
+    sourceContactInfo: string | null;
 }
 
 @Injectable()
@@ -66,8 +74,13 @@ export class AiService {
         @InjectRepository(DocumentClassification)
         private readonly classificationRepository: Repository<DocumentClassification>,
 
+        @InjectRepository(DocumentSource)
+        private readonly sourceRepository: Repository<DocumentSource>,
+
         private readonly httpService: HttpService,
         private readonly logger: AppLoggerService,
+        private readonly notificationsService: NotificationsService,
+        private readonly auditLogService: AuditLogService,
     ) {}
 
     async getActiveSettings(): Promise<AiSetting> {
@@ -86,10 +99,12 @@ export class AiService {
     }
 
     async analyzeDocument(documentId: number): Promise<AnalyzeAiResponseDto> {
+        let savedResult: DocumentAiResult | null = null;
+
         try {
             const document = await this.documentRepository.findOne({
                 where: { id: documentId },
-                relations: ['ocrResult'],
+                relations: ['ocrResult', 'creator'],
             });
 
             if (!document) {
@@ -105,7 +120,6 @@ export class AiService {
                 );
             }
 
-            // Мок-режим
             if (process.env.AI_MOCK_MODE === 'true') {
                 const mockResult = this.aiResultRepository.create({
                     documentId: documentId,
@@ -117,20 +131,58 @@ export class AiService {
                     providerCode: 'mock',
                     modelName: 'mock-model',
                 });
-                const saved = await this.aiResultRepository.save(mockResult);
-                await this.updateDocumentFields(document, {
-                    documentType: 'Договор',
-                    category: 'Финансовые документы',
-                    department: 'Юридический отдел',
-                    confidence: 85,
-                    summary: 'Мок-анализ документа',
-                    date: null,
-                    sender: null,
-                    amount: null,
-                    counterparty: null,
-                    keyPhrases: null,
-                });
-                return this.mapToDto(saved);
+                savedResult = await this.aiResultRepository.save(mockResult);
+
+                try {
+                    await this.updateDocumentFields(document, {
+                        documentType: 'Договор',
+                        category: 'Финансовые документы',
+                        summary: 'Мок-анализ',
+                        department: 'Юридический отдел',
+                        confidence: 85,
+                        date: null,
+                        sender: null,
+                        amount: null,
+                        counterparty: null,
+                        keyPhrases: null,
+                        sourceType: null,
+                        sourceOrganizationName: null,
+                        sourceSenderName: null,
+                        sourceContactInfo: null,
+                    });
+                } catch (updateError) {
+                    await this.aiResultRepository.remove(savedResult);
+                    throw updateError;
+                }
+
+                const totalPercent = 85;
+
+                await this.auditLogService.log(
+                    document.createdBy,
+                    'ai_analysis',
+                    documentId,
+                    { confidence: totalPercent, providerCode: 'mock', modelName: 'mock-model', isMock: true }
+                );
+
+                await this.notificationsService.upsertDocumentNotification(
+                    document.createdBy,
+                    document.id,
+                    'document_ready',
+                    'Документ обработан',
+                    `Документ «${document.title}» загружен, текст распознан, AI выполнил анализ.\nУверенность: ${totalPercent}%\nТип: Договор\nКатегория: Финансовые документы\nОтдел: Юридический отдел\nРег. номер: ${document.registrationNumber}`,
+                );
+
+                const pendingVerificationMessage = `Документ «${document.title}» ожидает проверки оператором.\n\nРег. номер: ${document.registrationNumber}\nТип: Договор\nКатегория: Финансовые документы\nУверенность AI: ${totalPercent}%`;
+
+                await this.notificationsService.createNotification(
+                    document.createdBy,
+                    'pending_verification',
+                    'Требуется проверка',
+                    pendingVerificationMessage,
+                    document.id,
+                );
+
+                return this.mapToDto(savedResult);
             }
 
             const settings = await this.getActiveSettings();
@@ -145,7 +197,7 @@ export class AiService {
                 );
             }
 
-            const prompt = this.buildPrompt(textToAnalyze, document.title);
+            const prompt = await this.buildPrompt(textToAnalyze, document.title);
             const aiResponse = await this.callDeepSeek(prompt, settings, apiKey, documentId);
 
             const aiResult = this.aiResultRepository.create({
@@ -154,19 +206,95 @@ export class AiService {
                 categorySuggested: aiResponse.category,
                 summaryText: aiResponse.summary,
                 departmentSuggested: aiResponse.department,
-                confidenceScore: aiResponse.confidence,
+                confidenceScore: (aiResponse.confidence ?? 0) / 100,
                 providerCode: settings.providerCode,
                 modelName: settings.modelName,
-                extractedDate: aiResponse.date ? new Date(aiResponse.date) : null,
+                extractedDate: aiResponse.date && !isNaN(Date.parse(aiResponse.date))
+                    ? new Date(aiResponse.date)
+                    : null,
                 extractedAmount: aiResponse.amount,
                 extractedCounterparty: aiResponse.counterparty,
                 keyPhrases: aiResponse.keyPhrases,
+                sourceTypeSuggested: aiResponse.sourceType,
+                sourceOrganizationSuggested: aiResponse.sourceOrganizationName,
+                sourceSenderSuggested: aiResponse.sourceSenderName,
+                sourceContactSuggested: aiResponse.sourceContactInfo,
             });
 
-            const savedResult = await this.aiResultRepository.save(aiResult);
+            savedResult = await this.aiResultRepository.save(aiResult);
 
-            // Автообновление полей документа
-            await this.updateDocumentFields(document, aiResponse);
+            try {
+                await this.updateDocumentFields(document, aiResponse);
+            } catch (updateError) {
+                await this.aiResultRepository.remove(savedResult);
+                throw updateError;
+            }
+
+            const ocrConf = document.ocrResult?.ocrConfidence ?? 0;
+            const aiConf = (aiResponse.confidence ?? 0) / 100;
+            const totalPercent = Math.round((ocrConf * 0.2 + aiConf * 0.8) * 100);
+            document.confidenceScore = totalPercent / 100;
+            await this.documentRepository.save(document);
+
+            await this.auditLogService.log(
+                document.createdBy,
+                'ai_analysis',
+                documentId,
+                { 
+                    confidence: totalPercent, 
+                    providerCode: settings.providerCode, 
+                    modelName: settings.modelName,
+                    documentType: aiResponse.documentType,
+                    category: aiResponse.category
+                }
+            );
+
+            const messageParts: string[] = [];
+            messageParts.push(`Документ «${document.title}» загружен, текст распознан, AI выполнил анализ.`);
+            messageParts.push(`Уверенность: ${totalPercent}%`);
+            if (aiResponse.documentType) messageParts.push(`Тип: ${aiResponse.documentType}`);
+            if (aiResponse.category) messageParts.push(`Категория: ${aiResponse.category}`);
+            if (aiResponse.department) messageParts.push(`Отдел: ${aiResponse.department}`);
+            if (aiResponse.summary) messageParts.push(`Сводка: ${aiResponse.summary}`);
+            if (aiResponse.sender) messageParts.push(`Отправитель: ${aiResponse.sender}`);
+            messageParts.push(`Рег. номер: ${document.registrationNumber}`);
+
+            const message = messageParts.join('\n');
+
+            await this.notificationsService.upsertDocumentNotification(
+                document.createdBy,
+                document.id,
+                'document_ready',
+                'Документ обработан',
+                message,
+            );
+
+            const pendingParts: string[] = [];
+            pendingParts.push(`Документ «${document.title}» ожидает проверки оператором.`);
+            pendingParts.push(`Рег. номер: ${document.registrationNumber}`);
+            if (aiResponse.documentType) pendingParts.push(`Тип: ${aiResponse.documentType}`);
+            if (aiResponse.category) pendingParts.push(`Категория: ${aiResponse.category}`);
+            pendingParts.push(`Уверенность AI: ${totalPercent}%`);
+
+            const pendingMessage = pendingParts.join('\n');
+
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'pending_verification',
+                'Требуется проверка',
+                pendingMessage,
+                document.id,
+            );
+
+            if (totalPercent < 50) {
+                await this.notificationsService.createNotification(
+                    document.createdBy,
+                    'low_confidence',
+                    'Низкая уверенность AI',
+                    `Документ «${document.title}» распознан с низкой уверенностью (${totalPercent}%). Требуется ручная проверка.\nРег. номер: ${document.registrationNumber}`,
+                    document.id,
+                );
+            }
 
             await this.logger.log({
                 module: 'AI',
@@ -182,6 +310,27 @@ export class AiService {
 
         } catch (error) {
             if (error instanceof HttpException) throw error;
+
+            try {
+                const document = await this.documentRepository.findOne({ where: { id: documentId } });
+                if (document) {
+                    await this.auditLogService.log(
+                        document.createdBy,
+                        'ai_analysis_error',
+                        documentId,
+                        { error: error instanceof Error ? error.message : 'Ошибка сервера' }
+                    );
+
+                    await this.notificationsService.upsertDocumentNotification(
+                        document.createdBy,
+                        document.id,
+                        'document_ready',
+                        'Документ загружен (без AI)',
+                        `Документ «${document.title}» загружен, текст распознан.\nAI-анализ не выполнен — попробуйте позже.\nРег. номер: ${document.registrationNumber}`,
+                    );
+                }
+            } catch (auditError) {
+            }
 
             await this.logger.log({
                 module: 'AI',
@@ -229,7 +378,7 @@ export class AiService {
                 message: 'AI-результат получен',
             });
 
-            return this.mapToDto(result);
+            return AiResultResponseDto.fromEntity(result);
 
         } catch (error) {
             if (error instanceof HttpException) throw error;
@@ -251,134 +400,160 @@ export class AiService {
         }
     }
 
-    // ========================================================================
-    // Автообновление полей документа после AI-анализа
-    // ========================================================================
     private async updateDocumentFields(
         document: Document,
         aiResponse: ParsedAiResponse,
     ): Promise<void> {
-        try {
-            // Обновляем тип документа
-            if (aiResponse.documentType) {
-                const type = await this.documentTypeRepository.findOne({
-                    where: { name: ILike(aiResponse.documentType) },
+        if (aiResponse.documentType) {
+            let type = await this.documentTypeRepository.findOne({
+                where: { name: ILike(`%${aiResponse.documentType}%`) },
+            });
+            if (!type) {
+                type = this.documentTypeRepository.create({
+                    name: aiResponse.documentType,
+                    code: transliterate(aiResponse.documentType).toLowerCase().replace(/\s+/g, '_'),
+                    description: 'Автоматически создан AI',
                 });
-                if (type) {
-                    document.documentTypeId = type.id;
-                }
-            }
-
-            // Обновляем категорию
-            if (aiResponse.category) {
-                const category = await this.documentCategoryRepository.findOne({
-                    where: { name: ILike(aiResponse.category) },
+                await this.documentTypeRepository.save(type);
+                await this.logger.log({
+                    module: 'AI',
+                    type: 'POST',
+                    url: `/documents/${document.id}/analyze-ai`,
+                    action: 'создан новый тип документа',
+                    status: 'success',
+                    statusCode: 201,
+                    message: `Тип "${aiResponse.documentType}" создан (id: ${type.id})`,
                 });
-                if (category) {
-                    document.categoryId = category.id;
-                }
             }
+            document.documentTypeId = type.id;
+        }
 
-            // Обновляем подразделение
-            if (aiResponse.department) {
-                const department = await this.departmentRepository.findOne({
-                    where: { name: ILike(aiResponse.department) },
+        if (aiResponse.category) {
+            let category = await this.documentCategoryRepository.findOne({
+                where: { name: ILike(`%${aiResponse.category}%`) },
+            });
+            if (!category) {
+                category = this.documentCategoryRepository.create({
+                    name: aiResponse.category,
+                    code: transliterate(aiResponse.category).toLowerCase().replace(/\s+/g, '_'),
+                    description: 'Автоматически создана AI',
                 });
-                if (department) {
-                    document.currentDepartmentId = department.id;
-                }
-            }
-
-            // Обновляем отправителя
-            if (aiResponse.sender) {
-                document.senderName = aiResponse.sender;
-            }
-
-            // Обновляем дату документа
-            if (aiResponse.date && !isNaN(Date.parse(aiResponse.date))) {
-                document.receivedDate = new Date(aiResponse.date);
-            }
-
-            // Вычисляем общую уверенность
-            const ocrConf = document.ocrResult?.ocrConfidence
-                ? Number(document.ocrResult.ocrConfidence)
-                : 0;
-            const aiConf = aiResponse.confidence ?? 0;
-            const totalConfidence = Math.round(ocrConf * 0.2 + aiConf * 0.8);
-            document.confidenceScore = totalConfidence;
-
-            // Меняем статус
-            document.currentStatus = 'pending_verification';
-
-            await this.documentRepository.save(document);
-
-            // Сохраняем классификацию
-            if (aiResponse.documentType || aiResponse.category) {
-                const classification = this.classificationRepository.create({
-                    documentId: document.id,
-                    typeId: document.documentTypeId,
-                    categoryId: document.categoryId,
-                    typeConfidence: aiResponse.confidence,
-                    categoryConfidence: aiResponse.confidence,
-                    isVerified: false,
+                await this.documentCategoryRepository.save(category);
+                await this.logger.log({
+                    module: 'AI',
+                    type: 'POST',
+                    url: `/documents/${document.id}/analyze-ai`,
+                    action: 'создана новая категория',
+                    status: 'success',
+                    statusCode: 201,
+                    message: `Категория "${aiResponse.category}" создана (id: ${category.id})`,
                 });
-                await this.classificationRepository.save(classification);
             }
+            document.categoryId = category.id;
+        }
+
+        if (aiResponse.sender) {
+            document.senderName = aiResponse.sender;
+        }
+
+        if (aiResponse.date && !isNaN(Date.parse(aiResponse.date))) {
+            document.receivedDate = new Date(aiResponse.date);
+        }
+
+        const ocrConf = document.ocrResult?.ocrConfidence ?? 0;
+        const aiConf = (aiResponse.confidence ?? 0) / 100;
+        const totalPercent = Math.round((ocrConf * 0.2 + aiConf * 0.8) * 100);
+        document.confidenceScore = totalPercent / 100;
+        document.currentStatus = 'pending_verification'; 
+
+        await this.documentRepository.save(document);
+
+        if (aiResponse.documentType || aiResponse.category) {
+            const classification = this.classificationRepository.create({
+                documentId: document.id,
+                typeId: document.documentTypeId,
+                categoryId: document.categoryId,
+                typeConfidence: (aiResponse.confidence ?? 0) / 100,
+                categoryConfidence: (aiResponse.confidence ?? 0) / 100,
+                isVerified: false,
+            });
+            await this.classificationRepository.save(classification);
+        }
+
+        if (aiResponse.sourceType || aiResponse.sourceOrganizationName ||
+            aiResponse.sourceSenderName || aiResponse.sourceContactInfo) {
+            let source = await this.sourceRepository.findOne({
+                where: { documentId: document.id },
+            });
+            if (!source) {
+                source = this.sourceRepository.create({ documentId: document.id });
+            }
+            if (aiResponse.sourceType) source.sourceType = aiResponse.sourceType;
+            if (aiResponse.sourceOrganizationName) source.organizationName = aiResponse.sourceOrganizationName;
+            if (aiResponse.sourceSenderName) source.senderName = aiResponse.sourceSenderName;
+            if (aiResponse.sourceContactInfo) source.contactInfo = aiResponse.sourceContactInfo;
+            await this.sourceRepository.save(source);
 
             await this.logger.log({
                 module: 'AI',
                 type: 'POST',
                 url: `/documents/${document.id}/analyze-ai`,
-                action: 'автообновление полей документа',
+                action: 'обновлён источник документа',
                 status: 'success',
                 statusCode: 200,
-                message: `Поля обновлены. Тип: ${aiResponse.documentType}, Категория: ${aiResponse.category}, Отправитель: ${aiResponse.sender}, Дата: ${aiResponse.date}`,
-            });
-
-        } catch (error) {
-            await this.logger.log({
-                module: 'AI',
-                type: 'POST',
-                url: `/documents/${document.id}/analyze-ai`,
-                action: 'автообновление полей документа',
-                status: 'error',
-                statusCode: 500,
-                message: error instanceof Error ? error.message : 'Ошибка обновления полей',
+                message: `Источник: ${aiResponse.sourceType} / ${aiResponse.sourceOrganizationName} / ${aiResponse.sourceSenderName}`,
             });
         }
+
+        await this.logger.log({
+            module: 'AI',
+            type: 'POST',
+            url: `/documents/${document.id}/analyze-ai`,
+            action: 'автообновление полей документа',
+            status: 'success',
+            statusCode: 200,
+            message: `Поля обновлены. Тип: ${aiResponse.documentType}, Категория: ${aiResponse.category}, Отправитель: ${aiResponse.sender}, Дата: ${aiResponse.date}`,
+        });
     }
 
-    // ========================================================================
-    // Промпт
-    // ========================================================================
-    private buildPrompt(documentText: string, documentTitle: string): string {
-        return `Проанализируй входящий документ транспортной компании. Определи тип, категорию, сделай сводку, предложи отдел, извлеки дату, отправителя, сумму и контрагента. Все ответы должны быть на русском языке, даже если документ на другом языке.
+    private async buildPrompt(documentText: string, documentTitle: string): Promise<string> {
+        const types = await this.documentTypeRepository.find();
+        const typeList = types.map(t => t.name).join(', ');
+
+        const categories = await this.documentCategoryRepository.find();
+        const categoryList = categories.map(c => c.name).join(', ');
+
+        const departments = await this.departmentRepository.find();
+        const departmentList = departments.map(d => d.name).join(', ');
+
+        return `Проанализируй входящий документ транспортной компании. Определи тип, категорию, сделай сводку, предложи отдел, извлеки дату, отправителя, сумму, контрагента и источник. Все ответы должны быть на русском языке, даже если документ на другом языке.
 
 Название документа: ${documentTitle}
 
 Верни результат строго в формате JSON:
 {
-  "documentType": "тип (Договор, Письмо, Обращение, Уведомление, Счёт, Акт, Соглашение, Счёт-фактура, Предписание, Заявление, Приказ, Служебная записка, Протокол, Доверенность, Акт сверки или другой)",
-  "category": "категория (Кадровые вопросы, Техническое обслуживание, Поставка оборудования, Административная переписка, Юридические документы, Финансовые документы, Транспорт, Логистика, Безопасность, Хозяйственная деятельность или другая)",
+  "documentType": "СТРОГО один из: ${typeList}. Если подходящего нет - предложи новый",
+  "category": "СТРОГО один из: ${categoryList}. Если подходящего нет - предложи новый",
   "summary": "краткая сводка (1-2 предложения, суть документа)",
-  "department": "подразделение (Управление, Технический отдел, Бухгалтерия, Отдел закупок, Юридический отдел, Отдел кадров, Отдел логистики, Хозяйственный отдел, Служба безопасности или другое)",
-  "confidence": число 0-100 (уверенность в правильности анализа),
+  "department": "СТРОГО один из: ${departmentList}. Если подходящего нет - предложи новый",
+  "confidence": число 0-100 (уверенность в правильности анализа)",
   "date": "дата документа в формате YYYY-MM-DD, извлечённая из текста",
-  "sender": "отправитель (организация или ФИО)",
-  "amount": число (сумма из документа, если указана),
+  "sender": "отправитель - КТО ПРИСЛАЛ документ извне (организация или ФИО, обычно в шапке или в поле 'От кого'). Для внутренних документов — подразделение-составитель",
+  "amount": число (сумма из документа, если указана)",
   "counterparty": "контрагент (вторая сторона договора/акта)",
-  "keyPhrases": ["массив ключевых фраз для поиска"]
+  "keyPhrases": ["массив ключевых фраз для поиска"],
+  "sourceType": "organization, individual или department - тип источника документа",
+  "sourceOrganizationName": "название организации-отправителя из шапки документа",
+  "sourceSenderName": "ФИО или должность конкретного отправителя из шапки документа",
+  "sourceContactInfo": "адрес, телефон, email из шапки документа"
 }
 
-Если не можешь определить — оставь поле пустым, не придумывай.
+Если не можешь определить - оставь поле пустым, не придумывай.
 
 Текст документа:
 ${documentText.substring(0, MAX_TEXT_LENGTH)}`;
     }
 
-    // ========================================================================
-    // Вызов DeepSeek
-    // ========================================================================
     private async callDeepSeek(
         prompt: string,
         settings: AiSetting,
@@ -443,78 +618,53 @@ ${documentText.substring(0, MAX_TEXT_LENGTH)}`;
         }
     }
 
-    // ========================================================================
-    // Парсинг ответа AI
-    // ========================================================================
     private parseContent(content: string): ParsedAiResponse {
-        try {
-            const parsed = JSON.parse(content.trim());
-            return {
-                documentType: parsed.documentType || null,
-                category: parsed.category || null,
-                summary: parsed.summary || null,
-                department: parsed.department || null,
-                confidence: typeof parsed.confidence === 'number' ? parsed.confidence : null,
-                date: parsed.date || null,
-                sender: parsed.sender || null,
-                amount: typeof parsed.amount === 'number' ? parsed.amount : null,
-                counterparty: parsed.counterparty || null,
-                keyPhrases: Array.isArray(parsed.keyPhrases) ? parsed.keyPhrases : null,
-            };
-        } catch (firstError) {
-            try {
-                let cleaned = content.trim();
-                if (cleaned.startsWith('```json')) {
-                    cleaned = cleaned.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-                } else if (cleaned.startsWith('```')) {
-                    cleaned = cleaned.replace(/```\s*/g, '');
-                }
+        let cleaned = content.trim();
 
-                const parsed = JSON.parse(cleaned);
-                return {
-                    documentType: parsed.documentType || null,
-                    category: parsed.category || null,
-                    summary: parsed.summary || null,
-                    department: parsed.department || null,
-                    confidence: typeof parsed.confidence === 'number' ? parsed.confidence : null,
-                    date: parsed.date || null,
-                    sender: parsed.sender || null,
-                    amount: typeof parsed.amount === 'number' ? parsed.amount : null,
-                    counterparty: parsed.counterparty || null,
-                    keyPhrases: Array.isArray(parsed.keyPhrases) ? parsed.keyPhrases : null,
-                };
-            } catch (secondError) {
-                throw new HttpException(
-                    'AI вернул ответ в неверном формате. Попробуйте повторить анализ.',
-                    HttpStatus.BAD_GATEWAY,
-                );
+        cleaned = cleaned.replace(/```(?:json)?\s*/gi, '').replace(/```\s*/g, '');
+
+        cleaned = cleaned.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
+        try {
+            const parsed = JSON.parse(cleaned);
+            return this.normalizeParsedResponse(parsed);
+        } catch {
+
+            const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                try {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    return this.normalizeParsedResponse(parsed);
+                } catch {}
             }
         }
+
+        throw new HttpException(
+            'AI вернул ответ в неверном формате. Попробуйте повторить анализ.',
+            HttpStatus.BAD_GATEWAY,
+        );
     }
 
-    // ========================================================================
-    // Маппинг в DTO
-    // ========================================================================
-    private mapToDto(
-        result: DocumentAiResult,
-    ): AnalyzeAiResponseDto | AiResultResponseDto {
+    private normalizeParsedResponse(parsed: any): ParsedAiResponse {
         return {
-            id: result.id,
-            documentId: result.documentId,
-            documentTypeSuggested: result.documentTypeSuggested,
-            categorySuggested: result.categorySuggested,
-            summaryText: result.summaryText,
-            departmentSuggested: result.departmentSuggested,
-            confidenceScore: result.confidenceScore
-                ? Number(result.confidenceScore)
-                : null,
-            providerCode: result.providerCode,
-            modelName: result.modelName,
-            createdAt: result.createdAt,
-            extractedDate: result.extractedDate || null,
-            extractedAmount: result.extractedAmount ? Number(result.extractedAmount) : null,
-            extractedCounterparty: result.extractedCounterparty || null,
-            keyPhrases: result.keyPhrases || null,
+            documentType: parsed.documentType || null,
+            category: parsed.category || null,
+            summary: parsed.summary || null,
+            department: parsed.department || null,
+            confidence: typeof parsed.confidence === 'number' ? parsed.confidence : null,
+            date: parsed.date || null,
+            sender: parsed.sender || null,
+            amount: typeof parsed.amount === 'number' ? parsed.amount : null,
+            counterparty: parsed.counterparty || null,
+            keyPhrases: Array.isArray(parsed.keyPhrases) ? parsed.keyPhrases : null,
+            sourceType: parsed.sourceType || null,
+            sourceOrganizationName: parsed.sourceOrganizationName || null,
+            sourceSenderName: parsed.sourceSenderName || null,
+            sourceContactInfo: parsed.sourceContactInfo || null,
         };
+    }
+
+    private mapToDto(result: DocumentAiResult): AnalyzeAiResponseDto {
+        return AnalyzeAiResponseDto.fromEntity(result);
     }
 }

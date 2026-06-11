@@ -157,6 +157,19 @@
     gap: 1rem;
 }
 
+
+.paginationWrapper button:not(:disabled) {
+  background: transparent !important;
+  color: var(--color-accent) !important;
+
+}
+
+.paginationWrapper button:disabled {
+  color: var(--text-tertiary) !important;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .apply-button {
   background: var(--color-accent);
   color: white;

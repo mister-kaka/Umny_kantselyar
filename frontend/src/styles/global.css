@@ -29,8 +29,8 @@
 
     /* Отступы ++*/
     --spacing-card: 20px;
-    --margin-card: 10px;
-    --padding-card: 20px;
+    --margin-card: 8px;
+    --padding-card: 12px;
     --spacing-element: 16px;
 
     /* Скругления */
@@ -87,7 +87,7 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: var(--color-bg-page);
   color: var(--text-primary);
-  line-height: 2.5;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -165,7 +165,7 @@ p {
 }
 
 
-/*    КАРТОЧКИ    ++*/
+/*    КАРТОЧКИ    */
 .card {
   display: flexbox;
   background-color: var(--color-bg-surface);
@@ -176,7 +176,7 @@ p {
   min-width: 0;
 }
 
-/*    ТАБЛИЦЫ++   */
+/*    ТАБЛИЦЫ   */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -185,8 +185,8 @@ p {
 }
 
 th, td {
-  height: var(--table-row-height);
-  padding: 0 var(--spacing-element);
+  height: 40px !important;
+  padding: 10px 12px !important;
   border-bottom: 1px solid var(--table-border);
   text-align: left;
   vertical-align: middle;
@@ -201,17 +201,16 @@ th {
   background-color: var(--bg-surface);
 }
 
-/* название документа выделено */
 td:first-child {
+  color: var(--text-secondary);
+  white-space: nowrap;
   font-weight: 600;
-  color: var(--text-primary);
 }
 
 td:not(:first-child) {
   color: var(--text-secondary);
 }
 
-/*    подсветка строки ПРИ НАВЕДЕНИИ    */
 tbody tr:hover {
   background-color: rgba(0, 0, 0, 0.02);
   transition: 0.2s;

@@ -10,6 +10,10 @@ import { DocumentType } from '../entities/document-type.entity';
 import { DocumentCategory } from '../entities/document-category.entity';
 import { Department } from '../entities/department.entity';
 import { DocumentClassification } from '../entities/document-classification.entity';
+import { DocumentSource } from '../entities/document-source.entity';
+import { LoggerModule } from '../logger/logger.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { AuditLogModule } from '../audit/audit-log.module';
 
 @Module({
     imports: [
@@ -21,8 +25,12 @@ import { DocumentClassification } from '../entities/document-classification.enti
             DocumentCategory,
             Department,
             DocumentClassification,
+            DocumentSource,
         ]),
         HttpModule,
+        LoggerModule,
+        NotificationsModule,
+        AuditLogModule,
     ],
     controllers: [AiController],
     providers: [AiService],

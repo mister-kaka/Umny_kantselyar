@@ -8,60 +8,28 @@ import { getDashboard } from "../../services/api";
 import { DashboardData, GroupedDepartment } from "../../types";
 import { NavLink, useNavigate } from 'react-router-dom';
 import "../../styles/MainMenu.css";
-
-export const statusMap: Record<string, string> = {
-    'in_progress': 'В работе',
-    'pending': 'На проверке',
-    'completed': 'Завершено',
-    'approved': 'Одобрено',
-    'in_review': 'На рассмотрении',
-    'sent': 'Отправлено',
-    'rejected': 'Отклонено'
-};
-
-export const translateStatus = (status: string): string => {
-    return statusMap[status] || status;
-};
-
-export const getStatusColor = (status: string): string => {
-    switch (status) {
-        case 'completed':
-        case 'approved':
-            return 'status-loaded';
-        case 'in_review':
-            return 'status-data-refinement';
-        case 'pending':
-            return 'status-clarify';
-        case 'in_progress':
-        case 'sent':
-            return 'status-assigned';
-        case 'rejected':
-            return 'status-rejected';
-        default:
-            return 'status-assigned';
-    }
-};
+import { translateStatus, getStatusColorClass } from "../../constants/statuses";
 
 export const groupByDepartment = (data: DashboardData | null): GroupedDepartment[] => {
-  if (!data?.departmentRouteStatuses) return [];
-  
-  const departmentMap = new Map<number, GroupedDepartment>();
-  
-  data.departmentRouteStatuses.forEach(item => {
-    if (!departmentMap.has(item.departmentId)) {
-      departmentMap.set(item.departmentId, {
-        departmentId: item.departmentId,
-        departmentName: item.departmentName,
-        statuses: []
-      });
-    }
-    departmentMap.get(item.departmentId)!.statuses.push({
-      routeStatus: item.routeStatus,
-      count: item.count
+    if (!data?.departmentRouteStatuses) return [];
+
+    const departmentMap = new Map<number, GroupedDepartment>();
+
+    data.departmentRouteStatuses.forEach(item => {
+        if (!departmentMap.has(item.departmentId)) {
+            departmentMap.set(item.departmentId, {
+                departmentId: item.departmentId,
+                departmentName: item.departmentName,
+                statuses: []
+            });
+        }
+        departmentMap.get(item.departmentId)!.statuses.push({
+            routeStatus: item.routeStatus,
+            count: item.count
+        });
     });
-  });
-  
-  return Array.from(departmentMap.values());
+
+    return Array.from(departmentMap.values());
 };
 
 const MainMenu = () => {
@@ -121,26 +89,37 @@ const MainMenu = () => {
                 <h4 className="text-secondary">Сегодня {date}</h4>
             </div>
             
-            <div className="Main-cards-container">
-                <Card className="main-card">
-                    <img src="/icons/dashboard/Total_incoming.png"
-                        className="Main-cards-image" alt="📄"/>
-                    <h1>{data?.totalDocuments}</h1>
-                    <h5 className="text-secondary">Всего входящих</h5>
+            <div className="stats-cards-container">
+                <Card className="stat-card">
+                    <div className="stat-card-icon-wrap">
+                    <img src="/icons/dashboard/Total_incoming.png" className="stat-card-icon" alt="Всего входящих" />
+                    </div>
+                    <div className="stat-card-content">
+                    <div className="stat-card-value">{data?.totalDocuments}</div>
+                    <div className="stat-card-label">Всего входящих</div>
+                    </div>
                 </Card>
-                <Card className="main-card">
-                    <img src="/icons/dashboard/In_processing.png"
-                        className="Main-cards-image" alt="✔️"/>
-                    <h1>{data?.inProgress}</h1>
-                    <h5 className="text-secondary">В обработке</h5>
+
+                <Card className="stat-card">
+                    <div className="stat-card-icon-wrap">
+                    <img src="/icons/dashboard/In_processing.png" className="stat-card-icon" alt="Направлено в отдел" />
+                    </div>
+                    <div className="stat-card-content">
+                    <div className="stat-card-value">{data?.routedCount || 0}</div>
+                    <div className="stat-card-label">Направлено в отдел</div>
+                    </div>
                 </Card>
-                <Card className="main-card">
-                    <img src="/icons/dashboard/Require_verification.png"
-                        className="Main-cards-image" alt="❕"/>
-                    <h1>{data?.pendingCheck}</h1>
-                    <h5 className="text-secondary">Требуют проверки</h5>
+
+                <Card className="stat-card">
+                    <div className="stat-card-icon-wrap">
+                    <img src="/icons/dashboard/Require_verification.png" className="stat-card-icon" alt="Ожидают проверки" />
+                    </div>
+                    <div className="stat-card-content">
+                    <div className="stat-card-value">{data?.pendingCheck}</div>
+                    <div className="stat-card-label">Ожидают проверки</div>
+                    </div>
                 </Card>
-            </div>
+                </div>
             
             <div className="tableAndSubCardsContainer">
                 <Card>
@@ -155,7 +134,7 @@ const MainMenu = () => {
                                 <th>Рег. номер</th>
                                 <th>Название файла</th>
                                 <th>Статус</th>
-                                <th>Дата</th>
+                                <th>Дата загрузки</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -168,11 +147,11 @@ const MainMenu = () => {
                                     <td>{doc.registrationNumber}</td>
                                     <td>{doc.title}</td>
                                     <td>
-                                        <span className={`status-badge ${getStatusColor(doc.status)}`}>
+                                        <span className={`status-badge ${getStatusColorClass(doc.status)}`}>
                                             {translateStatus(doc.status)}
                                         </span>
                                     </td>
-                                    <td>{formatDate(String(doc.date))}</td>
+                                    <td>{formatDate(String(doc.uploadedAt || doc.date))}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -181,15 +160,19 @@ const MainMenu = () => {
                 
                 <div className="subCards-container">
                     <Card title={<h4>Статусы маршрутов по отделам</h4>}>
-                        {groupedDepartments.map((dept) => (
-                            <Card key={dept.departmentId} title={<h5>{dept.departmentName}</h5>} className="card-in-card-blue-cortisol">
-                                {dept.statuses.map((status, idx) => (
-                                    <h6 key={idx} className="text-tertiary">
-                                        {translateStatus(status.routeStatus)} ({status.count}) 
-                                    </h6>
-                                ))}
-                            </Card>
-                        ))}
+                        {groupedDepartments.map((dept) => {
+                            const filteredStatuses = dept.statuses.filter(s => s.routeStatus === 'routed');
+                            if (filteredStatuses.length === 0) return null;
+                            return (
+                                <Card key={dept.departmentId} title={<h5>{dept.departmentName}</h5>} className="card-in-card-blue-cortisol">
+                                    {filteredStatuses.map((status, idx) => (
+                                        <h6 key={idx} className="text-tertiary">
+                                            {translateStatus(status.routeStatus)} ({status.count}) 
+                                        </h6>
+                                    ))}
+                                </Card>
+                            );
+                        })}
                     </Card>
                 </div>
             </div>

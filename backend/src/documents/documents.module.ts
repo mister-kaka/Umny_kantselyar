@@ -1,26 +1,19 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { HttpModule } from '@nestjs/axios';
 import { DocumentsController } from './documents.controller';
-import { DocumentsService } from './documents.service';
-import { Document } from '../entities/document.entity';
-import { DocumentRoute } from '../entities/document-route.entity';
-import { DocumentFile } from '../entities/document-file.entity';
-import { OcrResult } from '../entities/ocr-result.entity';
-import { AiSetting } from '../entities/ai-setting.entity';
+import { DocumentsSearchModule } from './search/documents-search.module';
+import { DocumentsCrudModule } from './crud/documents-crud.module';
+import { TextExtractionModule } from './extraction/text-extraction.module';
+import { DocumentsListModule } from './list/documents-list.module';
+import { DocumentsRoutingModule } from './routing/documents-routing.module';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([
-            Document,
-            DocumentRoute,
-            DocumentFile,
-            OcrResult,
-            AiSetting,
-        ]),
-        HttpModule,
+        DocumentsListModule,
+        DocumentsSearchModule,
+        DocumentsCrudModule,
+        TextExtractionModule,
+        DocumentsRoutingModule,
     ],
     controllers: [DocumentsController],
-    providers: [DocumentsService],
 })
 export class DocumentsModule {}
