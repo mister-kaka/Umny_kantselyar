@@ -52,6 +52,12 @@
   color: var(--color-status-loaded);
 }
 
+.verification-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  table-layout: auto;
+}
+
 .table-status-cell {
   text-align: center;
   padding: 40px;

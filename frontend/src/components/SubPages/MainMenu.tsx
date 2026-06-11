@@ -89,26 +89,37 @@ const MainMenu = () => {
                 <h4 className="text-secondary">Сегодня {date}</h4>
             </div>
             
-            <div className="Main-cards-container">
-                <Card className="main-card">
-                    <img src="/icons/dashboard/Total_incoming.png"
-                        className="Main-cards-image" alt="📄"/>
-                    <h1>{data?.totalDocuments}</h1>
-                    <h5 className="text-secondary">Всего входящих</h5>
+            <div className="stats-cards-container">
+                <Card className="stat-card">
+                    <div className="stat-card-icon-wrap">
+                    <img src="/icons/dashboard/Total_incoming.png" className="stat-card-icon" alt="Всего входящих" />
+                    </div>
+                    <div className="stat-card-content">
+                    <div className="stat-card-value">{data?.totalDocuments}</div>
+                    <div className="stat-card-label">Всего входящих</div>
+                    </div>
                 </Card>
-                <Card className="main-card">
-                    <img src="/icons/dashboard/In_processing.png"
-                        className="Main-cards-image" alt="➡️"/>
-                    <h1>{data?.routedCount || 0}</h1>
-                    <h5 className="text-secondary">Направлено в отдел</h5>
+
+                <Card className="stat-card">
+                    <div className="stat-card-icon-wrap">
+                    <img src="/icons/dashboard/In_processing.png" className="stat-card-icon" alt="Направлено в отдел" />
+                    </div>
+                    <div className="stat-card-content">
+                    <div className="stat-card-value">{data?.routedCount || 0}</div>
+                    <div className="stat-card-label">Направлено в отдел</div>
+                    </div>
                 </Card>
-                <Card className="main-card">
-                    <img src="/icons/dashboard/Require_verification.png"
-                        className="Main-cards-image" alt="⏳"/>
-                    <h1>{data?.pendingCheck}</h1>
-                    <h5 className="text-secondary">Ожидают проверки</h5>
+
+                <Card className="stat-card">
+                    <div className="stat-card-icon-wrap">
+                    <img src="/icons/dashboard/Require_verification.png" className="stat-card-icon" alt="Ожидают проверки" />
+                    </div>
+                    <div className="stat-card-content">
+                    <div className="stat-card-value">{data?.pendingCheck}</div>
+                    <div className="stat-card-label">Ожидают проверки</div>
+                    </div>
                 </Card>
-            </div>
+                </div>
             
             <div className="tableAndSubCardsContainer">
                 <Card>

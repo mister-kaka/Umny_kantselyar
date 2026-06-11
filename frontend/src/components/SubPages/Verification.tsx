@@ -217,7 +217,7 @@ const Verification = () => {
         </Tooltip>
       </Card>
 
-      <Card className="cuttinPaddin">
+      <Card className="cuttinPaddin verification-table-wrapper">
         <Table
           title={<h4>Очередь проверки ({data?.total ?? 0})</h4>}
           rightTitle={data && (
@@ -232,10 +232,8 @@ const Verification = () => {
             <tr>
               <th>Рег. номер</th>
               <th>Название</th>
-              <th>Отправитель</th>
               <th>Дата загрузки</th>
               <th>Тип (AI)</th>
-              <th>Категория (AI)</th>
               <th>Уверенность</th>
               <th>Статус</th>
               <th></th>
@@ -243,16 +241,16 @@ const Verification = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} className="table-status-cell">Загрузка...</td></tr>
+              <tr><td colSpan={7} className="table-status-cell">Загрузка...</td></tr>
             ) : error ? (
               <tr>
-                <td colSpan={9} className="table-error-cell">
+                <td colSpan={7} className="table-error-cell">
                   {error} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
               </tr>
             ) : filtersError && !types.length && !categories.length ? (
               <tr>
-                <td colSpan={9} className="table-error-cell">
+                <td colSpan={7} className="table-error-cell">
                   {filtersError} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
               </tr>
@@ -261,10 +259,8 @@ const Verification = () => {
                 <tr key={doc.id} onClick={() => handleRowClick(doc.id)}>
                   <td>{doc.registrationNumber}</td>
                   <td>{doc.title}</td>
-                  <td>{doc.senderName}</td>
                   <td>{new Date(doc.receivedDate).toLocaleDateString()}</td>
                   <td>{doc.aiDocumentType || doc.documentType || '-'}</td>
-                  <td>{doc.aiCategory || doc.category || '-'}</td>
                   <td>
                     <div className="confidence-cell">
                       <div className="confidence-bar">
@@ -294,14 +290,14 @@ const Verification = () => {
                       <span className="verification-status-text">В работе</span>
                     )}
                     {doc.currentStatus === "verified" && (
-                      <span className="verification-status-text verification-status-done">✓ Проверено</span>
+                      <span className="verification-status-text verification-status-done">Проверено</span>
                     )}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="table-empty-cell">
+                <td colSpan={7} className="table-empty-cell">
                   Нет документов, ожидающих проверки
                 </td>
               </tr>
