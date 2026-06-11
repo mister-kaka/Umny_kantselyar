@@ -63,11 +63,6 @@
   padding: 40px;
 }
 
-.table-status-cell {
-  text-align: center;
-  padding: 40px;
-}
-
 .table-error-cell {
   text-align: center;
   color: var(--color-status-rejected);

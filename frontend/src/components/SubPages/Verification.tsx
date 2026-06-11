@@ -297,7 +297,7 @@ const Verification = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="table-empty-cell">
+                <td colSpan={7} className="table-empty-cell">
                   Нет документов, ожидающих проверки
                 </td>
               </tr>
