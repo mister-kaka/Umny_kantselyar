@@ -75,19 +75,15 @@
 }
 
 .analytics-stat-card-value {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
   margin-bottom: 4px;
 }
 
-.compact-view .analytics-stat-card-value {
-  font-size: 12px;
-}
-
 .analytics-stat-card-suffix {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-secondary);
   margin-left: 2px;
@@ -259,7 +255,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 36px;
+    font-size: 28px;
   }
 
   .charts-grid {
@@ -282,7 +278,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 28px;
+    font-size: 22px;
   }
 
   .analytics-stat-icon {
@@ -313,7 +309,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 26px;
+    font-size: 20px;
   }
 
   .analytics-stat-card-label {
@@ -366,7 +362,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .analytics-stat-card-label {
@@ -420,7 +416,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 22px;
+    font-size: 18px;
   }
 
   .analytics-stat-card-label {
@@ -452,7 +448,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 20px;
+    font-size: 16px;
   }
 
   .analytics-stat-icon {
