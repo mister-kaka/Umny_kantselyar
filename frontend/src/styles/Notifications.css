@@ -2,7 +2,7 @@
 @import url("../styles/Dashboard.css");
 
 .notifications-page {
-  padding: 20px;
+  padding: 0px 20px 0px 0px;
 }
 
 .notifications-stats-cards-container {
