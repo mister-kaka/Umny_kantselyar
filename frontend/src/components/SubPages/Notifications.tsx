@@ -557,7 +557,7 @@ const Notifications = () => {
                     <img src="/icons/notifications/Low_confidence.png" className="notifications-stat-card-icon" alt="Низкая уверенность" />
                     <div className="notifications-stat-card-content">
                         <h1 className="notifications-stat-card-value">{stats?.lowConfidence ?? 0}</h1>
-                        <h5 className="notifications-stat-card-label text-secondary">Низкая уверенность</h5>
+                        <h5 className="notifications-stat-card-label text-secondary">Низ. уверенность</h5>
                     </div>
                 </Card>
 

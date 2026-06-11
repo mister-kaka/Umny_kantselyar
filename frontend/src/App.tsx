@@ -3,8 +3,6 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import Departments from "./components/SubPages/Departments";
-import Routing from "./components/SubPages/Routing";
 
 const AppRoutes = () => {
   const navigate = useNavigate();
@@ -24,8 +22,6 @@ const AppRoutes = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard/*" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      <Route path="/dashboard/departments" element={<Departments />} />
-      <Route path="/dashboard/routing" element={<Routing />} />
     </Routes>
   );
 };
