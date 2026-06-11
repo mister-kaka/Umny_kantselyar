@@ -32,7 +32,6 @@
   border-color: var(--color-accent);
 }
 
-/* Первая и третья карточки — перенос по буквам */
 .notifications-stat-card:first-child .notifications-stat-card-label,
 .notifications-stat-card:nth-child(3) .notifications-stat-card-label {
   word-break: break-all;
@@ -41,8 +40,8 @@
 }
 
 .notifications-stat-card-icon {
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   object-fit: contain;
 }
 
