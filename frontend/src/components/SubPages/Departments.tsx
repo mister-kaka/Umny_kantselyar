@@ -1,218 +1,235 @@
-// import React from 'react';
-// import './Departments.css';
-
 import "../../styles/global.css";
+import "../../styles/Dashboard.css";
+import "../../styles/Departments.css";
+
+import React, { useEffect, useState } from "react";
+import Card from "../Card";
+
+import {
+  Department,
+  DashboardData,
+  GroupedDepartment
+} from "../../types";
+
+import {
+  getDepartments,
+  getDashboard
+} from "../../services/api";
 
 const Departments = () => {
-    return (
+
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState("");
+
+  useEffect(()=>{
+
+    const fetchData=async()=>{
+
+      try{
+
+        setLoading(true);
+
+        const [dep,dash]=await Promise.all([
+          getDepartments(),
+          getDashboard()
+        ]);
+
+        setDepartments(dep);
+        setDashboard(dash);
+
+      }
+      catch(err){
+
+        console.log(err);
+
+        setError("Ошибка загрузки подразделений");
+
+      }
+      finally{
+
+        setLoading(false);
+
+      }
+
+    }
+
+    fetchData();
+
+  },[]);
+
+  const grouped:GroupedDepartment[]=
+  dashboard?.departmentRouteStatuses.reduce((acc,item)=>{
+
+    const exist=acc.find(
+      d=>d.departmentId===item.departmentId
+    );
+
+    if(exist){
+
+      exist.statuses.push({
+        routeStatus:item.routeStatus,
+        count:item.count
+      });
+
+    }else{
+
+      acc.push({
+
+        departmentId:item.departmentId,
+
+        departmentName:item.departmentName,
+
+        statuses:[
+          {
+            routeStatus:item.routeStatus,
+            count:item.count
+          }
+        ]
+
+      });
+
+    }
+
+    return acc;
+
+  },[] as GroupedDepartment[]) || [];
+
+  const getColor=(status:string)=>{
+
+    switch(status){
+
+      case "completed":
+      return "#81D8D0";
+
+      case "processing":
+      return "#F3C36B";
+
+      case "rejected":
+      return "#F27979";
+
+      case "pending":
+      return "#87A8FF";
+
+      default:
+      return "#DADADA";
+
+    }
+
+  }
+
+  if(loading){
+
+    return <Card>Загрузка...</Card>
+
+  }
+
+  if(error){
+
+    return <Card>{error}</Card>
+
+  }
+
+  return(
+
     <div>
-        Подразделения
+
+      <Card>
+
+        <div className="departmentHeader">
+
+          <h2>Подразделения</h2>
+
+          <span>
+
+            Всего: {departments.length}
+
+          </span>
+
+        </div>
+
+      </Card>
+
+      <div className="departmentGrid">
+
+        {grouped.map(dep=>(
+
+          <Card
+          key={dep.departmentId}
+          className="departmentCard"
+          >
+
+            <div
+            className="departmentSquare"
+            />
+
+            <h3>
+
+              {dep.departmentName}
+
+            </h3>
+
+            <div className="departmentTotal">
+
+              {dep.statuses.reduce(
+                (a,b)=>a+b.count,
+                0
+              )}
+
+              документов
+
+            </div>
+
+            <div className="departmentStatuses">
+
+              {
+
+                dep.statuses.map((status,index)=>(
+
+                  <div
+                  key={index}
+                  className="departmentStatus"
+                  >
+
+                    <span
+                    className="departmentDot"
+                    style={{
+                      background:getColor(status.routeStatus)
+                    }}
+                    />
+
+                    <span>
+
+                      {status.routeStatus}
+
+                    </span>
+
+                    <strong>
+
+                      {status.count}
+
+                    </strong>
+
+                  </div>
+
+                ))
+
+              }
+
+            </div>
+
+          </Card>
+
+        ))}
+
+      </div>
+
     </div>
-    )
+
+  )
 
 }
-export default Departments
 
-// const departments = [
-//   {
-//     id: 1,
-//     name: 'Отдел кадров',
-//     code: 'HR',
-//     isActive: true,
-//     documentsCount: 12
-//   },
-//   {
-//     id: 2,
-//     name: 'Юридический отдел',
-//     code: 'LAW',
-//     isActive: true,
-//     documentsCount: 8
-//   },
-//   {
-//     id: 3,
-//     name: 'Финансовый отдел',
-//     code: 'FIN',
-//     isActive: false,
-//     documentsCount: 3
-//   }
-// ];
-
-// // import React, { useEffect, useState } from 'react';
-// // import { getDepartments, getDashboard } from '../../services/api';
-// // import { Department, DashboardData } from '../../types';
-// // import './Departments.css';
-
-// // const Departments: React.FC = () => {
-// //   const [departments, setDepartments] = useState<Department[]>([]);
-// //   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-// //   const [loading, setLoading] = useState(true);
-// //   const [error, setError] = useState<string | null>(null);
-
-// //   useEffect(() => {
-// //     fetchDepartments();
-// //   }, []);
-
-// // const fetchDepartments = async () => {
-// //   try {
-// //     setLoading(true);
-
-// //     const [departmentsData, dashboardData] = await Promise.all([
-// //       getDepartments(),
-// //       getDashboard()
-// //     ]);
-
-// //     setDepartments(departmentsData);
-// //     setDashboard(dashboardData);
-
-// //     setError(null);
-// //   } catch (error) {
-// //     console.error(error);
-// //     setError('Не удалось загрузить список отделов');
-// //   } finally {
-// //     setLoading(false);
-// //   }
-// // };
-
-// // const getDocumentsCount = (departmentId: number): number => {
-// //   if (!dashboard) return 0;
-
-// //   return dashboard.departmentRouteStatuses
-// //     .filter((item) => item.departmentId === departmentId)
-// //     .reduce((sum, item) => sum + item.count, 0);
-// // };
-
-// // if (loading) {
-// //   return (
-// //     <div className="departments-loading">
-// //       Загрузка подразделений...
-// //     </div>
-// //   );
-// // }
-
-// // if (error) {
-// //   return (
-// //     <div className="departments-error">
-// //       {error}
-// //     </div>
-// //   );
-// // }
-
-// // return (
-// //   <div className="departments-page">
-// //     <div className="departments-header">
-// //       <h1>Подразделения</h1>
-// //       <p className="departments-subtitle">
-// //         Список подразделений и текущая нагрузка
-// //       </p>
-// //     </div>
-
-// //     <div className="departments-grid">
-// //       {departments.map((dept) => (
-// //         <div key={dept.id} className="department-card">
-
-// //           <div className="department-card-header">
-// //             <h3 className="department-name">{dept.name}</h3>
-
-// //             <span
-// //               className={`department-status ${
-// //                 dept.isActive
-// //                   ? 'status-active'
-// //                   : 'status-inactive'
-// //               }`}
-// //             >
-// //               {dept.isActive ? 'Активен' : 'Неактивен'}
-// //             </span>
-// //           </div>
-
-// //           <div className="department-card-body">
-
-// //             <div className="department-code">
-// //               <span className="label">Код</span>
-// //               <span className="value">{dept.code}</span>
-// //             </div>
-
-// //             <div className="department-documents">
-// //               <span className="label">Документов</span>
-
-// //               <span className="documents-count">
-// //                 {getDocumentsCount(dept.id)}
-// //               </span>
-// //             </div>
-
-// //           </div>
-// //         </div>
-// //       ))}
-// //     </div>
-// //   </div>
-// // );
-// // };
-
-// // export default Departments;
-
-// const Departments: React.FC = () => {
-//   return (
-//     <div className="departments-page">
-//       <div className="departments-header">
-//         <h1>Подразделения</h1>
-
-//         <p className="departments-subtitle">
-//           Список подразделений и текущая нагрузка
-//         </p>
-//       </div>
-
-//       <div className="departments-grid">
-//         {departments.map((dept) => (
-//           <div
-//             key={dept.id}
-//             className="department-card"
-//           >
-
-//             <div className="department-card-header">
-//               <h3 className="department-name">
-//                 {dept.name}
-//               </h3>
-
-//               <span
-//                 className={`department-status ${
-//                   dept.isActive
-//                     ? 'status-active'
-//                     : 'status-inactive'
-//                 }`}
-//               >
-//                 {dept.isActive
-//                   ? 'Активен'
-//                   : 'Неактивен'}
-//               </span>
-//             </div>
-
-//             <div className="department-card-body">
-
-//               <div className="department-code">
-//                 <span className="label">
-//                   Код
-//                 </span>
-
-//                 <span className="value">
-//                   {dept.code}
-//                 </span>
-//               </div>
-
-//               <div className="department-documents">
-//                 <span className="label">
-//                   Документов
-//                 </span>
-
-//                 <span className="documents-count">
-//                   {dept.documentsCount}
-//                 </span>
-//               </div>
-
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Departments;
+export default Departments;

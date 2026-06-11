@@ -1,0 +1,251 @@
+@import url("../styles/global.css");
+@import url("../styles/Dashboard.css");
+
+.routingFilter{
+    display:flex;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.routingRow{
+    cursor:pointer;
+    transition:all .2s ease;
+}
+
+.routingRow:hover{
+    background:#fafafa;
+}
+
+.routeBadge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:110px;
+
+    padding:6px 14px;
+
+    border-radius:20px;
+
+    font-size:12px;
+
+    font-weight:600;
+
+    transition:.2s;
+
+}
+
+.routeSuccess{
+
+    background:rgba(129,216,208,.18);
+
+    color:#39a89d;
+
+}
+
+.routeProcess{
+
+    background:rgba(255,185,80,.15);
+
+    color:#e39a21;
+
+}
+
+.routePending{
+
+    background:rgba(110,150,255,.12);
+
+    color:#5f82eb;
+
+}
+
+.routeRejected{
+
+    background:rgba(240,90,90,.12);
+
+    color:#e15555;
+
+}
+
+.routeDefault{
+
+    background:#f3f3f3;
+
+    color:#808080;
+
+}
+
+.routeBadge:hover{
+
+    transform:scale(1.03);
+
+}
+
+.data-table tbody tr{
+
+    transition:.2s;
+
+}
+
+.data-table tbody tr:hover{
+
+    background:#fafafa;
+
+}
+
+.data-table td{
+
+    vertical-align:middle;
+
+}
+
+.data-table th{
+
+    white-space:nowrap;
+
+}
+
+.routingHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.routingHeader h2{
+
+    margin:0;
+
+    font-size:24px;
+
+    font-weight:600;
+
+    color:var(--text-primary);
+
+}
+
+.routingHeader span{
+
+    color:var(--text-secondary);
+
+}
+
+.routingCard{
+
+    transition:.25s;
+
+}
+
+.routingCard:hover{
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,.05);
+
+}
+
+@media(max-width:1024px){
+
+.data-table{
+
+font-size:13px;
+
+}
+
+.routeBadge{
+
+min-width:90px;
+
+padding:5px 10px;
+
+font-size:11px;
+
+}
+
+}
+
+@media(max-width:768px){
+
+.table-wrapper{
+
+overflow-x:auto;
+
+}
+
+.data-table{
+
+min-width:720px;
+
+}
+
+.routeBadge{
+
+min-width:80px;
+
+font-size:10px;
+
+padding:4px 8px;
+
+}
+
+.routingFilter{
+
+flex-wrap:wrap;
+
+gap:8px;
+
+}
+
+}
+
+@media(max-width:480px){
+
+.data-table{
+
+min-width:650px;
+
+font-size:11px;
+
+}
+
+.routeBadge{
+
+padding:3px 7px;
+
+font-size:9px;
+
+min-width:70px;
+
+}
+
+.routingFilter{
+
+margin-bottom:12px;
+
+}
+
+}
+
+@media(min-width:1400px){
+
+.data-table th,
+.data-table td{
+
+height:54px;
+
+}
+
+.routeBadge{
+
+font-size:13px;
+
+padding:7px 16px;
+
+}
+
+}
