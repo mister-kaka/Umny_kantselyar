@@ -19,11 +19,18 @@ export class NotificationListResponseDto {
 export class UnreadCountDto {
     total!: number;
     newDocument!: number;
-    aiComplete!: number;
+    documentReady!: number;
     extractError!: number;
     pendingVerification!: number;
     routedToDepartment!: number;
+    rejected!: number;
+    verified!: number;
     lowConfidence!: number;
-    routeError!: number;
-    overdueVerification!: number;
+}
+
+export class NotificationFilterDto {
+    type?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    isRead?: boolean;
 }

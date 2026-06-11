@@ -386,7 +386,9 @@ const DocumentsListPage = () => {
                       <span className="file-queue-checkmark" />
                     </label>
                   </td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.registrationNumber}</td>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                    {doc.registrationNumber}
+                  </td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.title}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.senderName}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : '-'}</td>

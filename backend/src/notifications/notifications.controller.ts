@@ -1,7 +1,7 @@
 import { Controller, Get, Put, Delete, Param, Query, UseGuards, Req, ParseIntPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { NotificationsService } from './notifications.service';
-import { NotificationListResponseDto, UnreadCountDto } from './dto/notification.dto';
+import { NotificationListResponseDto, UnreadCountDto, NotificationFilterDto } from './dto/notification.dto';
 import { Request } from 'express';
 
 interface RequestWithUser extends Request {
@@ -21,14 +21,32 @@ export class NotificationsController {
         @Req() req: RequestWithUser,
         @Query('page') page?: number,
         @Query('limit') limit?: number,
+        @Query('type') type?: string,
+        @Query('dateFrom') dateFrom?: string,
+        @Query('dateTo') dateTo?: string,
+        @Query('isRead') isRead?: string,
     ): Promise<NotificationListResponseDto> {
-        return this.notificationsService.findAll(req.user.userId, page ?? 1, limit ?? 20);
+        const filter: NotificationFilterDto = {};
+
+        if (type) filter.type = type;
+        if (dateFrom) filter.dateFrom = dateFrom;
+        if (dateTo) filter.dateTo = dateTo;
+        if (isRead !== undefined) filter.isRead = isRead === 'true';
+
+        return this.notificationsService.findAll(req.user.userId, page ?? 1, limit ?? 10, filter);
     }
 
     @UseGuards(AuthGuard('jwt'))
     @Get('unread-count')
     async getUnreadCount(@Req() req: RequestWithUser): Promise<UnreadCountDto> {
         return this.notificationsService.getUnreadCount(req.user.userId);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Put('read-all')
+    async markAllAsRead(@Req() req: RequestWithUser): Promise<{ message: string }> {
+        await this.notificationsService.markAllAsRead(req.user.userId);
+        return { message: 'Все уведомления отмечены как прочитанные' };
     }
 
     @UseGuards(AuthGuard('jwt'))
@@ -42,10 +60,9 @@ export class NotificationsController {
     }
 
     @UseGuards(AuthGuard('jwt'))
-    @Put('read-all')
-    async markAllAsRead(@Req() req: RequestWithUser): Promise<{ message: string }> {
-        await this.notificationsService.markAllAsRead(req.user.userId);
-        return { message: 'Все уведомления отмечены как прочитанные' };
+    @Delete('read')
+    async deleteAllRead(@Req() req: RequestWithUser): Promise<{ message: string; deletedCount: number }> {
+        return this.notificationsService.deleteAllRead(req.user.userId);
     }
 
     @UseGuards(AuthGuard('jwt'))
@@ -55,11 +72,5 @@ export class NotificationsController {
         @Param('id', ParseIntPipe) id: number,
     ): Promise<{ message: string }> {
         return this.notificationsService.deleteNotification(req.user.userId, id);
-    }
-
-    @UseGuards(AuthGuard('jwt'))
-    @Delete('read')
-    async deleteAllRead(@Req() req: RequestWithUser): Promise<{ message: string; deletedCount: number }> {
-        return this.notificationsService.deleteAllRead(req.user.userId);
     }
 }

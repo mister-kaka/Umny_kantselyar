@@ -59,7 +59,6 @@ export class DocumentsCrudService {
         private readonly auditLogService: AuditLogService,
     ) {}
 
-    // GET /documents/:id - карточка документа
     async findOne(id: number): Promise<DocumentCardDto> {
         try {
             const document = await this.documentRepository.findOne({
@@ -173,7 +172,6 @@ export class DocumentsCrudService {
         }
     }
 
-    // DELETE /documents/:id - удаление документа
     async delete(id: number, userId: number): Promise<void> {
         try {
             const document = await this.documentRepository.findOne({ where: { id } });
@@ -190,6 +188,10 @@ export class DocumentsCrudService {
                 fs.rmSync(docDir, { recursive: true, force: true });
             }
 
+            const user = await this.userRepository.findOne({ where: { id: userId }, select: ['fullName'] });
+            const userName = user?.fullName || 'Пользователь';
+            const now = new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+
             await this.documentRepository.remove(document);
 
             await this.auditLogService.log(
@@ -197,6 +199,13 @@ export class DocumentsCrudService {
                 'document_delete',
                 id,
                 { registrationNumber, title }
+            );
+
+            await this.notificationsService.createNotification(
+                userId,
+                'document_deleted',
+                `Документ «${title}» удалён`,
+                `Документ был удалён из системы.\n\nНазвание: ${title}\nРег. номер: ${registrationNumber}\nУдалил: ${userName}\nВремя: ${now}`,
             );
 
             await this.logger.log({
@@ -223,7 +232,6 @@ export class DocumentsCrudService {
         }
     }
 
-    // POST /documents/upload - загрузка файла и создание документа
     async uploadDocument(file: Express.Multer.File, createdBy: number): Promise<UploadDocumentResponseDto> {
         try {
             const fileExtension = file.originalname.split('.').pop()?.toLowerCase() || '';
@@ -289,7 +297,7 @@ export class DocumentsCrudService {
             await this.notificationsService.createNotification(
                 createdBy,
                 'new_document',
-                'Новый документ',
+                'Поступил новый документ',
                 `Поступил новый документ «${safeFileName}» от Загружен через сканирование (№${registrationNumber})`,
                 savedDocument.id,
             );
@@ -327,7 +335,6 @@ export class DocumentsCrudService {
         }
     }
 
-    // PUT /documents/:id/verify - подтверждение оператором
     async verifyDocument(id: number, dto: VerifyDocumentDto, userId: number): Promise<{ message: string }> {
         try {
             const document = await this.documentRepository.findOne({ where: { id } });
@@ -379,11 +386,34 @@ export class DocumentsCrudService {
                 { changes, registrationNumber: document.registrationNumber }
             );
 
+            const verifiedParts: string[] = [];
+            verifiedParts.push(`Документ «${document.title}» проверен оператором.`);
+            verifiedParts.push(`Рег. номер: ${document.registrationNumber}`);
+            if (document.documentTypeId) {
+                const docType = await this.documentTypeRepository.findOne({ where: { id: document.documentTypeId } });
+                if (docType) verifiedParts.push(`Тип: ${docType.name}`);
+            }
+            if (document.categoryId) {
+                const docCategory = await this.documentCategoryRepository.findOne({ where: { id: document.categoryId } });
+                if (docCategory) verifiedParts.push(`Категория: ${docCategory.name}`);
+            }
+            if (document.currentDepartmentId) {
+                const department = await this.documentRepository.manager
+                    .createQueryBuilder()
+                    .select('d.name')
+                    .from('departments', 'd')
+                    .where('d.id = :id', { id: document.currentDepartmentId })
+                    .getRawOne();
+                if (department?.d_name) verifiedParts.push(`Отдел: ${department.d_name}`);
+            }
+
+            const verifiedMessage = verifiedParts.join('\n');
+
             await this.notificationsService.createNotification(
                 document.createdBy,
                 'verified',
                 'Документ проверен',
-                `Документ «${document.title}» проверен оператором (№${document.registrationNumber})`,
+                verifiedMessage,
                 document.id,
             );
 
@@ -419,7 +449,6 @@ export class DocumentsCrudService {
         }
     }
 
-    // POST /documents/:id/route - направление в отдел
     async routeDocument(id: number, dto: RouteDocumentDto, userId: number): Promise<{ message: string }> {
         try {
             const document = await this.documentRepository.findOne({ where: { id } });
@@ -456,11 +485,19 @@ export class DocumentsCrudService {
                 { departmentId: dto.departmentId, departmentName, comment: dto.comment, registrationNumber: document.registrationNumber }
             );
 
+            const routedParts: string[] = [];
+            routedParts.push(`Документ «${document.title}» направлен в отдел.`);
+            routedParts.push(`Рег. номер: ${document.registrationNumber}`);
+            routedParts.push(`Отдел: ${departmentName}`);
+            if (dto.comment) routedParts.push(`Комментарий: ${dto.comment}`);
+
+            const routedMessage = routedParts.join('\n');
+
             await this.notificationsService.createNotification(
                 document.createdBy,
                 'routed',
                 'Направлен в отдел',
-                `Документ «${document.title}» направлен в отдел ${departmentName} (№${document.registrationNumber})`,
+                routedMessage,
                 document.id,
             );
 
@@ -496,7 +533,6 @@ export class DocumentsCrudService {
         }
     }
 
-    // POST /documents/:id/reject - отклонение документа
     async rejectDocument(id: number, comment?: string, userId?: number): Promise<{ message: string }> {
         try {
             const document = await this.documentRepository.findOne({ where: { id } });
@@ -535,11 +571,18 @@ export class DocumentsCrudService {
                 );
             }
 
+            const rejectedParts: string[] = [];
+            rejectedParts.push(`Документ «${document.title}» отклонён.`);
+            rejectedParts.push(`Рег. номер: ${document.registrationNumber}`);
+            if (comment) rejectedParts.push(`Причина: ${comment}`);
+
+            const rejectedMessage = rejectedParts.join('\n');
+
             await this.notificationsService.createNotification(
                 document.createdBy,
                 'rejected',
                 'Документ отклонён',
-                `Документ «${document.title}» отклонён${comment ? `: ${comment}` : ''} (№${document.registrationNumber})`,
+                rejectedMessage,
                 document.id,
             );
 
@@ -575,7 +618,6 @@ export class DocumentsCrudService {
         }
     }
 
-    // PUT /documents/:id - редактирование документа
     async updateDocument(
         id: number,
         userId: number,
@@ -593,7 +635,6 @@ export class DocumentsCrudService {
 
             const updatedFields: string[] = [];
 
-            // === Основные поля документа ===
             if (dto.title !== undefined && dto.title !== document.title) {
                 document.title = dto.title;
                 updatedFields.push('title');
@@ -607,7 +648,6 @@ export class DocumentsCrudService {
                 updatedFields.push('receivedDate');
             }
 
-            // === Тип документа ===
             if (dto.documentTypeName) {
                 let type = await this.documentTypeRepository.findOne({
                     where: { name: ILike(dto.documentTypeName) }
@@ -635,7 +675,6 @@ export class DocumentsCrudService {
                 updatedFields.push('documentTypeId');
             }
 
-            // === Категория ===
             if (dto.categoryName) {
                 let category = await this.documentCategoryRepository.findOne({
                     where: { name: ILike(dto.categoryName) }
@@ -663,10 +702,8 @@ export class DocumentsCrudService {
                 updatedFields.push('categoryId');
             }
 
-            // Сохраняем основные поля документа
             await this.documentRepository.save(document);
 
-            // === Обновление классификации (document_classifications) ===
             if (dto.documentTypeId !== undefined || dto.documentTypeName || 
                 dto.categoryId !== undefined || dto.categoryName) {
                 
@@ -696,7 +733,6 @@ export class DocumentsCrudService {
                 updatedFields.push('classification');
             }
 
-            // === Сохранение ИСТОЧНИКА (document_sources) ===
             if (dto.sourceType !== undefined || dto.contactInfo !== undefined || dto.senderName !== undefined) {
                 let source = await this.documentSourceRepository.findOne({
                     where: { documentId: id },
@@ -727,7 +763,6 @@ export class DocumentsCrudService {
                 await this.documentSourceRepository.save(source);
             }
 
-            // === AI-поля (сохраняем в document_ai_results) ===
             const hasAiFields = dto.extractedAmount !== undefined ||
                 dto.extractedDate !== undefined ||
                 dto.extractedCounterparty !== undefined ||
@@ -787,7 +822,6 @@ export class DocumentsCrudService {
                 await this.documentAiResultRepository.save(aiResult);
             }
 
-            // === Аудит ===
             if (updatedFields.length > 0) {
                 await this.auditLogService.log(
                     userId,
@@ -807,7 +841,6 @@ export class DocumentsCrudService {
                 message: `Документ ${document.registrationNumber} обновлён пользователем ${userId}`,
             });
 
-            // === Получаем обновлённые данные для ответа ===
             const updatedAiResult = await this.documentAiResultRepository.findOne({
                 where: { documentId: id },
                 order: { createdAt: 'DESC' },
@@ -825,10 +858,8 @@ export class DocumentsCrudService {
                 receivedDate: document.receivedDate,
                 documentTypeId: document.documentTypeId,
                 categoryId: document.categoryId,
-                // === Поля источника ===
                 sourceType: updatedSource?.sourceType || null,
                 contactInfo: updatedSource?.contactInfo || null,
-                // === AI-поля ===
                 extractedAmount: updatedAiResult?.extractedAmount || null,
                 extractedDate: updatedAiResult?.extractedDate || null,
                 extractedCounterparty: updatedAiResult?.extractedCounterparty || null,
@@ -860,7 +891,6 @@ export class DocumentsCrudService {
         }
     }
 
-    // GET /documents/:id/comments - получение комментариев
     async getComments(documentId: number): Promise<CommentResponseDto[]> {
         try {
             const document = await this.documentRepository.findOne({
@@ -916,7 +946,6 @@ export class DocumentsCrudService {
         }
     }
 
-    // POST /documents/:id/comments - добавление комментария
     async addComment(
         documentId: number,
         userId: number,
@@ -953,6 +982,16 @@ export class DocumentsCrudService {
                 { commentId: saved.id, textPreview: dto.text.substring(0, 100) }
             );
 
+            const now = new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+
+            await this.notificationsService.createNotification(
+                document.createdBy,
+                'comment_added',
+                `Новый комментарий к документу «${document.title}»`,
+                `Добавлен комментарий к документу «${document.title}».\n\nАвтор: ${userName}\nРег. номер: ${document.registrationNumber}\nТекст: ${dto.text}\nВремя: ${now}`,
+                document.id,
+            );
+
             await this.logger.log({
                 module: 'Documents',
                 type: 'POST',
@@ -962,16 +1001,6 @@ export class DocumentsCrudService {
                 statusCode: 201,
                 message: `Комментарий добавлен к документу ${documentId} пользователем ${userName}`,
             });
-
-            if (document.createdBy !== userId) {
-                await this.notificationsService.createNotification(
-                    document.createdBy,
-                    'comment_added',
-                    'Новый комментарий',
-                    `Пользователь ${userName} оставил комментарий к документу «${document.title}»`,
-                    documentId,
-                );
-            }
 
             return {
                 id: saved.id,
@@ -1002,7 +1031,6 @@ export class DocumentsCrudService {
         }
     }
 
-    // DELETE /documents/:id/comments/:commentId - удаление комментария
     async deleteComment(
         documentId: number,
         commentId: number,

@@ -35,7 +35,6 @@ export class TextExtractionService {
         private readonly auditLogService: AuditLogService,
     ) {}
 
-    // POST /documents/:id/extract-text - извлечение текста из файла
     async extractText(id: number): Promise<ExtractTextResponseDto> {
         try {
             const document = await this.documentRepository.findOne({ where: { id }, relations: ['files', 'ocrResult'] });
@@ -188,12 +187,28 @@ export class TextExtractionService {
                             { fileName: file.fileName, error: error.message }
                         );
 
+                        const errorParts: string[] = [];
+                        errorParts.push(`Не удалось распознать текст в файле «${file.fileName}».`);
+                        errorParts.push(`Рег. номер: ${document.registrationNumber}`);
+                        errorParts.push(`Формат файла: ${file.fileType}`);
+                        errorParts.push(`Рекомендация: проверьте качество файла или загрузите в другом формате`);
+
+                        const errorMessage = errorParts.join('\n');
+
                         await this.notificationsService.createNotification(
                             document.createdBy,
                             'extract_error',
-                            'Ошибка извлечения',
-                            `Не удалось распознать текст в файле «${file.fileName}» (№${document.registrationNumber})`,
+                            'Ошибка распознавания',
+                            errorMessage,
                             document.id,
+                        );
+
+                        await this.notificationsService.upsertDocumentNotification(
+                            document.createdBy,
+                            document.id,
+                            'document_ready',
+                            'Документ загружен (без текста)',
+                            `Документ «${document.title}» загружен.\nНе удалось распознать текст — проверьте формат файла.\nРег. номер: ${document.registrationNumber}`,
                         );
                     }
                 } catch (notifError) {
@@ -218,7 +233,6 @@ export class TextExtractionService {
         }
     }
 
-    // POST /documents/generate-embeddings - генерация векторов
     async generateEmbeddings(): Promise<{ message: string; count: number }> {
         const documents = await this.documentRepository.find({
             where: { embedding: IsNull() }, relations: ['ocrResult'],
