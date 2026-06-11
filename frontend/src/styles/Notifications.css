@@ -12,6 +12,10 @@
   margin-bottom: 24px;
 }
 
+.compact-view .notifications-stats-cards-container {
+  margin-bottom: 0px;
+}
+
 .notifications-stat-card {
   display: flex;
   align-items: center;
