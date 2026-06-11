@@ -56,8 +56,6 @@ const Verification = () => {
     setActiveFilter(prev => (prev === filterId ? null : filterId));
   };
 
-  const [takingId, setTakingId] = useState<number | null>(null);
-
   const hasActiveFilters = !!(filters.typeId || filters.categoryId);
 
   const handleRowClick = (id: number) => {
@@ -140,37 +138,20 @@ const Verification = () => {
     return "low";
   };
 
-  const getVerificationStatusClass = (status: string): string => {
-    return getStatusColorClass(status);
-  };
-
-  const getVerificationStatusText = (status: string): string => {
-    return translateStatus(status);
-  };
-
-  const handleTakeToReview = async (docId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setTakingId(docId);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      navigate(`/dashboard/documents/${docId}`, { 
-        state: { 
-          openVerificationTab: true,
-          from: 'verification'
-        } 
-      });
-    } catch (err) {
-      console.error("Ошибка:", err);
-    } finally {
-      setTakingId(null);
-    }
-  };
-
   const formatConfidence = (score?: number): number => {
     if (score === undefined || score === null) return 0;
     if (score > 1) return Math.round(score);
     return Math.round(score * 100);
+  };
+
+  const handleTakeToReview = (docId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/dashboard/documents/${docId}`, { 
+      state: { 
+        openVerificationTab: true,
+        from: 'verification'
+      } 
+    });
   };
 
   return (
@@ -186,7 +167,7 @@ const Verification = () => {
               setFilters(prev => ({ ...prev, typeId: id }));
               setSelectedLabels(prev => ({ ...prev, docType: name }));
             }}
-            icon={<img src="/icons/filters/Document_type.png" alt="📄" />}
+            icon={<img src="/icons/filters/Document_type.png" alt="Тип" />}
             defaultLabel="Тип документа"
             isOpen={activeFilter === 'docType'}
             onToggle={() => toggleFilter('docType')}/>
@@ -202,7 +183,7 @@ const Verification = () => {
               setFilters(prev => ({ ...prev, categoryId: id }));
               setSelectedLabels(prev => ({ ...prev, category: name }));
             }}
-            icon={<img src="/icons/filters/Category.png" alt="🗂️" />}
+            icon={<img src="/icons/filters/Category.png" alt="Категория" />}
             defaultLabel="Категория"
             isOpen={activeFilter === 'category'}
             onToggle={() => toggleFilter('category')}/>
@@ -260,22 +241,22 @@ const Verification = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px' }}>Загрузка...</td></tr>
+              <tr><td colSpan={9} className="table-status-cell">Загрузка...</td></tr>
             ) : error ? (
               <tr>
-                <td colSpan={9} style={{ textAlign: 'center', color: 'var(--color-status-rejected)', padding: '20px' }}>
+                <td colSpan={9} className="table-error-cell">
                   {error} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
               </tr>
             ) : filtersError && !types.length && !categories.length ? (
               <tr>
-                <td colSpan={9} style={{ textAlign: 'center', color: 'var(--color-status-rejected)', padding: '20px' }}>
+                <td colSpan={9} className="table-error-cell">
                   {filtersError} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
               </tr>
             ) : data?.items?.length ? (
               data.items.map((doc) => (
-                <tr key={doc.id} onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
+                <tr key={doc.id} onClick={() => handleRowClick(doc.id)}>
                   <td>{doc.registrationNumber}</td>
                   <td>{doc.title}</td>
                   <td>{new Date(doc.receivedDate).toLocaleDateString()}</td>
@@ -292,33 +273,31 @@ const Verification = () => {
                     </div>
                   </td>
                   <td>
-                    <span className={`status-badge ${getVerificationStatusClass(doc.currentStatus)}`}>
-                      {getVerificationStatusText(doc.currentStatus)}
+                    <span className={`status-badge ${getStatusColorClass(doc.currentStatus)}`}>
+                      {translateStatus(doc.currentStatus)}
                     </span>
                   </td>
                   <td>
                     {doc.currentStatus === "pending_verification" && (
                       <button
-                        className="apply-button"
+                        className="apply-button verification-take-btn"
                         onClick={(e) => handleTakeToReview(doc.id, e)}
-                        disabled={takingId === doc.id}
-                        style={{ whiteSpace: 'nowrap' }}
                       >
-                        {takingId === doc.id ? '...' : 'Взять в проверку'}
+                        Взять в проверку
                       </button>
                     )}
                     {doc.currentStatus === "in_review" && (
-                      <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>В работе</span>
+                      <span className="verification-status-text">В работе</span>
                     )}
                     {doc.currentStatus === "verified" && (
-                      <span style={{ fontSize: "12px", color: "var(--color-status-loaded)" }}>Проверено</span>
+                      <span className="verification-status-text verification-status-done">✓ Проверено</span>
                     )}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
+                <td colSpan={9} className="table-empty-cell">
                   Нет документов, ожидающих проверки
                 </td>
               </tr>

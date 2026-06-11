@@ -7,7 +7,7 @@ export class UpdateNotificationSettingsDto {
 
     @IsOptional()
     @IsBoolean()
-    aiComplete?: boolean;
+    documentReady?: boolean;
 
     @IsOptional()
     @IsBoolean()
@@ -23,13 +23,37 @@ export class UpdateNotificationSettingsDto {
 
     @IsOptional()
     @IsBoolean()
+    rejected?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    verified?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
     lowConfidence?: boolean;
 
     @IsOptional()
     @IsBoolean()
-    routeError?: boolean;
+    passwordChanged?: boolean;
 
     @IsOptional()
     @IsBoolean()
-    overdueVerification?: boolean;
+    profileUpdated?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    settingsChanged?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    newLogin?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    commentAdded?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    documentDeleted?: boolean;
 }

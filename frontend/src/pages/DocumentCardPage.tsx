@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
-import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument, verifyDocument, routeDocument, getDocumentTypes, getDocumentCategories, getDepartments, createDocumentType, createDocumentCategory, extractText, updateDocument, getComments, addComment, deleteComment } from '../services/api';
+import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument, verifyDocument, routeDocument, getDocumentTypes, getDocumentCategories, getDepartments, createDocumentType, createDocumentCategory, extractText, updateDocument, getComments, addComment, deleteComment, rejectDocument } from '../services/api';
 import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult, DocumentType, DocumentCategory, Department, Comment } from '../types/';
 import Card from '../components/Card';
 import Tooltip from '../components/Tooltip';
@@ -111,7 +111,7 @@ const DocumentCardPage: React.FC = () => {
     const shouldOpenVerification = (location.state as any)?.openVerificationTab;
     if (shouldOpenVerification) {
       setActiveTab("verification");
-      navigate(location.pathname, { replace: true, state: {} });
+      navigate(location.pathname, { replace: true, state: { from } });
     }
   }, [location, navigate]);
 
@@ -477,17 +477,13 @@ const DocumentCardPage: React.FC = () => {
 
   const handleReject = async () => {
     if (!id) return;
+    
+    const confirmed = window.confirm('Вы уверены, что хотите отклонить документ?');
+    if (!confirmed) return;
+    
     setRejectLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/documents/${id}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify({ comment: rejectComment })
-      });
-      if (!response.ok) throw new Error('Ошибка при отклонении');
+      await rejectDocument(Number(id), rejectComment);
       setShowRejectModal(false);
       setRejectComment('');
       const updatedData = await getDocumentById(Number(id));
@@ -495,7 +491,8 @@ const DocumentCardPage: React.FC = () => {
       setVerifyStatus('success');
       setVerifyMessage('Документ отклонён');
       setActiveTab('history');
-    } catch {
+    } catch (error) {
+      console.error('Ошибка при отклонении:', error);
       setVerifyStatus('error');
       setVerifyMessage('Ошибка при отклонении документа');
     } finally {
