@@ -11,6 +11,7 @@ import Analytics from "../components/SubPages/Analytics";
 import Settings from "../components/SubPages/Settings";
 import Notifications from "../components/SubPages/Notifications";
 import Scanner from "../components/SubPages/Scanner";
+import ProfilePage from "./ProfilePage";
 import "../styles/global.css";
 import "../styles/Dashboard.css";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
@@ -61,6 +62,7 @@ const DashboardContent = () => {
             <Route path="routing" element={<Routing />} />
             <Route path="documents" element={<DocumentsListPage />} />
             <Route path="documents/:id" element={<DocumentCardPage />} />
+            <Route path="profile" element={<ProfilePage />} />
             <Route path="departments" element={<Departments />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Settings />} />

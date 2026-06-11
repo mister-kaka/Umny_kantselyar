@@ -7,12 +7,14 @@ import { UserNotificationSettings } from '../entities/user-notification-settings
 import { UserInterfaceSettings } from '../entities/user-interface-settings.entity';
 import { LoggerModule } from '../logger/logger.module';
 import { AuditLogModule } from '../audit/audit-log.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AiSetting, UserNotificationSettings, UserInterfaceSettings]),
     LoggerModule,
     AuditLogModule,
+    NotificationsModule,
   ],
   controllers: [SettingsController],
   providers: [SettingsService],

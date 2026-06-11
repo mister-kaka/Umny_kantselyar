@@ -12,8 +12,8 @@ export class UserNotificationSettings {
     @Column({ name: 'new_document', default: true })
     newDocument!: boolean;
 
-    @Column({ name: 'ai_complete', default: true })
-    aiComplete!: boolean;
+    @Column({ name: 'document_ready', default: true })
+    documentReady!: boolean;
 
     @Column({ name: 'extract_error', default: true })
     extractError!: boolean;
@@ -24,14 +24,32 @@ export class UserNotificationSettings {
     @Column({ name: 'routed_to_department', default: true })
     routedToDepartment!: boolean;
 
+    @Column({ name: 'rejected', default: true })
+    rejected!: boolean;
+
+    @Column({ name: 'verified', default: true })
+    verified!: boolean;
+
     @Column({ name: 'low_confidence', default: false })
     lowConfidence!: boolean;
 
-    @Column({ name: 'route_error', default: true })
-    routeError!: boolean;
+    @Column({ name: 'password_changed', default: true })
+    passwordChanged!: boolean;
 
-    @Column({ name: 'overdue_verification', default: false })
-    overdueVerification!: boolean;
+    @Column({ name: 'profile_updated', default: true })
+    profileUpdated!: boolean;
+
+    @Column({ name: 'settings_changed', default: false })
+    settingsChanged!: boolean;
+
+    @Column({ name: 'new_login', default: true })
+    newLogin!: boolean;
+
+    @Column({ name: 'comment_added', default: true })
+    commentAdded!: boolean;
+
+    @Column({ name: 'document_deleted', default: false })
+    documentDeleted!: boolean;
 
     @Column({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     updatedAt!: Date;
