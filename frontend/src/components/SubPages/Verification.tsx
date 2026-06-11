@@ -217,7 +217,7 @@ const Verification = () => {
         </Tooltip>
       </Card>
 
-      <Card className="cuttinPaddin">
+      <Card className="cuttinPaddin verification-table-wrapper">
         <Table
           title={<h4>Очередь проверки ({data?.total ?? 0})</h4>}
           rightTitle={data && (
@@ -241,16 +241,16 @@ const Verification = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} className="table-status-cell">Загрузка...</td></tr>
+              <tr><td colSpan={7} className="table-status-cell">Загрузка...</td></tr>
             ) : error ? (
               <tr>
-                <td colSpan={9} className="table-error-cell">
+                <td colSpan={7} className="table-error-cell">
                   {error} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
               </tr>
             ) : filtersError && !types.length && !categories.length ? (
               <tr>
-                <td colSpan={9} className="table-error-cell">
+                <td colSpan={7} className="table-error-cell">
                   {filtersError} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
               </tr>
@@ -290,7 +290,7 @@ const Verification = () => {
                       <span className="verification-status-text">В работе</span>
                     )}
                     {doc.currentStatus === "verified" && (
-                      <span className="verification-status-text verification-status-done">✓ Проверено</span>
+                      <span className="verification-status-text verification-status-done">Проверено</span>
                     )}
                   </td>
                 </tr>

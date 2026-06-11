@@ -52,26 +52,17 @@
   color: var(--color-status-loaded);
 }
 
-<<<<<<< HEAD
-
-/* правим табличку как в архиве */
 .verification-table-wrapper {
   overflow-x: auto;
   width: 100%;
-}
-
-.verification-table {
-  width: 100%;
-  min-width: auto;
   table-layout: auto;
 }
 
+.table-status-cell {
+  text-align: center;
+  padding: 40px;
+}
 
-/* Адаптив */
-@media (max-width: 768px) {
-  .verification-header h2 {
-    font-size: 20px;
-=======
 .table-status-cell {
   text-align: center;
   padding: 40px;
@@ -93,7 +84,6 @@
 @media (max-width: 1024px) {
   .confidence-bar {
     width: 50px;
->>>>>>> main
   }
 
   .confidence-text {
@@ -148,8 +138,6 @@
   }
 }
 
-<<<<<<< HEAD
-=======
 /* Маленькие телефоны (480px) */
 @media (max-width: 480px) {
   .confidence-bar {
@@ -220,4 +208,3 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
->>>>>>> main

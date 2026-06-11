@@ -20,6 +20,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-card);
   padding: 20px 24px;
+  min-height: 100px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all 0.2s ease;
   border-top: 3px solid var(--color-accent);
@@ -29,6 +30,14 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
   border-color: var(--color-accent);
+}
+
+/* Первая и третья карточки — перенос по буквам */
+.notifications-stat-card:first-child .notifications-stat-card-label,
+.notifications-stat-card:nth-child(3) .notifications-stat-card-label {
+  word-break: break-all;
+  white-space: normal;
+  max-width: 100%;
 }
 
 .notifications-stat-card-icon {
@@ -42,7 +51,7 @@
 }
 
 .notifications-stat-card-value {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
@@ -576,26 +585,66 @@
 /* Планшеты и небольшие ноутбуки */
 @media (max-width: 1024px) {
   .notifications-stats-cards-container {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
   }
 
   .notifications-stat-card {
-    padding: 18px 20px;
-    gap: 16px;
+    padding: 12px 14px;
+    gap: 10px;
   }
 
   .notifications-stat-card-icon {
-    width: 44px;
-    height: 44px;
+    width: 32px;
+    height: 32px;
   }
 
   .notifications-stat-card-value {
-    font-size: 28px;
+    font-size: 22px;
   }
 
   .notifications-stat-card-label {
-    font-size: 12px;
+    font-size: 10px;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+
+/* Уменьшаем текст в карточках при сужении */
+@media (max-width: 1100px) {
+  .notifications-stat-card-value {
+    font-size: 26px !important;
+  }
+  .notifications-stat-card-label {
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 950px) {
+  .notifications-stat-card-value {
+    font-size: 22px !important;
+  }
+  .notifications-stat-card-label {
+    font-size: 10px !important;
+  }
+}
+
+@media (max-width: 850px) {
+  .notifications-stat-card-value {
+    font-size: 20px !important;
+  }
+  .notifications-stat-card-label {
+    font-size: 10px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .notifications-stats-cards-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .notifications-stat-card-value {
+    font-size: 28px !important;
   }
 }
 
