@@ -4,6 +4,7 @@ import "./../../styles/Settings.css";
 import Card from "../Card";
 import DropdownButton from "../DropdownButton";
 import Table from "../Table";
+import { useSearchParams } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import {
   getAiProviders, getAiSettings, updateAiSettings, testAiConnection,
@@ -24,6 +25,8 @@ type Tab = "provider" | "interface" | "notifications" | "security";
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>("provider");
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
 
   const [providers, setProviders] = useState<AiProvider[]>([]);
   const [settings, setSettings] = useState<AiSettings | null>(null);
@@ -43,13 +46,19 @@ const Settings: React.FC = () => {
 
   const [notifications, setNotifications] = useState<NotificationSettings>({
     newDocument: true,
-    aiComplete: false,
-    extractError: false,
-    pendingVerification: false,
-    routedToDepartment: false,
+    documentReady: true,
+    extractError: true,
+    pendingVerification: true,
+    routedToDepartment: true,
+    rejected: false,
+    verified: false,
     lowConfidence: false,
-    routeError: false,
-    overdueVerification: false,
+    passwordChanged: false,
+    profileUpdated: false,
+    settingsChanged: false,
+    newLogin: false,
+    commentAdded: false,
+    documentDeleted: false,
   });
 
   const [interfaceSettings, setInterfaceSettings] = useState<InterfaceSettings | null>(null);
@@ -90,6 +99,12 @@ const Settings: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+    useEffect(() => {
+    if (tabFromUrl === "notifications") {
+      setActiveTab("notifications");
+    }
+  }, [tabFromUrl]);
 
   useEffect(() => {
     const loadUserSettings = async () => {
@@ -253,26 +268,32 @@ const Settings: React.FC = () => {
     }
   };
 
-const saveNotifications = async () => {
-  try {
-    const payload: NotificationSettings = {
-      newDocument: Boolean(notifications.newDocument),
-      aiComplete: Boolean(notifications.aiComplete),
-      extractError: Boolean(notifications.extractError),
-      pendingVerification: Boolean(notifications.pendingVerification),
-      routedToDepartment: Boolean(notifications.routedToDepartment),
-      lowConfidence: Boolean(notifications.lowConfidence),
-      routeError: Boolean(notifications.routeError),
-      overdueVerification: Boolean(notifications.overdueVerification),
-    };
-    const updated = await updateNotificationSettings(payload);
-    setNotifications(updated);
-    setSettingsStatus('Настройки уведомлений сохранены!');
-    setStatusType('success');
-  } catch {
-    setErrorMsg('Ошибка сохранения уведомлений');
-  }
-};
+  const saveNotifications = async () => {
+    try {
+      const payload: NotificationSettings = {
+        newDocument: Boolean(notifications.newDocument),
+        documentReady: Boolean(notifications.documentReady),
+        extractError: Boolean(notifications.extractError),
+        pendingVerification: Boolean(notifications.pendingVerification),
+        routedToDepartment: Boolean(notifications.routedToDepartment),
+        rejected: Boolean(notifications.rejected),
+        verified: Boolean(notifications.verified),
+        lowConfidence: Boolean(notifications.lowConfidence),
+        passwordChanged: Boolean(notifications.passwordChanged),
+        profileUpdated: Boolean(notifications.profileUpdated),
+        settingsChanged: Boolean(notifications.settingsChanged),
+        newLogin: Boolean(notifications.newLogin),
+        commentAdded: Boolean(notifications.commentAdded),
+        documentDeleted: Boolean(notifications.documentDeleted),
+      };
+      const updated = await updateNotificationSettings(payload);
+      setNotifications(updated);
+      setSettingsStatus('Настройки уведомлений сохранены!');
+      setStatusType('success');
+    } catch {
+      setErrorMsg('Ошибка сохранения уведомлений');
+    }
+  };
 
   const handleLogoutAll = async () => {
     try {
@@ -467,13 +488,19 @@ const saveNotifications = async () => {
                 <h3>Настройки уведомлений</h3>
                 {([
                   ["newDocument", "Новый документ"],
-                  ["aiComplete", "AI-анализ завершён"],
+                  ["documentReady", "Документ готов"],
                   ["extractError", "Ошибка извлечения текста"],
                   ["pendingVerification", "Ожидание проверки"],
                   ["routedToDepartment", "Направлен в отдел"],
+                  ["rejected", "Отклонён"],
+                  ["verified", "Проверен"],
                   ["lowConfidence", "Низкая уверенность"],
-                  ["routeError", "Ошибка маршрутизации"],
-                  ["overdueVerification", "Просрочена проверка"],
+                  ["passwordChanged", "Смена пароля"],
+                  ["profileUpdated", "Обновление профиля"],
+                  ["settingsChanged", "Изменение настроек"],
+                  ["newLogin", "Новый вход в систему"],
+                  ["commentAdded", "Новый комментарий"],
+                  ["documentDeleted", "Документ удалён"],
                 ] as [keyof NotificationSettings, string][]).map(([key, label]) => (
                   <div className="settings-form-row" key={key}>
                     <span className="settings-form-label">{label}</span>
@@ -488,12 +515,12 @@ const saveNotifications = async () => {
                   <button className="apply-button" onClick={saveNotifications}>
                     Сохранить
                   </button>
-                    <span></span>
-                    {settingsStatus && (
-                      <span className={`settings-status ${statusType}`}>
-                        {settingsStatus}
-                      </span>
-                    )}
+                  <span></span>
+                  {settingsStatus && (
+                    <span className={`settings-status ${statusType}`}>
+                      {settingsStatus}
+                    </span>
+                  )}
                 </div>
               </div>
             </Card>
