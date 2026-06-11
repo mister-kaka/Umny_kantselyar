@@ -73,8 +73,9 @@
   flex: 1;
 }
 
+/* УМЕНЬШЕННЫЕ ЦИФРЫ В КАРТОЧКАХ */
 .analytics-stat-card-value {
-  font-size: 32px;
+  font-size: 24px;  /* было 32px */
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
@@ -82,7 +83,7 @@
 }
 
 .analytics-stat-card-suffix {
-  font-size: 20px;
+  font-size: 16px;  /* было 20px */
   font-weight: 500;
   color: var(--text-secondary);
   margin-left: 2px;
@@ -250,7 +251,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 36px;
+    font-size: 28px;  /* было 36px */
   }
 
   .charts-grid {
@@ -273,7 +274,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 28px;
+    font-size: 22px;  /* было 28px */
   }
 
   .analytics-stat-icon {
@@ -304,7 +305,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 26px;
+    font-size: 20px;  /* было 26px */
   }
 
   .analytics-stat-card-label {
@@ -357,7 +358,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 24px;
+    font-size: 20px;  /* было 24px */
   }
 
   .analytics-stat-card-label {
@@ -411,7 +412,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 22px;
+    font-size: 18px;  /* было 22px */
   }
 
   .analytics-stat-card-label {
@@ -443,7 +444,7 @@
   }
 
   .analytics-stat-card-value {
-    font-size: 20px;
+    font-size: 16px;  /* было 20px */
   }
 
   .analytics-stat-icon {
