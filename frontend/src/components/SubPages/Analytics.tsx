@@ -215,32 +215,40 @@ const Analytics = () => {
   };
 
   const statusBarOptions: ApexCharts.ApexOptions = {
-    chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-    plotOptions: {
-      bar: { horizontal: true, borderRadius: 4, barHeight: '40%', distributed: true }
-    },
-    colors: statusStats.map(s => s.color),
-    dataLabels: {
-      enabled: true,
-      textAnchor: 'start',
-      style: { colors: ['#000000'], fontSize: '11px', fontWeight: 500 },
-      formatter: val => val.toString(),
-      offsetX: 16,
-    },
-    xaxis: {
-      categories: statusStats.map(s => s.label),
-      labels: { style: { colors: '#696969' } },
-      axisBorder: { show: false },
-      axisTicks: { show: false }
-    },
-    yaxis: { labels: { style: { colors: '#4b4b4b', fontWeight: 500 }, maxWidth: 200 } },
-    grid: { borderColor: '#f0f0f0', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
-    legend: { show: false },
-    tooltip: {
-      theme: 'light',
-      y: { formatter: val => `${val} шт.` }
+  chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+  plotOptions: {
+    bar: { horizontal: true, borderRadius: 4, barHeight: '40%', distributed: true }
+  },
+  colors: statusStats.map(s => s.color),
+  dataLabels: {
+    enabled: true,
+    textAnchor: 'start',
+    style: { colors: ['#000000'], fontSize: '10px', fontWeight: 500 },
+    formatter: (val) => val.toString(),
+    offsetX: 12,
+  },
+  xaxis: {
+    categories: statusStats.map(s => s.label),
+    labels: { show: true, style: { colors: '#696969', fontSize: '10px' } },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+    tickAmount: Math.max(...statusStats.map(s => s.count)),
+    min: 0,
+    max: Math.max(...statusStats.map(s => s.count)),
+  },
+  yaxis: {
+    labels: {
+      style: { colors: '#4b4b4b', fontWeight: 500, fontSize: '10px' },
+      maxWidth: 180
     }
-  };
+  },
+  grid: { borderColor: '#f0f0f0', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+  legend: { show: false },
+  tooltip: {
+    theme: 'light',
+    y: { formatter: val => `${val} шт.` }
+  }
+};
 
   const statCards = [
     { value: analyticsData?.totalDocuments || 0, label: 'Всего документов', icon: '/icons/analytics/total.png' },
