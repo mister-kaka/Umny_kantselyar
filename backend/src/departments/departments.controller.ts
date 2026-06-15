@@ -1,10 +1,18 @@
-import { Controller, Get, Post, Delete, Patch, Param, Query, Body, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Patch, Param, Query, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { DepartmentsService } from './departments.service';
 import { DepartmentDto } from './dto/department.dto';
 import { DepartmentStatsDto } from './dto/department-stats.dto';
 import { DepartmentDetailDto } from './dto/department-detail.dto';
 import { CreateDepartmentDto } from './dto/create-department.dto';
+import { Request } from 'express';
+
+interface RequestWithUser extends Request {
+    user: {
+        userId: number;
+        email: string;
+    };
+}
 
 @Controller('departments')
 export class DepartmentsController {
@@ -36,19 +44,28 @@ export class DepartmentsController {
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  async create(@Body() dto: CreateDepartmentDto): Promise<DepartmentDto> {
-    return this.departmentsService.create(dto.name);
+  async create(
+    @Req() req: RequestWithUser,
+    @Body() dto: CreateDepartmentDto,
+  ): Promise<DepartmentDto> {
+    return this.departmentsService.create(dto.name, req.user.userId);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  async deactivate(@Param('id', ParseIntPipe) id: number): Promise<DepartmentDto> {
-    return this.departmentsService.deactivate(id);
+  async deactivate(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: RequestWithUser,
+  ): Promise<DepartmentDto> {
+    return this.departmentsService.deactivate(id, req.user.userId);
   }
 
   @Patch(':id/restore')
   @UseGuards(AuthGuard('jwt'))
-  async restore(@Param('id', ParseIntPipe) id: number): Promise<DepartmentDto> {
-    return this.departmentsService.restore(id);
+  async restore(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: RequestWithUser,
+  ): Promise<DepartmentDto> {
+    return this.departmentsService.restore(id, req.user.userId);
   }
 }

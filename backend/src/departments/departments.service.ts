@@ -8,6 +8,7 @@ import { DepartmentDto } from './dto/department.dto';
 import { DepartmentStatsDto } from './dto/department-stats.dto';
 import { DepartmentDetailDto, DepartmentEmployeeDto } from './dto/department-detail.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { transliterate } from '../utils/transliterate';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class DepartmentsService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly logger: AppLoggerService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findAll(showArchived?: boolean): Promise<DepartmentDto[]> {
@@ -71,7 +73,7 @@ export class DepartmentsService {
     }
   }
 
-  async create(name: string): Promise<DepartmentDto> {
+  async create(name: string, userId: number): Promise<DepartmentDto> {
     try {
       const code = transliterate(name).toLowerCase().replace(/\s+/g, '_');
 
@@ -97,6 +99,13 @@ export class DepartmentsService {
         statusCode: 201,
         message: `Отдел "${name}" создан (id: ${saved.id})`,
       });
+
+      await this.notificationsService.createNotification(
+        userId,
+        'reference_created',
+        'Справочник изменён',
+        `Создан новый отдел: «${name}»`,
+      );
 
       return {
         id: saved.id,
@@ -344,7 +353,7 @@ export class DepartmentsService {
     }
   }
 
-  async deactivate(id: number): Promise<DepartmentDto> {
+  async deactivate(id: number, userId: number): Promise<DepartmentDto> {
     try {
       const department = await this.departmentRepository.findOne({ where: { id } });
 
@@ -368,6 +377,13 @@ export class DepartmentsService {
         statusCode: 200,
         message: `Отдел "${saved.name}" архивирован`,
       });
+
+      await this.notificationsService.createNotification(
+        userId,
+        'reference_deleted',
+        'Справочник изменён',
+        `Архивирован отдел: «${saved.name}»`,
+      );
 
       return {
         id: saved.id,
@@ -397,7 +413,7 @@ export class DepartmentsService {
     }
   }
 
-  async restore(id: number): Promise<DepartmentDto> {
+  async restore(id: number, userId: number): Promise<DepartmentDto> {
     try {
       const department = await this.departmentRepository.findOne({ where: { id } });
 
@@ -421,6 +437,13 @@ export class DepartmentsService {
         statusCode: 200,
         message: `Отдел "${saved.name}" восстановлен`,
       });
+
+      await this.notificationsService.createNotification(
+        userId,
+        'reference_created',
+        'Справочник изменён',
+        `Восстановлен отдел: «${saved.name}»`,
+      );
 
       return {
         id: saved.id,
