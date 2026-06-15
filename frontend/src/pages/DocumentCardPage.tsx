@@ -7,6 +7,7 @@ import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, Document
 import Card from '../components/Card';
 import Tooltip from '../components/Tooltip';
 import { translateStatus, getStatusColorClass } from '../constants/statuses';
+import { formatMoscowDate, formatMoscowDateTime } from '../utils/moscowTime';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 
@@ -42,6 +43,7 @@ const DocumentCardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from;
+  const departmentId = (location.state as any)?.departmentId;
   const [activeTab, setActiveTab] = useState<"overview" | "ai" | "verification" | "ocr" | "history" | "discussion">("overview");
 
   const [data, setData] = useState<DocumentCardType | null>(null);
@@ -111,7 +113,7 @@ const DocumentCardPage: React.FC = () => {
     const shouldOpenVerification = (location.state as any)?.openVerificationTab;
     if (shouldOpenVerification) {
       setActiveTab("verification");
-      navigate(location.pathname, { replace: true, state: { from } });
+      navigate(location.pathname, { replace: true, state: { from, departmentId } });
     }
   }, [location, navigate]);
 
@@ -122,6 +124,9 @@ const DocumentCardPage: React.FC = () => {
       case 'search': return 'Архив документов';
       case 'notifications': return 'К уведомлениям';
       case 'verification': return 'В очередь проверки';
+      case 'routing': return 'К маршрутизации';
+      case 'departments': return departmentId ? 'Назад в отдел' : 'К подразделениям';
+      case 'department-detail': return 'Назад в отдел';
       default: return 'Архив документов';
     }
   };
@@ -133,6 +138,9 @@ const DocumentCardPage: React.FC = () => {
       case 'search': return '/dashboard/documents';
       case 'notifications': return '/dashboard/notifications';
       case 'verification': return '/dashboard/verification';
+      case 'routing': return '/dashboard/routing';
+      case 'departments': return departmentId ? `/dashboard/departments/${departmentId}` : '/dashboard/departments';
+      case 'department-detail': return departmentId ? `/dashboard/departments/${departmentId}` : '/dashboard/departments';
       default: return '/dashboard/documents';
     }
   };
@@ -385,7 +393,7 @@ const DocumentCardPage: React.FC = () => {
     if (!window.confirm('Удалить документ? Это действие нельзя отменить.')) return;
     try {
       await deleteDocument(Number(id));
-      navigate('/dashboard/documents');
+      navigate(getBackPath());
     } catch {
       alert('Ошибка при удалении документа');
     }
@@ -566,15 +574,7 @@ const DocumentCardPage: React.FC = () => {
 
   const canReject = data.currentStatus !== 'rejected' && data.currentStatus !== 'routed';
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const formatDate = (dateString: string) => formatMoscowDateTime(dateString);
 
   return (
     <div className="document-page">
@@ -630,14 +630,14 @@ const DocumentCardPage: React.FC = () => {
             className="doc-info-value has-tooltip"
             data-tooltip="Дата из текста самого документа, извлечена AI. Может отличаться от даты загрузки в систему."
           >
-            {data.receivedDate ? new Date(data.receivedDate).toLocaleDateString('ru-RU') : 'Не указана'}
+            {data.receivedDate ? formatMoscowDate(data.receivedDate) : 'Не указана'}
             <span className="confidence-info-symbol">ⓘ</span>
           </span>
         </div>
         <div className="doc-info-divider" />
         <div className="doc-info-item">
           <span className="doc-info-label">Дата загрузки</span>
-          <span className="doc-info-value">{data.uploadedAt ? new Date(data.uploadedAt).toLocaleDateString('ru-RU') : '-'}</span>
+          <span className="doc-info-value">{data.uploadedAt ? formatMoscowDate(data.uploadedAt) : '-'}</span>
         </div>
         <div className="doc-info-divider" />
         <div className="doc-info-item">
@@ -684,7 +684,7 @@ const DocumentCardPage: React.FC = () => {
                   </div>
                   <div className="info-row">
                     <span>Дата загрузки</span>
-                    <strong>{data.uploadedAt ? new Date(data.uploadedAt).toLocaleDateString('ru-RU') : '-'}</strong>
+                    <strong>{data.uploadedAt ? formatMoscowDate(data.uploadedAt) : '-'}</strong>
                   </div>
                   <div className="info-row">
                     <span>Статус</span>
@@ -789,11 +789,9 @@ const DocumentCardPage: React.FC = () => {
                         <div className="source-contacts">
                           {(() => {
                             const text = data.source.contactInfo;
-                            // Ищем телефон и email
                             const phoneMatch = text.match(/тел?:?\s*([\+\(]?\d[\d\s\-\(\)\+]+)/i);
                             const emailMatch = text.match(/email:\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
                             
-                            // Адрес — всё, что до телефона или email
                             let address = text;
                             if (phoneMatch && phoneMatch.index !== undefined) {
                               address = text.substring(0, phoneMatch.index).trim();
@@ -1223,15 +1221,7 @@ const DocumentCardPage: React.FC = () => {
                             </span>
                           </td>
                           <td>{route.routeReason || '—'}</td>
-                          <td>
-                            {new Date(route.routedAt).toLocaleString('ru-RU', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </td>
+                          <td>{formatMoscowDateTime(route.routedAt)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1307,7 +1297,7 @@ const DocumentCardPage: React.FC = () => {
         </button>
       </div>
 
-      {from !== 'archive' && from !== 'search' && (
+      {from !== 'archive' && from !== 'search' && from !== 'notifications' && from !== 'routing' && from !== 'departments' && from !== 'department-detail' && (
         <div className="doc-bottom-link">
           <a href="/dashboard/documents" onClick={(e) => { e.preventDefault(); navigate('/dashboard/documents'); }}>
             В архив документов

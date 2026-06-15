@@ -13,6 +13,7 @@ import { DateFilterDropdown } from "../DropdownButton";
 import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
+import { formatMoscowDate } from "../../utils/moscowTime";
 
 const DocumentsListPage = () => {
   const navigate = useNavigate();
@@ -391,7 +392,7 @@ const DocumentsListPage = () => {
                   </td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.title}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.senderName}</td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : '-'}</td>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{formatMoscowDate(doc.uploadedAt)}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.documentType}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.category}</td>
                   <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
