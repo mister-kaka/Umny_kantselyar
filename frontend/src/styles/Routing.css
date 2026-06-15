@@ -1,251 +1,302 @@
 @import url("../styles/global.css");
 @import url("../styles/Dashboard.css");
 
-.routingFilter{
-    display:flex;
-    align-items:center;
-    margin-bottom:20px;
+.routing-page {
+  padding: 0;
 }
 
-.routingRow{
-    cursor:pointer;
-    transition:all .2s ease;
+.routing-header {
+  margin-bottom: 24px;
 }
 
-.routingRow:hover{
-    background:#fafafa;
+.routing-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
 }
 
-.routeBadge{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    min-width:110px;
-
-    padding:6px 14px;
-
-    border-radius:20px;
-
-    font-size:12px;
-
-    font-weight:600;
-
-    transition:.2s;
-
+.routing-subtitle {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  margin: 0;
 }
 
-.routeSuccess{
-
-    background:rgba(129,216,208,.18);
-
-    color:#39a89d;
-
+.routing-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
-.routeProcess{
-
-    background:rgba(255,185,80,.15);
-
-    color:#e39a21;
-
+.routing-stats .card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px;
+  min-height: 110px;
+  border-top: 3px solid var(--color-accent);
+  transition: all 0.2s ease;
 }
 
-.routePending{
-
-    background:rgba(110,150,255,.12);
-
-    color:#5f82eb;
-
+.routing-stats .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
-.routeRejected{
-
-    background:rgba(240,90,90,.12);
-
-    color:#e15555;
-
+.routing-stat-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
 }
 
-.routeDefault{
-
-    background:#f3f3f3;
-
-    color:#808080;
-
+.routing-stat-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
 }
 
-.routeBadge:hover{
-
-    transform:scale(1.03);
-
+.routing-stat-content {
+  flex: 1;
 }
 
-.data-table tbody tr{
-
-    transition:.2s;
-
+.routing-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 4px;
 }
 
-.data-table tbody tr:hover{
-
-    background:#fafafa;
-
+.routing-stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
-.data-table td{
-
-    vertical-align:middle;
-
+.routing-row {
+  cursor: pointer;
 }
 
-.data-table th{
-
-    white-space:nowrap;
-
+.routing-row--matched {
+  border-left: 3px solid #7EE29F;
 }
 
-.routingHeader{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
+.routing-row--mismatched {
+  border-left: 3px solid #E87373;
 }
 
-.routingHeader h2{
-
-    margin:0;
-
-    font-size:24px;
-
-    font-weight:600;
-
-    color:var(--text-primary);
-
+.routing-cell-reg {
+  white-space: nowrap;
+  font-weight: 600;
 }
 
-.routingHeader span{
-
-    color:var(--text-secondary);
-
+.routing-cell-title {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.routingCard{
-
-    transition:.25s;
-
+.routing-cell-date {
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
-.routingCard:hover{
-
-    box-shadow:
-    0 10px 30px rgba(0,0,0,.05);
-
+.routing-department-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-@media(max-width:1024px){
-
-.data-table{
-
-font-size:13px;
-
+.routing-table-dept-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
 }
 
-.routeBadge{
-
-min-width:90px;
-
-padding:5px 10px;
-
-font-size:11px;
-
+.routing-table-dept-link:hover {
+  background-color: rgba(129, 216, 208, 0.12);
 }
 
+.routing-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
-@media(max-width:768px){
-
-.table-wrapper{
-
-overflow-x:auto;
-
+.routing-avatar--initials {
+  background-color: var(--color-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
 }
 
-.data-table{
-
-min-width:720px;
-
+.routing-operator-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
 }
 
-.routeBadge{
-
-min-width:80px;
-
-font-size:10px;
-
-padding:4px 8px;
-
+.routing-reason-text {
+  font-size: 12px;
+  color: var(--color-accent);
+  cursor: help;
+  border-bottom: 1px dashed var(--color-accent);
 }
 
-.routingFilter{
-
-flex-wrap:wrap;
-
-gap:8px;
-
+.routing-reason-empty {
+  font-size: 12px;
+  color: var(--text-tertiary);
 }
 
+.routing-loading {
+  text-align: center;
+  padding: 48px 24px;
+  font-size: 14px;
+  color: var(--text-tertiary);
 }
 
-@media(max-width:480px){
-
-.data-table{
-
-min-width:650px;
-
-font-size:11px;
-
+.routing-error {
+  text-align: center;
+  padding: 48px 24px;
+  font-size: 14px;
+  color: var(--color-status-rejected);
 }
 
-.routeBadge{
-
-padding:3px 7px;
-
-font-size:9px;
-
-min-width:70px;
-
+.routing-error .apply-button {
+  margin-left: 8px;
 }
 
-.routingFilter{
-
-margin-bottom:12px;
-
+.routing-empty {
+  text-align: center;
+  padding: 48px 24px;
+  font-size: 14px;
+  color: var(--text-tertiary);
 }
 
+@media (max-width: 1024px) {
+  .routing-stats {
+    gap: 16px;
+  }
+
+  .routing-stats .card {
+    padding: 16px 20px;
+  }
+
+  .routing-stat-value {
+    font-size: 22px;
+  }
+
+  .routing-cell-title {
+    max-width: 120px;
+  }
 }
 
-@media(min-width:1400px){
+@media (max-width: 768px) {
+  .routing-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
 
-.data-table th,
-.data-table td{
+  .routing-stats .card {
+    padding: 14px 16px;
+    min-height: 80px;
+  }
 
-height:54px;
+  .routing-stat-icon-wrap {
+    width: 36px;
+    height: 36px;
+  }
 
+  .routing-stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .routing-stat-value {
+    font-size: 20px;
+  }
+
+  .routing-stat-label {
+    font-size: 11px;
+  }
+
+  .routing-cell-title {
+    max-width: 100px;
+  }
 }
 
-.routeBadge{
+@media (max-width: 480px) {
+  .routing-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 
-font-size:13px;
+  .routing-stats .card {
+    min-height: 60px;
+    padding: 12px;
+  }
 
-padding:7px 16px;
+  .routing-stat-icon-wrap {
+    width: 28px;
+    height: 28px;
+  }
 
+  .routing-stat-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .routing-stat-value {
+    font-size: 20px;
+  }
 }
 
+@media (max-width: 375px) {
+  .routing-stat-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 320px) {
+  .routing-stats {
+    gap: 8px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .routing-row:active {
+    background-color: rgba(129, 216, 208, 0.08);
+  }
+
+  .routing-table-dept-link:active {
+    transform: scale(0.92);
+  }
+
+  .routing-row,
+  .routing-table-dept-link {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
