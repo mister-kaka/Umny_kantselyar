@@ -11,7 +11,7 @@ import DepartmentDetailPage from "./DepartmentDetailPage";
 import Analytics from "../components/SubPages/Analytics";
 import Settings from "../components/SubPages/Settings";
 import Notifications from "../components/SubPages/Notifications";
-import Scanner from "../components/SubPages/Scanner";
+import Scanner from "../components/Scanner";
 import ProfilePage from "./ProfilePage";
 import "../styles/global.css";
 import "../styles/Dashboard.css";
