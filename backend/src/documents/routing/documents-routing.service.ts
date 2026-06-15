@@ -7,6 +7,7 @@ import { User } from '../../entities/user.entity';
 import { RoutingResponseDto, RoutingDocumentDto, RoutingOperatorDto, RoutingStatsDto } from '../dto/routing-response.dto';
 import { RouteTemplateDto } from '../dto/route-template.dto';
 import { AppLoggerService } from '../../logger/app-logger.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 @Injectable()
 export class DocumentsRoutingService {
@@ -18,6 +19,7 @@ export class DocumentsRoutingService {
         @InjectRepository(User)
         private userRepository: Repository<User>,
         private readonly logger: AppLoggerService,
+        private readonly notificationsService: NotificationsService,
     ) {}
 
     async getRoutingDocuments(
@@ -223,6 +225,115 @@ export class DocumentsRoutingService {
 
             throw new HttpException(
                 'Ошибка сервера при получении шаблонов маршрутизации',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    async createRouteTemplate(dto: { name: string; description?: string; departmentIds: number[] }, userId: number): Promise<RouteTemplateDto> {
+        try {
+            const result = await this.documentRepository.manager
+                .createQueryBuilder()
+                .insert()
+                .into('route_templates')
+                .values({
+                    name: dto.name,
+                    description: dto.description || null,
+                    department_ids: dto.departmentIds,
+                    is_active: true,
+                })
+                .returning('*')
+                .execute();
+
+            const template = result.raw[0];
+
+            await this.logger.log({
+                module: 'DocumentsRouting',
+                type: 'POST',
+                url: '/route-templates',
+                action: 'создание шаблона маршрутизации',
+                status: 'success',
+                statusCode: 201,
+                message: `Шаблон "${dto.name}" создан (id: ${template.id})`,
+            });
+
+            await this.notificationsService.createNotification(
+                userId,
+                'reference_created',
+                'Справочник изменён',
+                `Создан новый шаблон маршрутизации: «${dto.name}»`,
+            );
+
+            return {
+                id: template.id,
+                name: template.name,
+                description: template.description,
+                departmentIds: template.department_ids || [],
+                isActive: template.is_active,
+            };
+        } catch (error) {
+            await this.logger.log({
+                module: 'DocumentsRouting',
+                type: 'POST',
+                url: '/route-templates',
+                action: 'создание шаблона маршрутизации',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при создании шаблона маршрутизации',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    async deleteRouteTemplate(id: number, userId: number): Promise<void> {
+        try {
+            const result = await this.documentRepository.manager
+                .createQueryBuilder()
+                .delete()
+                .from('route_templates')
+                .where('id = :id', { id })
+                .execute();
+
+            if (!result.affected) {
+                throw new HttpException('Шаблон не найден', HttpStatus.NOT_FOUND);
+            }
+
+            await this.logger.log({
+                module: 'DocumentsRouting',
+                type: 'DELETE',
+                url: `/route-templates/${id}`,
+                action: 'удаление шаблона маршрутизации',
+                status: 'success',
+                statusCode: 200,
+                message: `Шаблон ${id} удалён`,
+            });
+
+            await this.notificationsService.createNotification(
+                userId,
+                'reference_deleted',
+                'Справочник изменён',
+                `Удалён шаблон маршрутизации (id: ${id})`,
+            );
+
+        } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.logger.log({
+                module: 'DocumentsRouting',
+                type: 'DELETE',
+                url: `/route-templates/${id}`,
+                action: 'удаление шаблона маршрутизации',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
+            throw new HttpException(
+                'Ошибка сервера при удалении шаблона маршрутизации',
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }

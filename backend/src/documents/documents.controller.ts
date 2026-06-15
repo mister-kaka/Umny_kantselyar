@@ -16,6 +16,7 @@ import { VerifyDocumentDto } from './dto/verify-document.dto';
 import { RouteDocumentDto } from './dto/route-document.dto';
 import { RejectDocumentDto } from './dto/reject-document.dto';
 import { RoutingResponseDto } from './dto/routing-response.dto';
+import { RouteTemplateDto } from './dto/route-template.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { AddCommentDto } from './dto/add-comment.dto';
 import { Request } from 'express';
@@ -69,6 +70,31 @@ export class DocumentsController {
         const pageNum = page ? parseInt(page, 10) : 1;
         const limitNum = limit ? parseInt(limit, 10) : 10;
         return this.routingService.getRoutingDocuments(deptId, operId, filter, pageNum, limitNum);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get('route-templates')
+    async getRouteTemplates(): Promise<RouteTemplateDto[]> {
+        return this.routingService.getRouteTemplates();
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post('route-templates')
+    async createRouteTemplate(
+        @Req() req: RequestWithUser,
+        @Body() dto: { name: string; description?: string; departmentIds: number[] },
+    ): Promise<RouteTemplateDto> {
+        return this.routingService.createRouteTemplate(dto, req.user.userId);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete('route-templates/:id')
+    async deleteRouteTemplate(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: RequestWithUser,
+    ): Promise<{ message: string }> {
+        await this.routingService.deleteRouteTemplate(id, req.user.userId);
+        return { message: 'Шаблон удалён' };
     }
 
     @UseGuards(AuthGuard('jwt'))
