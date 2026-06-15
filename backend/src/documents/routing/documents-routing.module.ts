@@ -5,9 +5,10 @@ import { Document } from '../../entities/document.entity';
 import { DocumentRoute } from '../../entities/document-route.entity';
 import { User } from '../../entities/user.entity';
 import { LoggerModule } from '../../logger/logger.module';
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Document, DocumentRoute, User]), LoggerModule],
+    imports: [TypeOrmModule.forFeature([Document, DocumentRoute, User]), LoggerModule, NotificationsModule],
     providers: [DocumentsRoutingService],
     exports: [DocumentsRoutingService],
 })

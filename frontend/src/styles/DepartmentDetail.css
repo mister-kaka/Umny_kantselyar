@@ -339,8 +339,8 @@
 .dept-chart-container {
   width: 100%;
   height: 280px;
+  min-height: 200px;
 }
-
 .dept-doc-row {
   cursor: pointer;
 }

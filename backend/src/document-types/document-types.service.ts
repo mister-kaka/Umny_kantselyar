@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { DocumentType } from '../entities/document-type.entity';
 import { DocumentTypeDto } from './dto/document-type.dto';
 import { AppLoggerService } from '../logger/app-logger.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { transliterate } from '../utils/transliterate';
 
 @Injectable()
@@ -12,6 +13,7 @@ export class DocumentTypesService {
     @InjectRepository(DocumentType)
     private readonly documentTypeRepository: Repository<DocumentType>,
     private readonly logger: AppLoggerService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findAll(): Promise<DocumentTypeDto[]> {
@@ -55,7 +57,7 @@ export class DocumentTypesService {
     }
   }
 
-  async create(name: string): Promise<DocumentTypeDto> {
+  async create(name: string, userId: number): Promise<DocumentTypeDto> {
     try {
       const type = this.documentTypeRepository.create({
         name,
@@ -74,6 +76,13 @@ export class DocumentTypesService {
         message: `Тип "${name}" создан (id: ${saved.id})`,
       });
 
+      await this.notificationsService.createNotification(
+        userId,
+        'reference_created',
+        'Справочник изменён',
+        `Создан новый тип документа: «${name}»`,
+      );
+
       return { id: saved.id, name: saved.name, code: saved.code, description: saved.description };
 
     } catch (error) {
@@ -91,6 +100,52 @@ export class DocumentTypesService {
 
       throw new HttpException(
         'Ошибка сервера при создании типа документа',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async delete(id: number, userId: number): Promise<void> {
+    try {
+      const type = await this.documentTypeRepository.findOne({ where: { id } });
+      if (!type) {
+        throw new HttpException('Тип документа не найден', HttpStatus.NOT_FOUND);
+      }
+
+      await this.documentTypeRepository.remove(type);
+
+      await this.logger.log({
+        module: 'DocumentTypes',
+        type: 'DELETE',
+        url: `/document-types/${id}`,
+        action: 'удаление типа документа',
+        status: 'success',
+        statusCode: 200,
+        message: `Тип "${type.name}" удалён (id: ${id})`,
+      });
+
+      await this.notificationsService.createNotification(
+        userId,
+        'reference_deleted',
+        'Справочник изменён',
+        `Удалён тип документа: «${type.name}»`,
+      );
+
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+
+      await this.logger.log({
+        module: 'DocumentTypes',
+        type: 'DELETE',
+        url: `/document-types/${id}`,
+        action: 'удаление типа документа',
+        status: 'error',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: error instanceof Error ? error.message : 'Ошибка сервера',
+      });
+
+      throw new HttpException(
+        'Ошибка сервера при удалении типа документа',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

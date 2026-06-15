@@ -320,6 +320,8 @@ export interface NotificationSettings {
   newLogin: boolean;
   commentAdded: boolean;
   documentDeleted: boolean;
+  referenceCreated: boolean;
+  referenceDeleted: boolean;
 }
 
 export interface InterfaceSettings {
@@ -358,6 +360,7 @@ export interface AuditLogItem {
   id: number;
   userId: number;
   userName: string;
+  userAvatarUrl: string | null;
   action: string;
   documentId: number | null;
   details: any;
@@ -403,7 +406,9 @@ export type AppNotificationType =
   | 'settings_changed'
   | 'new_login'
   | 'comment_added'
-  | 'document_deleted';
+  | 'document_deleted'
+  | 'reference_created'
+  | 'reference_deleted';
 
 export interface AppNotification {
   id: number;
@@ -527,4 +532,25 @@ export interface DepartmentDto {
   name: string;
   code: string;
   isActive: boolean;
+}
+
+export interface CreateRouteTemplateData {
+  name: string;
+  description?: string;
+  departmentIds: number[];
+}
+
+export interface ExportDataResponse {
+  version: string;
+  exportedAt: string;
+  exportedBy: number;
+}
+
+export interface ImportDataResponse {
+  message: string;
+  counts: Record<string, number>;
+}
+
+export interface AboutResponse {
+  version: string;
 }

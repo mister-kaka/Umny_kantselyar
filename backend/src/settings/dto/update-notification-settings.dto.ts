@@ -56,4 +56,12 @@ export class UpdateNotificationSettingsDto {
     @IsOptional()
     @IsBoolean()
     documentDeleted?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    referenceCreated?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    referenceDeleted?: boolean;
 }

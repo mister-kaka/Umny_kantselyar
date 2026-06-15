@@ -200,6 +200,8 @@ CREATE TABLE user_notification_settings (
     new_login BOOLEAN DEFAULT TRUE,
     comment_added BOOLEAN DEFAULT TRUE,
     document_deleted BOOLEAN DEFAULT FALSE,
+    reference_created BOOLEAN DEFAULT TRUE,
+    reference_deleted BOOLEAN DEFAULT TRUE,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -273,7 +275,9 @@ CREATE TABLE notifications (
         'profile_updated',
         'settings_changed',
         'new_login',
-        'document_deleted'
+        'document_deleted',
+        'reference_created',
+        'reference_deleted'
     ))
 );
 

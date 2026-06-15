@@ -1,8 +1,8 @@
-import "../../styles/global.css";
-import "../../styles/Scanner.css";
+import "../styles/global.css";
+import "../styles/Scanner.css";
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { uploadDocument } from "../../services/api";
+import { uploadDocument } from "../services/api";
 
 interface ScannerProps {
   onClose: () => void;

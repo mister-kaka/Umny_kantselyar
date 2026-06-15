@@ -4,6 +4,22 @@ import { Repository } from 'typeorm';
 import { AiSetting } from '../entities/ai-setting.entity';
 import { UserNotificationSettings } from '../entities/user-notification-settings.entity';
 import { UserInterfaceSettings } from '../entities/user-interface-settings.entity';
+import { Document } from '../entities/document.entity';
+import { DocumentType } from '../entities/document-type.entity';
+import { DocumentCategory } from '../entities/document-category.entity';
+import { Department } from '../entities/department.entity';
+import { User } from '../entities/user.entity';
+import { DocumentRoute } from '../entities/document-route.entity';
+import { DocumentSource } from '../entities/document-source.entity';
+import { DocumentFile } from '../entities/document-file.entity';
+import { OcrResult } from '../entities/ocr-result.entity';
+import { DocumentClassification } from '../entities/document-classification.entity';
+import { DocumentAiResult } from '../entities/document-ai-result.entity';
+import { DocumentComment } from '../entities/document-comment.entity';
+import { Notification } from '../entities/notification.entity';
+import { LoginHistory } from '../entities/login-history.entity';
+import { AuditLog } from '../entities/audit-log.entity';
+import { UserSession } from '../entities/user-session.entity';
 import { AiSettingsResponseDto } from './dto/ai-settings-response.dto';
 import { UpdateAiSettingsDto } from './dto/update-ai-settings.dto';
 import { AiProviderDto } from './dto/ai-provider.dto';
@@ -25,6 +41,38 @@ export class SettingsService {
     private readonly userNotificationSettingsRepository: Repository<UserNotificationSettings>,
     @InjectRepository(UserInterfaceSettings)
     private readonly userInterfaceSettingsRepository: Repository<UserInterfaceSettings>,
+    @InjectRepository(Document)
+    private readonly documentRepository: Repository<Document>,
+    @InjectRepository(DocumentType)
+    private readonly documentTypeRepository: Repository<DocumentType>,
+    @InjectRepository(DocumentCategory)
+    private readonly documentCategoryRepository: Repository<DocumentCategory>,
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(DocumentRoute)
+    private readonly documentRouteRepository: Repository<DocumentRoute>,
+    @InjectRepository(DocumentSource)
+    private readonly documentSourceRepository: Repository<DocumentSource>,
+    @InjectRepository(DocumentFile)
+    private readonly documentFileRepository: Repository<DocumentFile>,
+    @InjectRepository(OcrResult)
+    private readonly ocrResultRepository: Repository<OcrResult>,
+    @InjectRepository(DocumentClassification)
+    private readonly classificationRepository: Repository<DocumentClassification>,
+    @InjectRepository(DocumentAiResult)
+    private readonly aiResultRepository: Repository<DocumentAiResult>,
+    @InjectRepository(DocumentComment)
+    private readonly commentRepository: Repository<DocumentComment>,
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
+    @InjectRepository(LoginHistory)
+    private readonly loginHistoryRepository: Repository<LoginHistory>,
+    @InjectRepository(AuditLog)
+    private readonly auditLogRepository: Repository<AuditLog>,
+    @InjectRepository(UserSession)
+    private readonly userSessionRepository: Repository<UserSession>,
     private readonly logger: AppLoggerService,
     private readonly auditLogService: AuditLogService,
     private readonly notificationsService: NotificationsService,
@@ -325,6 +373,8 @@ export class SettingsService {
           newLogin: true,
           commentAdded: true,
           documentDeleted: false,
+          referenceCreated: true,
+          referenceDeleted: true,
         });
         settings = await this.userNotificationSettingsRepository.save(settings);
       }
@@ -356,6 +406,8 @@ export class SettingsService {
         newLogin: settings.newLogin,
         commentAdded: settings.commentAdded,
         documentDeleted: settings.documentDeleted,
+        referenceCreated: settings.referenceCreated,
+        referenceDeleted: settings.referenceDeleted,
         updatedAt: settings.updatedAt,
       };
 
@@ -404,6 +456,8 @@ export class SettingsService {
       if (dto.newLogin !== undefined) settings.newLogin = dto.newLogin;
       if (dto.commentAdded !== undefined) settings.commentAdded = dto.commentAdded;
       if (dto.documentDeleted !== undefined) settings.documentDeleted = dto.documentDeleted;
+      if (dto.referenceCreated !== undefined) settings.referenceCreated = dto.referenceCreated;
+      if (dto.referenceDeleted !== undefined) settings.referenceDeleted = dto.referenceDeleted;
 
       settings.updatedAt = new Date();
       const saved = await this.userNotificationSettingsRepository.save(settings);
@@ -444,6 +498,8 @@ export class SettingsService {
         newLogin: saved.newLogin,
         commentAdded: saved.commentAdded,
         documentDeleted: saved.documentDeleted,
+        referenceCreated: saved.referenceCreated,
+        referenceDeleted: saved.referenceDeleted,
         updatedAt: saved.updatedAt,
       };
 
@@ -585,6 +641,179 @@ export class SettingsService {
         'Ошибка сервера при получении настроек интерфейса',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  async exportData(userId: number): Promise<object> {
+    try {
+      const data = {
+        version: '1.5.0',
+        exportedAt: new Date().toISOString(),
+        exportedBy: userId,
+        documents: await this.documentRepository.find(),
+        documentTypes: await this.documentTypeRepository.find(),
+        documentCategories: await this.documentCategoryRepository.find(),
+        departments: await this.departmentRepository.find(),
+        users: await this.userRepository.find({ select: ['id', 'email', 'fullName', 'role', 'departmentId', 'avatarUrl', 'createdAt'] }),
+        documentRoutes: await this.documentRouteRepository.find(),
+        documentSources: await this.documentSourceRepository.find(),
+        documentFiles: await this.documentFileRepository.find(),
+        ocrResults: await this.ocrResultRepository.find(),
+        classifications: await this.classificationRepository.find(),
+        aiResults: await this.aiResultRepository.find(),
+        comments: await this.commentRepository.find(),
+        notifications: await this.notificationRepository.find(),
+        aiSettings: await this.aiSettingRepository.find(),
+      };
+
+      await this.auditLogService.log(userId, 'export_data', null, {});
+      await this.logger.log({
+        module: 'Settings',
+        type: 'GET',
+        url: '/settings/export',
+        action: 'экспорт данных',
+        status: 'success',
+        statusCode: 200,
+        message: `Данные экспортированы пользователем ${userId}`,
+      });
+
+      return data;
+    } catch (error) {
+      await this.logger.log({
+        module: 'Settings',
+        type: 'GET',
+        url: '/settings/export',
+        action: 'экспорт данных',
+        status: 'error',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: error instanceof Error ? error.message : 'Ошибка сервера',
+      });
+
+      throw new HttpException(
+        'Ошибка сервера при экспорте данных',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async importData(data: any, userId: number): Promise<{ message: string; counts: Record<string, number> }> {
+    try {
+      const counts: Record<string, number> = {};
+
+      if (data.documentTypes) {
+        await this.documentTypeRepository.clear();
+        await this.documentTypeRepository.save(data.documentTypes);
+        counts.documentTypes = data.documentTypes.length;
+      }
+
+      if (data.documentCategories) {
+        await this.documentCategoryRepository.clear();
+        await this.documentCategoryRepository.save(data.documentCategories);
+        counts.documentCategories = data.documentCategories.length;
+      }
+
+      if (data.departments) {
+        await this.departmentRepository.clear();
+        await this.departmentRepository.save(data.departments);
+        counts.departments = data.departments.length;
+      }
+
+      if (data.documents) {
+        await this.documentRepository.clear();
+        await this.documentRepository.save(data.documents);
+        counts.documents = data.documents.length;
+      }
+
+      if (data.documentRoutes) {
+        await this.documentRouteRepository.clear();
+        await this.documentRouteRepository.save(data.documentRoutes);
+        counts.documentRoutes = data.documentRoutes.length;
+      }
+
+      if (data.documentSources) {
+        await this.documentSourceRepository.clear();
+        await this.documentSourceRepository.save(data.documentSources);
+        counts.documentSources = data.documentSources.length;
+      }
+
+      if (data.documentFiles) {
+        await this.documentFileRepository.clear();
+        await this.documentFileRepository.save(data.documentFiles);
+        counts.documentFiles = data.documentFiles.length;
+      }
+
+      if (data.ocrResults) {
+        await this.ocrResultRepository.clear();
+        await this.ocrResultRepository.save(data.ocrResults);
+        counts.ocrResults = data.ocrResults.length;
+      }
+
+      if (data.classifications) {
+        await this.classificationRepository.clear();
+        await this.classificationRepository.save(data.classifications);
+        counts.classifications = data.classifications.length;
+      }
+
+      if (data.aiResults) {
+        await this.aiResultRepository.clear();
+        await this.aiResultRepository.save(data.aiResults);
+        counts.aiResults = data.aiResults.length;
+      }
+
+      if (data.comments) {
+        await this.commentRepository.clear();
+        await this.commentRepository.save(data.comments);
+        counts.comments = data.comments.length;
+      }
+
+      if (data.notifications) {
+        await this.notificationRepository.clear();
+        await this.notificationRepository.save(data.notifications);
+        counts.notifications = data.notifications.length;
+      }
+
+      if (data.aiSettings) {
+        await this.aiSettingRepository.clear();
+        await this.aiSettingRepository.save(data.aiSettings);
+        counts.aiSettings = data.aiSettings.length;
+      }
+
+      await this.auditLogService.log(userId, 'import_data', null, { counts });
+      await this.logger.log({
+        module: 'Settings',
+        type: 'POST',
+        url: '/settings/import',
+        action: 'импорт данных',
+        status: 'success',
+        statusCode: 200,
+        message: `Данные импортированы пользователем ${userId}. Загружено: ${JSON.stringify(counts)}`,
+      });
+
+      return { message: 'Данные успешно импортированы', counts };
+    } catch (error) {
+      await this.logger.log({
+        module: 'Settings',
+        type: 'POST',
+        url: '/settings/import',
+        action: 'импорт данных',
+        status: 'error',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: error instanceof Error ? error.message : 'Ошибка сервера',
+      });
+
+      throw new HttpException(
+        'Ошибка сервера при импорте данных',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getAbout(): Promise<{ version: string }> {
+    try {
+      const packageJson = require('../../package.json');
+      return { version: packageJson.version || '1.5.0' };
+    } catch {
+      return { version: '1.5.0' };
     }
   }
 }

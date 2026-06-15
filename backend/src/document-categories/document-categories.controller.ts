@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { DocumentCategoriesService } from './document-categories.service';
 import { DocumentCategoryDto } from './dto/document-category.dto';
+import { Request } from 'express';
+
+interface RequestWithUser extends Request {
+    user: {
+        userId: number;
+        email: string;
+    };
+}
 
 @Controller('document-categories')
 export class DocumentCategoriesController {
@@ -17,7 +25,20 @@ export class DocumentCategoriesController {
 
     @Post()
     @UseGuards(AuthGuard('jwt'))
-    async create(@Body('name') name: string): Promise<DocumentCategoryDto> {
-        return this.documentCategoriesService.create(name);
+    async create(
+        @Req() req: RequestWithUser,
+        @Body('name') name: string,
+    ): Promise<DocumentCategoryDto> {
+        return this.documentCategoriesService.create(name, req.user.userId);
+    }
+
+    @Delete(':id')
+    @UseGuards(AuthGuard('jwt'))
+    async delete(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req: RequestWithUser,
+    ): Promise<{ message: string }> {
+        await this.documentCategoriesService.delete(id, req.user.userId);
+        return { message: 'Категория удалена' };
     }
 }

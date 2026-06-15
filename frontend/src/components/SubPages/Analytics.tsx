@@ -3,15 +3,19 @@ import { getDocumentTypes, getDocumentCategories, getDocuments, getAnalyticsData
 import { DocumentType, DocumentCategory, DocumentListItem, AnalyticsData } from '../../types';
 import '../../styles/Analytics.css';
 import { getStatusHexColor, translateStatus } from '../../constants/statuses';
-
+import '../../styles/global.css';
 const Chart = lazy(() => import('react-apexcharts'));
 
 const CLEAN_PALETTE = ['#81D8D0', '#5DBFBB', '#7EADE2', '#3BA6A5', '#BBDFFB', '#A2C5C3', '#C7D9D8', '#E1EDED'];
 const ACCENT = '#81D8D0';
 
-const formatConfidence = (value: number | null | undefined): number => {
-  if (value == null) return 0;
-  return Math.round(value * 100);
+const getThemeColors = () => {
+  const styles = getComputedStyle(document.documentElement);
+  return {
+    textPrimary: styles.getPropertyValue('--text-primary').trim() || '#000000',
+    textSecondary: styles.getPropertyValue('--text-secondary').trim() || '#4b4b4b',
+    borderColor: styles.getPropertyValue('--border-color').trim() || '#E5E5E5',
+  };
 };
 
 const Analytics = () => {
@@ -22,6 +26,7 @@ const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isChartReady, setIsChartReady] = useState(false);
+  const [themeKey, setThemeKey] = useState(0);
 
   useEffect(() => {
     Promise.all([
@@ -49,6 +54,17 @@ const Analytics = () => {
       setIsChartReady(true);
     }, 100);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setThemeKey(prev => prev + 1);
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    return () => observer.disconnect();
   }, []);
 
   const last14Days = useMemo(() => {
@@ -121,6 +137,8 @@ const Analytics = () => {
     return <div className="analytics-error">{error}</div>;
   }
 
+  const themeColors = getThemeColors();
+
   const donutOptions: ApexCharts.ApexOptions = {
     labels: typeStats.map(t => t.name),
     colors: CLEAN_PALETTE,
@@ -130,6 +148,9 @@ const Analytics = () => {
       fontFamily: 'Inter, sans-serif',
       markers: { size: 6, strokeWidth: 0 },
       itemMargin: { horizontal: 10, vertical: 4 },
+      labels: {
+        colors: themeColors.textSecondary
+      }
     },
     plotOptions: {
       pie: {
@@ -137,8 +158,8 @@ const Analytics = () => {
           size: '65%',
           labels: {
             show: true,
-            name: { fontSize: '11px', color: '#696969' },
-            value: { fontSize: '24px', fontWeight: 600, color: '#000000' },
+            name: { fontSize: '11px', color: themeColors.textSecondary },
+            value: { fontSize: '24px', fontWeight: 600, color: themeColors.textPrimary },
             total: {
               show: true,
               label: 'Всего',
@@ -168,17 +189,17 @@ const Analytics = () => {
     dataLabels: {
       enabled: true,
       textAnchor: 'start',
-      style: { colors: ['#000000'], fontSize: '11px', fontWeight: 500 },
+      style: { colors: [themeColors.textPrimary], fontSize: '11px', fontWeight: 500 },
       formatter: (val) => val.toString(),
       offsetX: 16,
     },
     xaxis: {
       categories: categoryStats.map(c => c.name),
-      labels: { style: { colors: '#696969' } },
+      labels: { style: { colors: themeColors.textSecondary } },
       axisBorder: { show: false },
       axisTicks: { show: false }
     },
-    yaxis: { labels: { style: { colors: '#4b4b4b', fontWeight: 500 }, maxWidth: 200 } },
+    yaxis: { labels: { style: { colors: themeColors.textSecondary, fontWeight: 500 }, maxWidth: 200 } },
     grid: { borderColor: '#f0f0f0', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
     legend: { show: false },
     tooltip: {
@@ -201,54 +222,46 @@ const Analytics = () => {
         const [, m, day] = d.split('-');
         return `${day}.${m}`;
       }),
-      labels: { style: { colors: '#696969' } },
+      labels: { style: { colors: themeColors.textSecondary } },
       axisBorder: { show: false },
       axisTicks: { show: false }
     },
     yaxis: {
       min: 0,
       tickAmount: 4,
-      labels: { formatter: val => Math.floor(val).toString(), style: { colors: '#696969' } }
+      labels: { formatter: val => Math.floor(val).toString(), style: { colors: themeColors.textSecondary } }
     },
     grid: { borderColor: '#f0f0f0', strokeDashArray: 4 },
     tooltip: { theme: 'light', y: { formatter: val => `${val} шт.` } }
   };
 
   const statusBarOptions: ApexCharts.ApexOptions = {
-  chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-  plotOptions: {
-    bar: { horizontal: true, borderRadius: 4, barHeight: '40%', distributed: true }
-  },
-  colors: statusStats.map(s => s.color),
-  dataLabels: {
-    enabled: true,
-    textAnchor: 'start',
-    style: { colors: ['#000000'], fontSize: '10px', fontWeight: 500 },
-    formatter: (val) => val.toString(),
-    offsetX: 12,
-  },
-  xaxis: {
-    categories: statusStats.map(s => s.label),
-    labels: { show: true, style: { colors: '#696969', fontSize: '10px' } },
-    axisBorder: { show: false },
-    axisTicks: { show: false },
-    tickAmount: Math.max(...statusStats.map(s => s.count)),
-    min: 0,
-    max: Math.max(...statusStats.map(s => s.count)),
-  },
-  yaxis: {
-    labels: {
-      style: { colors: '#4b4b4b', fontWeight: 500, fontSize: '10px' },
-      maxWidth: 180
+    chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+    plotOptions: {
+      bar: { horizontal: true, borderRadius: 4, barHeight: '40%', distributed: true }
+    },
+    colors: statusStats.map(s => s.color),
+    dataLabels: {
+      enabled: true,
+      textAnchor: 'start',
+      style: { colors: [themeColors.textPrimary], fontSize: '11px', fontWeight: 500 },
+      formatter: val => val.toString(),
+      offsetX: 16,
+    },
+    xaxis: {
+      categories: statusStats.map(s => s.label),
+      labels: { style: { colors: themeColors.textSecondary } },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    yaxis: { labels: { style: { colors: themeColors.textSecondary, fontWeight: 500 }, maxWidth: 200 } },
+    grid: { borderColor: themeColors.borderColor, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+    legend: { show: false },
+    tooltip: {
+      theme: 'light',
+      y: { formatter: val => `${val} шт.` }
     }
-  },
-  grid: { borderColor: '#f0f0f0', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
-  legend: { show: false },
-  tooltip: {
-    theme: 'light',
-    y: { formatter: val => `${val} шт.` }
-  }
-};
+  };
 
   const statCards = [
     { value: analyticsData?.totalDocuments || 0, label: 'Всего документов', icon: '/icons/analytics/total.png' },
@@ -260,11 +273,9 @@ const Analytics = () => {
   ];
 
   return (
-    <div className="analytics-page">
-      <div className="analytics-header">
-        <h1 className="analytics-title">Аналитика</h1>
-        <p className="analytics-subtitle">{documents.length} документов в системе</p>
-      </div>
+    <div>
+      <h2 className="page-title">Аналитика</h2>
+      <p className="page-subtitle">{documents.length} документов в системе</p>
 
       <div className="analytics-stats-cards-container">
         {statCards.map((card, i) => (
@@ -293,7 +304,7 @@ const Analytics = () => {
             {typeof window !== 'undefined' && isChartReady && typeStats.length > 0 ? (
               <Suspense fallback={<div className="empty-chart">Загрузка графика...</div>}>
                 <Chart
-                  key="donut-chart"
+                  key={`donut-${themeKey}`}
                   options={donutOptions}
                   series={typeStats.map(t => t.value)}
                   type="donut"
@@ -315,7 +326,7 @@ const Analytics = () => {
             {typeof window !== 'undefined' && isChartReady && categoryStats.length > 0 ? (
               <Suspense fallback={<div className="empty-chart">Загрузка графика...</div>}>
                 <Chart
-                  key="categories-bar"
+                  key={`categories-${themeKey}`}
                   options={barOptions}
                   series={[{ name: 'Документы', data: categoryStats.map(c => c.value) }]}
                   type="bar"
@@ -337,7 +348,7 @@ const Analytics = () => {
             {typeof window !== 'undefined' && isChartReady && (
               <Suspense fallback={<div className="empty-chart">Загрузка графика...</div>}>
                 <Chart
-                  key="daily-area"
+                  key={`area-${themeKey}`}
                   options={areaOptions}
                   series={[{ name: 'Загружено', data: dailyData }]}
                   type="area"
@@ -356,7 +367,7 @@ const Analytics = () => {
             {typeof window !== 'undefined' && isChartReady && statusStats.length > 0 ? (
               <Suspense fallback={<div className="empty-chart">Загрузка графика...</div>}>
                 <Chart
-                  key="statuses-bar"
+                  key={`statuses-${themeKey}`}
                   options={statusBarOptions}
                   series={[{ name: 'Документы', data: statusStats.map(s => s.count) }]}
                   type="bar"

@@ -51,6 +51,12 @@ export class UserNotificationSettings {
     @Column({ name: 'document_deleted', default: false })
     documentDeleted!: boolean;
 
+    @Column({ name: 'reference_created', default: true })
+    referenceCreated!: boolean;
+
+    @Column({ name: 'reference_deleted', default: true })
+    referenceDeleted!: boolean;
+
     @Column({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     updatedAt!: Date;
 

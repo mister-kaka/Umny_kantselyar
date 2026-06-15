@@ -39,6 +39,10 @@
   margin-bottom: 24px;
 }
 
+.compact-view .stats-cards-container {
+  margin-bottom: 0px;
+}
+
 .stat-card {
   display: flex;
   align-items: center;

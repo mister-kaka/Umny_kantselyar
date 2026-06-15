@@ -14,16 +14,18 @@ import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
 import { formatMoscowDate } from "../../utils/moscowTime";
+import { useSettings } from "../../contexts/SettingsContext";
 
 const DocumentsListPage = () => {
   const navigate = useNavigate();
+  const { defaultPageLimit } = useSettings();
 
   const [data, setData] = useState<DocumentsListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filtersError, setFiltersError] = useState('');
   const [page, setPage] = useState(1);
-  const [Plimit, setPLimit] = useState(10);
+  const [Plimit, setPLimit] = useState(defaultPageLimit);
   const [isExporting, setIsExporting] = useState(false);
 
   const [types, setTypes] = useState<DocumentType[]>([]);
@@ -219,6 +221,9 @@ const DocumentsListPage = () => {
 
   return (
     <div>
+      <h2 className="page-title">Архив документов</h2>
+      <p className="page-subtitle">Все документы в системе</p>
+
       <Card className="filtersButtsWrapper">
         <Tooltip text="Фильтр по дате загрузки">
           <DateFilterDropdown
@@ -283,7 +288,7 @@ const DocumentsListPage = () => {
               const newLimit = parseInt(value, 10);
               if (!isNaN(newLimit)) setPLimit(newLimit);
             }}
-            defaultLabel="10"
+            defaultLabel={String(defaultPageLimit)}
             isOpen={activeFilter === 'limitSelector'}
             onToggle={() => toggleFilter('limitSelector')}/>
         </Tooltip>
@@ -387,20 +392,18 @@ const DocumentsListPage = () => {
                       <span className="file-queue-checkmark" />
                     </label>
                   </td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600 }}>
-                    {doc.registrationNumber}
-                  </td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.title}</td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.senderName}</td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{formatMoscowDate(doc.uploadedAt)}</td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.documentType}</td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.category}</td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
+                  <td onClick={() => handleRowClick(doc.id)}>{doc.registrationNumber}</td>
+                  <td onClick={() => handleRowClick(doc.id)}>{doc.title}</td>
+                  <td onClick={() => handleRowClick(doc.id)}>{doc.senderName}</td>
+                  <td onClick={() => handleRowClick(doc.id)}>{formatMoscowDate(doc.uploadedAt)}</td>
+                  <td onClick={() => handleRowClick(doc.id)}>{doc.documentType}</td>
+                  <td onClick={() => handleRowClick(doc.id)}>{doc.category}</td>
+                  <td onClick={() => handleRowClick(doc.id)}>
                     <span className={`status-badge ${getStatusColorClass(doc.currentStatus)}`}>
                       {translateStatus(doc.currentStatus)}
                     </span>
                   </td>
-                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.department}</td>
+                  <td onClick={() => handleRowClick(doc.id)}>{doc.department}</td>
                 </tr>
               ))
             ) : (

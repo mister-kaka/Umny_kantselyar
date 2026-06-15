@@ -50,5 +50,11 @@ export class NotificationSettingsResponseDto {
     documentDeleted!: boolean;
 
     @Expose()
+    referenceCreated!: boolean;
+
+    @Expose()
+    referenceDeleted!: boolean;
+
+    @Expose()
     updatedAt!: Date;
 }

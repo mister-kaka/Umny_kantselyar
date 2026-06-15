@@ -220,12 +220,14 @@ export const DateFilterDropdown: React.FC<DateFilterDropdownProps> = ({
             <li className="no-hover custom-range-panel">
               <input
                 type="date"
+                className='calendarik'
                 value={customFrom}
                 onChange={(e) => setCustomFrom(e.target.value)}
                 placeholder="с"/>
               <span> – </span>
               <input
                 type="date"
+                className='calendarik'
                 value={customTo}
                 onChange={(e) => setCustomTo(e.target.value)}
                 placeholder="по"/>

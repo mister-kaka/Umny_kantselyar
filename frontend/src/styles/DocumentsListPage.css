@@ -143,6 +143,14 @@
   background: var(--color-bg-page);
 }
 
+.calendarik {
+  color: var(--text-primary)
+}
+
+[data-theme="dark"] .calendarik::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 .paginationWrapper{
     display: flex;
     align-items: center;
@@ -178,6 +186,10 @@
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 500;
+}
+
+.compact-view .apply-button {
+  height: 35px;
 }
 
 .apply-button:hover {
