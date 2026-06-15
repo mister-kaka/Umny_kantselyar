@@ -44,7 +44,8 @@ const DocumentCardPage: React.FC = () => {
   const location = useLocation();
   const from = (location.state as any)?.from;
   const departmentId = (location.state as any)?.departmentId;
-  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "verification" | "ocr" | "history" | "discussion">("overview");
+  const returnTab = (location.state as any)?.tab;
+  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "verification" | "ocr" | "history" | "discussion">(returnTab || "overview");
 
   const [data, setData] = useState<DocumentCardType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -508,6 +509,19 @@ const DocumentCardPage: React.FC = () => {
     }
   };
 
+  const handleGoToDepartment = (e: React.MouseEvent, departmentName: string) => {
+    e.stopPropagation();
+    const dept = departments.find(d => d.name === departmentName);
+    if (dept) {
+      navigate(`/dashboard/departments/${dept.id}`, {
+        state: {
+          from: 'document-card',
+          documentId: id ? Number(id) : undefined
+        }
+      });
+    }
+  };
+
   const handlePreviewFile = async (file: DocumentFile) => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     const fileUrl = `${apiUrl}${file.filePath}`;
@@ -706,26 +720,30 @@ const DocumentCardPage: React.FC = () => {
                     <span className="classif-label">Тип документа</span>
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.type || aiResult?.documentTypeSuggested || '-'}</span>
-                      <span
-                        className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null))}`}
-                        data-tooltip="Точность определения типа документа AI-моделью"
-                      >
-                        {formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null)}%
-                        <span className="confidence-info-symbol">ⓘ</span>
-                      </span>
+                      {!data.classification?.isVerified && (
+                        <span
+                          className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null))}`}
+                          data-tooltip="Точность определения типа документа AI-моделью"
+                        >
+                          {formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null)}%
+                          <span className="confidence-info-symbol">ⓘ</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="classif-item">
                     <span className="classif-label">Категория</span>
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.category || aiResult?.categorySuggested || '-'}</span>
-                      <span
-                        className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null))}`}
-                        data-tooltip="Точность определения категории документа AI-моделью"
-                      >
-                        {formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null)}%
-                        <span className="confidence-info-symbol">ⓘ</span>
-                      </span>
+                      {!data.classification?.isVerified && (
+                        <span
+                          className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null))}`}
+                          data-tooltip="Точность определения категории документа AI-моделью"
+                        >
+                          {formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null)}%
+                          <span className="confidence-info-symbol">ⓘ</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                   {aiResult?.extractedAmount != null && (
@@ -1209,6 +1227,7 @@ const DocumentCardPage: React.FC = () => {
                         <th>Статус</th>
                         <th>Причина</th>
                         <th>Дата</th>
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1222,6 +1241,18 @@ const DocumentCardPage: React.FC = () => {
                           </td>
                           <td>{route.routeReason || '—'}</td>
                           <td>{formatMoscowDateTime(route.routedAt)}</td>
+                          <td>
+                            {route.departmentName && (
+                              <Tooltip text="Перейти в отдел">
+                                <button
+                                  className="history-dept-btn"
+                                  onClick={(e) => handleGoToDepartment(e, route.departmentName)}
+                                >
+                                  В отдел →
+                                </button>
+                              </Tooltip>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

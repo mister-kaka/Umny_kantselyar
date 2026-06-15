@@ -23,6 +23,7 @@ const DepartmentDetailPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const from = (location.state as any)?.from;
+    const documentId = (location.state as any)?.documentId;
 
     const [data, setData] = useState<DepartmentDetail | null>(null);
     const [loading, setLoading] = useState(true);
@@ -44,12 +45,18 @@ const DepartmentDetailPage = () => {
 
     const getBackLabel = (): string => {
         if (from === 'routing') return 'К маршрутизации';
+        if (from === 'document-card') return 'К карточке документа';
         return 'К подразделениям';
     };
 
-    const getBackPath = (): string => {
-        if (from === 'routing') return '/dashboard/routing';
-        return '/dashboard/departments';
+    const handleBackClick = () => {
+        if (from === 'document-card' && documentId) {
+            navigate(`/dashboard/documents/${documentId}`, { state: { tab: 'history' } });
+        } else if (from === 'routing') {
+            navigate('/dashboard/routing');
+        } else {
+            navigate('/dashboard/departments');
+        }
     };
 
     const fetchData = async () => {
@@ -201,7 +208,7 @@ const DepartmentDetailPage = () => {
     return (
         <div className="dept-detail-page">
             <div className="dept-detail-top-row">
-                <button className="dept-detail-back" onClick={() => navigate(getBackPath())}>
+                <button className="dept-detail-back" onClick={handleBackClick}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                         <path d="M9 3l-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
