@@ -7,10 +7,11 @@ import Routing from "../components/SubPages/Routing";
 import DocumentsListPage from "../components/SubPages/DocumentsListPage";
 import DocumentCardPage from "./DocumentCardPage";
 import Departments from "../components/SubPages/Departments";
+import DepartmentDetailPage from "./DepartmentDetailPage";
 import Analytics from "../components/SubPages/Analytics";
 import Settings from "../components/SubPages/Settings";
 import Notifications from "../components/SubPages/Notifications";
-import Scanner from "../components/SubPages/Scanner";
+import Scanner from "../components/Scanner";
 import ProfilePage from "./ProfilePage";
 import "../styles/global.css";
 import "../styles/Dashboard.css";
@@ -64,6 +65,7 @@ const DashboardContent = () => {
             <Route path="documents/:id" element={<DocumentCardPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="departments" element={<Departments />} />
+            <Route path="departments/:id" element={<DepartmentDetailPage />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Settings />} />
             <Route path="notifications" element={<Notifications />} />

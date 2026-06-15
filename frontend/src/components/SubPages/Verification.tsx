@@ -12,6 +12,7 @@ import { translateStatus, getStatusColorClass } from "../../constants/statuses";
 import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
+import { formatMoscowDate } from "../../utils/moscowTime";
 
 interface VerificationDocument {
   id: number;
@@ -259,7 +260,7 @@ const Verification = () => {
                 <tr key={doc.id} onClick={() => handleRowClick(doc.id)}>
                   <td>{doc.registrationNumber}</td>
                   <td>{doc.title}</td>
-                  <td>{new Date(doc.receivedDate).toLocaleDateString()}</td>
+                  <td>{formatMoscowDate(doc.receivedDate)}</td>
                   <td>{doc.aiDocumentType || doc.documentType || '-'}</td>
                   <td>
                     <div className="confidence-cell">

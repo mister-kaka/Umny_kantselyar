@@ -443,3 +443,88 @@ export interface RouteTemplate {
   departmentIds: number[];
   isActive: boolean;
 }
+
+export interface DepartmentStats {
+  id: number;
+  name: string;
+  code: string;
+  routedCount: number;
+  lastRoutedTitle: string | null;
+  lastRoutedAt: string | null;
+}
+
+export interface DepartmentEmployee {
+  id: number;
+  fullName: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
+export interface DepartmentDocumentItem {
+  id: number;
+  registrationNumber: string;
+  title: string;
+  documentType: string | null;
+  routedAt: string | null;
+  operatorName?: string;
+  operatorAvatarUrl?: string | null;
+  routeReason?: string | null;
+}
+
+export interface DepartmentDetail {
+  id: number;
+  name: string;
+  code: string;
+  isActive: boolean;
+  totalRouted: number;
+  firstRoutedAt: string | null;
+  lastRoutedAt: string | null;
+  employees: DepartmentEmployee[];
+  documents: {
+    items: DepartmentDocumentItem[];
+    total: number;
+    page: number;
+    totalPages: number;
+  };
+  monthlyStats: { month: string; count: number }[];
+}
+
+export interface RoutingStats {
+  total: number;
+  matched: number;
+  mismatched: number;
+}
+
+export interface RoutingOperator {
+  id: number;
+  fullName: string;
+}
+
+export interface RoutingDocumentItem {
+  id: number;
+  registrationNumber: string;
+  title: string;
+  currentDepartment: string;
+  suggestedDepartment: string;
+  routeStatus: string;
+  operatorName: string;
+  operatorAvatarUrl: string | null;
+  routedAt: string;
+  routeReason?: string | null;
+}
+
+export interface RoutingResponse {
+  stats: RoutingStats;
+  items: RoutingDocumentItem[];
+  operators: RoutingOperator[];
+  page: number;
+  totalPages: number;
+  totalItems: number;
+}
+
+export interface DepartmentDto {
+  id: number;
+  name: string;
+  code: string;
+  isActive: boolean;
+}

@@ -1,9 +1,10 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { Document } from '../../entities/document.entity';
 import { DocumentRoute } from '../../entities/document-route.entity';
-import { RoutingDocumentDto } from '../dto/routing-document.dto';
+import { User } from '../../entities/user.entity';
+import { RoutingResponseDto, RoutingDocumentDto, RoutingOperatorDto, RoutingStatsDto } from '../dto/routing-response.dto';
 import { RouteTemplateDto } from '../dto/route-template.dto';
 import { AppLoggerService } from '../../logger/app-logger.service';
 
@@ -14,43 +15,129 @@ export class DocumentsRoutingService {
         private documentRepository: Repository<Document>,
         @InjectRepository(DocumentRoute)
         private documentRouteRepository: Repository<DocumentRoute>,
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
         private readonly logger: AppLoggerService,
     ) {}
 
-    async getRoutingDocuments(departmentId?: number): Promise<RoutingDocumentDto[]> {
+    async getRoutingDocuments(
+        departmentId?: number,
+        operatorId?: number,
+        filter?: 'all' | 'matched' | 'mismatched',
+        page: number = 1,
+        limit: number = 10,
+    ): Promise<RoutingResponseDto> {
         try {
-            const query = this.documentRepository
-                .createQueryBuilder('doc')
-                .leftJoin('doc.currentDepartment', 'currentDept')
-                .leftJoin('doc.aiResults', 'ai', 'ai.id = (SELECT id FROM document_ai_results WHERE document_id = doc.id ORDER BY created_at DESC LIMIT 1)')
-                .where('doc.currentStatus = :status', { status: 'routed' })
-                .select([
-                    'doc.id as id',
-                    'doc.registrationNumber as registrationNumber',
-                    'doc.title as title',
-                    'currentDept.name as currentDepartment',
-                    'ai.departmentSuggested as suggestedDepartment',
-                    'doc.currentStatus as routeStatus'
-                ]);
+            const where: FindOptionsWhere<Document> = {
+                currentStatus: 'routed',
+            };
 
             if (departmentId) {
-                query.andWhere('doc.currentDepartmentId = :departmentId', { departmentId });
+                where.currentDepartmentId = departmentId;
             }
 
-            const results = await query.getRawMany();
+            if (operatorId) {
+                where.createdBy = operatorId;
+            }
 
-            return results.map(row => ({
-                id: row.id,
-                registrationNumber: row.registrationNumber,
-                title: row.title,
-                currentDepartment: row.currentDepartment,
-                suggestedDepartment: row.suggestedDepartment,
-                routeStatus: row.routeStatus,
-            }));
+            const [allDocs, totalItems] = await this.documentRepository.findAndCount({
+                where,
+                relations: ['currentDepartment', 'creator', 'aiResults', 'documentRoutes'],
+                order: { routedAt: 'DESC' },
+            });
+
+            let filteredDocs = allDocs;
+
+            if (filter === 'matched') {
+                filteredDocs = allDocs.filter(doc => {
+                    const lastAi = doc.aiResults?.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+                    return lastAi && doc.currentDepartment?.name === lastAi.departmentSuggested;
+                });
+            } else if (filter === 'mismatched') {
+                filteredDocs = allDocs.filter(doc => {
+                    const lastAi = doc.aiResults?.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+                    return lastAi && doc.currentDepartment?.name !== lastAi.departmentSuggested;
+                });
+            }
+
+            const totalFiltered = filteredDocs.length;
+            const pagedDocs = filteredDocs.slice((page - 1) * limit, page * limit);
+
+            const items: RoutingDocumentDto[] = pagedDocs.map(doc => {
+                const lastAi = doc.aiResults?.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+                const routedRoute = doc.documentRoutes?.find(dr => dr.routeStatus === 'routed');
+
+                return {
+                    id: doc.id,
+                    registrationNumber: doc.registrationNumber,
+                    title: doc.title,
+                    currentDepartment: doc.currentDepartment?.name || '—',
+                    suggestedDepartment: lastAi?.departmentSuggested || '—',
+                    routeStatus: doc.currentStatus,
+                    operatorName: doc.creator?.fullName || 'Неизвестно',
+                    operatorAvatarUrl: doc.creator?.avatarUrl || null,
+                    routedAt: doc.routedAt?.toISOString() || '',
+                    routeReason: routedRoute?.routeReason || null,
+                };
+            });
+
+            const stats: RoutingStatsDto = {
+                total: totalItems,
+                matched: allDocs.filter(doc => {
+                    const lastAi = doc.aiResults?.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+                    return lastAi && doc.currentDepartment?.name === lastAi.departmentSuggested;
+                }).length,
+                mismatched: allDocs.filter(doc => {
+                    const lastAi = doc.aiResults?.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+                    return lastAi && doc.currentDepartment?.name !== lastAi.departmentSuggested;
+                }).length,
+            };
+
+            const operatorSet = new Map<number, { id: number; fullName: string }>();
+            allDocs.forEach(doc => {
+                if (doc.creator && !operatorSet.has(doc.creator.id)) {
+                    operatorSet.set(doc.creator.id, {
+                        id: doc.creator.id,
+                        fullName: doc.creator.fullName,
+                    });
+                }
+            });
+            const operators: RoutingOperatorDto[] = Array.from(operatorSet.values());
+
+            await this.logger.log({
+                module: 'DocumentsRouting',
+                type: 'GET',
+                url: '/documents/routing',
+                action: 'получение списка маршрутизации',
+                status: 'success',
+                statusCode: 200,
+                message: `Найдено ${totalFiltered} документов`,
+            });
+
+            return {
+                stats,
+                items,
+                operators,
+                page,
+                totalPages: Math.ceil(totalFiltered / limit),
+                totalItems: totalFiltered,
+            };
         } catch (error) {
+            if (error instanceof HttpException) throw error;
+
+            await this.logger.log({
+                module: 'DocumentsRouting',
+                type: 'GET',
+                url: '/documents/routing',
+                action: 'получение списка маршрутизации',
+                status: 'error',
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: error instanceof Error ? error.message : 'Ошибка сервера',
+            });
+
             throw new HttpException(
                 'Ошибка получения списка документов для маршрутизации',
-                HttpStatus.INTERNAL_SERVER_ERROR
+                HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }

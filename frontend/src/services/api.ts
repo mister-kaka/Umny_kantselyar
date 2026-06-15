@@ -33,7 +33,11 @@ import {
   ExtractTextResponse,
   AiSearchResponse,
   AnalyticsData,
-  RouteTemplate
+  RouteTemplate,
+  DepartmentStats,
+  DepartmentDetail,
+  RoutingResponse,
+  DepartmentDto,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -223,14 +227,64 @@ export const createDocumentCategory = async (name: string): Promise<DocumentCate
 };
 
 //подразделения
-export const getDepartments = async (): Promise<Department[]> => {
+export const getDepartments = async (showArchived?: boolean): Promise<Department[]> => {
   try {
-    const response = await api.get<Department[]>('/departments');
+    const params: any = {};
+    if (showArchived) params.showArchived = showArchived;
+    const response = await api.get<Department[]>('/departments', { params });
     return response.data;
   } catch (error) {
     console.error('Ошибка получения списка подразделений', error);
     throw error;
   }
+};
+
+export const getDepartmentStats = async (showArchived?: boolean): Promise<DepartmentStats[]> => {
+  try {
+    const params: any = {};
+    if (showArchived) params.showArchived = showArchived;
+    const response = await api.get<DepartmentStats[]>('/departments/stats', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения статистики подразделений', error);
+    throw error;
+  }
+};
+
+export const getDepartmentDetail = async (
+    id: number,
+    page?: number,
+    limit?: number,
+    dateFrom?: string,
+    dateTo?: string,
+): Promise<DepartmentDetail> => {
+    try {
+        const params: any = {};
+        if (page) params.page = page;
+        if (limit) params.limit = limit;
+        if (dateFrom) params.dateFrom = dateFrom;
+        if (dateTo) params.dateTo = dateTo;
+        const response = await api.get<DepartmentDetail>(`/departments/${id}/detail`, { params });
+        return response.data;
+    } catch (error) {
+        console.error('Ошибка получения детализации отдела', error);
+        throw error;
+    }
+};
+
+export const createDepartment = async (name: string): Promise<Department> => {
+    const res = await api.post<Department>('/departments', { name });
+    return res.data;
+};
+
+export const deleteDepartment = async (id: number): Promise<DepartmentDto> => {
+  const res = await api.delete<DepartmentDto>(`/departments/${id}`);
+  return res.data;
+};
+
+export const restoreDepartment = async (id: number): Promise<DepartmentDto> => {
+  const res = await api.patch<DepartmentDto>(`/departments/${id}/restore`);
+  return res.data;
 };
 
 //аи
@@ -287,6 +341,22 @@ export const getRoutingDocuments = async (departmentId?: number): Promise<Routin
     return response.data;
   } catch (error) {
     console.error('Ошибка получения документов в маршрутизации', error);
+    throw error;
+  }
+};
+
+export const getRoutingDocumentsNew = async (params?: {
+  departmentId?: number;
+  operatorId?: number;
+  filter?: 'all' | 'matched' | 'mismatched';
+  page?: number;
+  limit?: number;
+}): Promise<RoutingResponse> => {
+  try {
+    const response = await api.get<RoutingResponse>('/documents/routing', { params: params || {} });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка получения маршрутизации', error);
     throw error;
   }
 };

@@ -128,12 +128,6 @@
   color: var(--color-accent-hover);
 }
 
-.mark-all-read-btn.active {
-  background-color: rgba(129, 216, 208, 0.12);
-  color: var(--color-accent-hover);
-  font-weight: 600;
-}
-
 .notifications-filters-row {
   display: flex;
   align-items: center;
@@ -145,6 +139,44 @@
 .notifications-filters-row .dropdown-button {
   padding: 6px 14px;
   height: 36px;
+}
+
+.notifications-group-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.notifications-group-label-text {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-right: 4px;
+}
+
+.notifications-group-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--border-color);
+  background: var(--color-bg-surface);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.notifications-group-btn.active {
+  background-color: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
+.notifications-group-btn:hover:not(.active) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .notifications-actions-bar {
@@ -585,7 +617,6 @@
   transition: background-color 0.2s;
 }
 
-/* Планшеты и небольшие ноутбуки */
 @media (max-width: 1024px) {
   .notifications-stats-cards-container {
     grid-template-columns: repeat(4, 1fr);
@@ -613,8 +644,6 @@
   }
 }
 
-
-/* Уменьшаем текст в карточках при сужении */
 @media (max-width: 1100px) {
   .notifications-stat-card-value {
     font-size: 26px !important;
@@ -651,7 +680,6 @@
   }
 }
 
-/* Мобильные и вертикальные планшеты */
 @media (max-width: 768px) {
   .notifications-page {
     padding: 16px;
@@ -716,13 +744,28 @@
 
   .notifications-filters-row {
     gap: 6px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .notifications-filters-row .dropdown-button {
     padding: 6px 12px;
     height: 38px;
     font-size: 13px;
+  }
+
+  .notifications-group-row {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .notifications-group-btn {
+    min-height: 44px;
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .notifications-group-label-text {
+    font-size: 12px;
   }
 
   .notifications-actions-bar {
@@ -849,7 +892,6 @@
   }
 }
 
-/* Маленькие мобильные телефоны (480px) */
 @media (max-width: 480px) {
   .notifications-page {
     padding: 12px;
@@ -927,6 +969,20 @@
     height: 38px;
     font-size: 12px;
     padding: 6px 10px;
+  }
+
+  .notifications-group-row {
+    gap: 6px;
+  }
+
+  .notifications-group-btn {
+    min-height: 44px;
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  .notifications-group-label-text {
+    font-size: 12px;
   }
 
   .notifications-actions-bar {
@@ -1060,7 +1116,6 @@
   }
 }
 
-/* Очень маленькие телефоны (375px) */
 @media (max-width: 375px) {
   .notifications-stats-cards-container {
     grid-template-columns: 1fr 1fr;
@@ -1101,6 +1156,16 @@
 
   .unread-count-badge {
     font-size: 10px;
+  }
+
+  .notifications-group-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    min-height: 44px;
+  }
+
+  .notifications-group-label-text {
+    font-size: 11px;
   }
 
   .notification-item {
@@ -1171,7 +1236,6 @@
   }
 }
 
-/* Экстремально маленькие (320px) */
 @media (max-width: 320px) {
   .notifications-page {
     padding: 8px;
@@ -1229,6 +1293,17 @@
     width: 100%;
   }
 
+  .notifications-group-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .notifications-group-btn {
+    width: 100%;
+    text-align: center;
+  }
+
   .notification-item {
     padding: 8px;
     gap: 6px;
@@ -1281,7 +1356,6 @@
   }
 }
 
-/* Сенсорные устройства */
 @media (hover: none) and (pointer: coarse) {
   .notification-item:active {
     background-color: rgba(129, 216, 208, 0.08);
@@ -1304,11 +1378,16 @@
     transform: scale(0.97);
   }
 
+  .notifications-group-btn:active {
+    transform: scale(0.96);
+  }
+
   .notification-item,
   .mark-all-read-btn,
   .delete-read-btn,
   .mass-delete-btn,
-  .notification-doc-btn {
+  .notification-doc-btn,
+  .notifications-group-btn {
     -webkit-tap-highlight-color: transparent;
   }
 }

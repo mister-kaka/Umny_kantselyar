@@ -13,6 +13,7 @@ import { DateFilterDropdown } from "../DropdownButton";
 import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
+import { formatMoscowDate } from "../../utils/moscowTime";
 
 const DocumentsListPage = () => {
   const navigate = useNavigate();
@@ -386,18 +387,20 @@ const DocumentsListPage = () => {
                       <span className="file-queue-checkmark" />
                     </label>
                   </td>
-                  <td onClick={() => handleRowClick(doc.id)}>{doc.registrationNumber}</td>
-                  <td onClick={() => handleRowClick(doc.id)}>{doc.title}</td>
-                  <td onClick={() => handleRowClick(doc.id)}>{doc.senderName}</td>
-                  <td onClick={() => handleRowClick(doc.id)}>{doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : '-'}</td>
-                  <td onClick={() => handleRowClick(doc.id)}>{doc.documentType}</td>
-                  <td onClick={() => handleRowClick(doc.id)}>{doc.category}</td>
-                  <td onClick={() => handleRowClick(doc.id)}>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                    {doc.registrationNumber}
+                  </td>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.title}</td>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.senderName}</td>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{formatMoscowDate(doc.uploadedAt)}</td>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.documentType}</td>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.category}</td>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>
                     <span className={`status-badge ${getStatusColorClass(doc.currentStatus)}`}>
                       {translateStatus(doc.currentStatus)}
                     </span>
                   </td>
-                  <td onClick={() => handleRowClick(doc.id)}>{doc.department}</td>
+                  <td onClick={() => handleRowClick(doc.id)} style={{ cursor: 'pointer' }}>{doc.department}</td>
                 </tr>
               ))
             ) : (
