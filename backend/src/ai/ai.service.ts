@@ -523,7 +523,9 @@ export class AiService {
         const categories = await this.documentCategoryRepository.find();
         const categoryList = categories.map(c => c.name).join(', ');
 
-        const departments = await this.departmentRepository.find();
+        const departments = await this.departmentRepository.find({
+            where: { isActive: true },
+        });
         const departmentList = departments.map(d => d.name).join(', ');
 
         return `Проанализируй входящий документ транспортной компании. Определи тип, категорию, сделай сводку, предложи отдел, извлеки дату, отправителя, сумму, контрагента и источник. Все ответы должны быть на русском языке, даже если документ на другом языке.

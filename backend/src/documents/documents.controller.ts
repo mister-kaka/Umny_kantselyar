@@ -15,7 +15,7 @@ import { ExtractTextResponseDto } from './dto/extract-text-response.dto';
 import { VerifyDocumentDto } from './dto/verify-document.dto';
 import { RouteDocumentDto } from './dto/route-document.dto';
 import { RejectDocumentDto } from './dto/reject-document.dto';
-import { RoutingDocumentDto } from './dto/routing-document.dto';
+import { RoutingResponseDto } from './dto/routing-response.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { AddCommentDto } from './dto/add-comment.dto';
 import { Request } from 'express';
@@ -57,9 +57,18 @@ export class DocumentsController {
 
     @UseGuards(AuthGuard('jwt'))
     @Get('routing')
-    async getRoutingDocuments(@Query('departmentId') departmentId?: string): Promise<RoutingDocumentDto[]> {
+    async getRoutingDocuments(
+        @Query('departmentId') departmentId?: string,
+        @Query('operatorId') operatorId?: string,
+        @Query('filter') filter?: 'all' | 'matched' | 'mismatched',
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ): Promise<RoutingResponseDto> {
         const deptId = departmentId ? parseInt(departmentId, 10) : undefined;
-        return this.routingService.getRoutingDocuments(deptId);
+        const operId = operatorId ? parseInt(operatorId, 10) : undefined;
+        const pageNum = page ? parseInt(page, 10) : 1;
+        const limitNum = limit ? parseInt(limit, 10) : 10;
+        return this.routingService.getRoutingDocuments(deptId, operId, filter, pageNum, limitNum);
     }
 
     @UseGuards(AuthGuard('jwt'))

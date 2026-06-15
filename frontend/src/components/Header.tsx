@@ -7,7 +7,7 @@ import Search from "./Search";
 import { useNavigate } from "react-router-dom";
 import "../styles/Header.css";
 import { useState, useEffect, useRef } from "react";
-import Scanner from "./SubPages/Scanner";
+import Scanner from "./Scanner";
 import Tooltip from "./Tooltip";
 import { getProfile, getUnreadCount, getNotifications, markAsRead, markAllAsRead } from "../services/api";
 import type { Profile, UnreadCount, AppNotification } from "../types";

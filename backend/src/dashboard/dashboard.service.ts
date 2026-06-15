@@ -25,6 +25,7 @@ export class DashboardService {
             COUNT(dr.id) as count
         FROM document_routes dr
         INNER JOIN departments d ON d.id = dr.department_id
+        WHERE d.is_active = TRUE
         GROUP BY d.id, d.name, dr.route_status
         ORDER BY d.name ASC, dr.route_status ASC
     `;

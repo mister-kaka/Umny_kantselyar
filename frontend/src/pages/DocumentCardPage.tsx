@@ -7,6 +7,7 @@ import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, Document
 import Card from '../components/Card';
 import Tooltip from '../components/Tooltip';
 import { translateStatus, getStatusColorClass } from '../constants/statuses';
+import { formatMoscowDate, formatMoscowDateTime } from '../utils/moscowTime';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 
@@ -42,7 +43,9 @@ const DocumentCardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from;
-  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "verification" | "ocr" | "history" | "discussion">("overview");
+  const departmentId = (location.state as any)?.departmentId;
+  const returnTab = (location.state as any)?.tab;
+  const [activeTab, setActiveTab] = useState<"overview" | "ai" | "verification" | "ocr" | "history" | "discussion">(returnTab || "overview");
 
   const [data, setData] = useState<DocumentCardType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -111,7 +114,7 @@ const DocumentCardPage: React.FC = () => {
     const shouldOpenVerification = (location.state as any)?.openVerificationTab;
     if (shouldOpenVerification) {
       setActiveTab("verification");
-      navigate(location.pathname, { replace: true, state: { from } });
+      navigate(location.pathname, { replace: true, state: { from, departmentId } });
     }
   }, [location, navigate]);
 
@@ -122,6 +125,9 @@ const DocumentCardPage: React.FC = () => {
       case 'search': return 'Архив документов';
       case 'notifications': return 'К уведомлениям';
       case 'verification': return 'В очередь проверки';
+      case 'routing': return 'К маршрутизации';
+      case 'departments': return departmentId ? 'Назад в отдел' : 'К подразделениям';
+      case 'department-detail': return 'Назад в отдел';
       default: return 'Архив документов';
     }
   };
@@ -133,6 +139,9 @@ const DocumentCardPage: React.FC = () => {
       case 'search': return '/dashboard/documents';
       case 'notifications': return '/dashboard/notifications';
       case 'verification': return '/dashboard/verification';
+      case 'routing': return '/dashboard/routing';
+      case 'departments': return departmentId ? `/dashboard/departments/${departmentId}` : '/dashboard/departments';
+      case 'department-detail': return departmentId ? `/dashboard/departments/${departmentId}` : '/dashboard/departments';
       default: return '/dashboard/documents';
     }
   };
@@ -385,7 +394,7 @@ const DocumentCardPage: React.FC = () => {
     if (!window.confirm('Удалить документ? Это действие нельзя отменить.')) return;
     try {
       await deleteDocument(Number(id));
-      navigate('/dashboard/documents');
+      navigate(getBackPath());
     } catch {
       alert('Ошибка при удалении документа');
     }
@@ -500,6 +509,19 @@ const DocumentCardPage: React.FC = () => {
     }
   };
 
+  const handleGoToDepartment = (e: React.MouseEvent, departmentName: string) => {
+    e.stopPropagation();
+    const dept = departments.find(d => d.name === departmentName);
+    if (dept) {
+      navigate(`/dashboard/departments/${dept.id}`, {
+        state: {
+          from: 'document-card',
+          documentId: id ? Number(id) : undefined
+        }
+      });
+    }
+  };
+
   const handlePreviewFile = async (file: DocumentFile) => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     const fileUrl = `${apiUrl}${file.filePath}`;
@@ -566,15 +588,7 @@ const DocumentCardPage: React.FC = () => {
 
   const canReject = data.currentStatus !== 'rejected' && data.currentStatus !== 'routed';
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const formatDate = (dateString: string) => formatMoscowDateTime(dateString);
 
   return (
     <div className="document-page">
@@ -630,14 +644,14 @@ const DocumentCardPage: React.FC = () => {
             className="doc-info-value has-tooltip"
             data-tooltip="Дата из текста самого документа, извлечена AI. Может отличаться от даты загрузки в систему."
           >
-            {data.receivedDate ? new Date(data.receivedDate).toLocaleDateString('ru-RU') : 'Не указана'}
+            {data.receivedDate ? formatMoscowDate(data.receivedDate) : 'Не указана'}
             <span className="confidence-info-symbol">ⓘ</span>
           </span>
         </div>
         <div className="doc-info-divider" />
         <div className="doc-info-item">
           <span className="doc-info-label">Дата загрузки</span>
-          <span className="doc-info-value">{data.uploadedAt ? new Date(data.uploadedAt).toLocaleDateString('ru-RU') : '-'}</span>
+          <span className="doc-info-value">{data.uploadedAt ? formatMoscowDate(data.uploadedAt) : '-'}</span>
         </div>
         <div className="doc-info-divider" />
         <div className="doc-info-item">
@@ -684,7 +698,7 @@ const DocumentCardPage: React.FC = () => {
                   </div>
                   <div className="info-row">
                     <span>Дата загрузки</span>
-                    <strong>{data.uploadedAt ? new Date(data.uploadedAt).toLocaleDateString('ru-RU') : '-'}</strong>
+                    <strong>{data.uploadedAt ? formatMoscowDate(data.uploadedAt) : '-'}</strong>
                   </div>
                   <div className="info-row">
                     <span>Статус</span>
@@ -706,26 +720,30 @@ const DocumentCardPage: React.FC = () => {
                     <span className="classif-label">Тип документа</span>
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.type || aiResult?.documentTypeSuggested || '-'}</span>
-                      <span
-                        className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null))}`}
-                        data-tooltip="Точность определения типа документа AI-моделью"
-                      >
-                        {formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null)}%
-                        <span className="confidence-info-symbol">ⓘ</span>
-                      </span>
+                      {!data.classification?.isVerified && (
+                        <span
+                          className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null))}`}
+                          data-tooltip="Точность определения типа документа AI-моделью"
+                        >
+                          {formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null)}%
+                          <span className="confidence-info-symbol">ⓘ</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="classif-item">
                     <span className="classif-label">Категория</span>
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.category || aiResult?.categorySuggested || '-'}</span>
-                      <span
-                        className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null))}`}
-                        data-tooltip="Точность определения категории документа AI-моделью"
-                      >
-                        {formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null)}%
-                        <span className="confidence-info-symbol">ⓘ</span>
-                      </span>
+                      {!data.classification?.isVerified && (
+                        <span
+                          className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null))}`}
+                          data-tooltip="Точность определения категории документа AI-моделью"
+                        >
+                          {formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null)}%
+                          <span className="confidence-info-symbol">ⓘ</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                   {aiResult?.extractedAmount != null && (
@@ -789,11 +807,9 @@ const DocumentCardPage: React.FC = () => {
                         <div className="source-contacts">
                           {(() => {
                             const text = data.source.contactInfo;
-                            // Ищем телефон и email
                             const phoneMatch = text.match(/тел?:?\s*([\+\(]?\d[\d\s\-\(\)\+]+)/i);
                             const emailMatch = text.match(/email:\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
                             
-                            // Адрес — всё, что до телефона или email
                             let address = text;
                             if (phoneMatch && phoneMatch.index !== undefined) {
                               address = text.substring(0, phoneMatch.index).trim();
@@ -1211,6 +1227,7 @@ const DocumentCardPage: React.FC = () => {
                         <th>Статус</th>
                         <th>Причина</th>
                         <th>Дата</th>
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1223,14 +1240,18 @@ const DocumentCardPage: React.FC = () => {
                             </span>
                           </td>
                           <td>{route.routeReason || '—'}</td>
+                          <td>{formatMoscowDateTime(route.routedAt)}</td>
                           <td>
-                            {new Date(route.routedAt).toLocaleString('ru-RU', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {route.departmentName && (
+                              <Tooltip text="Перейти в отдел">
+                                <button
+                                  className="history-dept-btn"
+                                  onClick={(e) => handleGoToDepartment(e, route.departmentName)}
+                                >
+                                  В отдел →
+                                </button>
+                              </Tooltip>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -1307,7 +1328,7 @@ const DocumentCardPage: React.FC = () => {
         </button>
       </div>
 
-      {from !== 'archive' && from !== 'search' && (
+      {from !== 'archive' && from !== 'search' && from !== 'notifications' && from !== 'routing' && from !== 'departments' && from !== 'department-detail' && (
         <div className="doc-bottom-link">
           <a href="/dashboard/documents" onClick={(e) => { e.preventDefault(); navigate('/dashboard/documents'); }}>
             В архив документов

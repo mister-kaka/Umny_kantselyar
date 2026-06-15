@@ -16,6 +16,7 @@ import {
     deleteAllRead,
 } from "../../services/api";
 import type { AppNotification, UnreadCount } from "../../types";
+import { toMoscowTime } from "../../utils/moscowTime";
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
     new_document: "Загружен",
@@ -79,8 +80,8 @@ const getTypeLabel = (type: string): string => {
 };
 
 const formatTime = (timeString: string): string => {
-    const date = new Date(timeString);
-    const now = new Date();
+    const date = toMoscowTime(timeString);
+    const now = toMoscowTime(new Date().toISOString());
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
@@ -94,8 +95,8 @@ const formatTime = (timeString: string): string => {
 };
 
 const formatGroupDate = (timeString: string): string => {
-    const date = new Date(timeString);
-    const now = new Date();
+    const date = toMoscowTime(timeString);
+    const now = toMoscowTime(new Date().toISOString());
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today.getTime() - 86400000);
     const weekAgo = new Date(today.getTime() - 7 * 86400000);
@@ -118,7 +119,6 @@ const getTimelineEvents = (items: AppNotification[]): AppNotification[] => {
     return [...items].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 };
 
-const NOTIFICATIONS_PER_PAGE = 10;
 const POLLING_INTERVAL = 30000;
 
 const Notifications = () => {
@@ -143,6 +143,7 @@ const Notifications = () => {
     const [groupMode, setGroupMode] = useState<'date' | 'document'>(() => {
         return (localStorage.getItem('notifications_group_mode') as 'date' | 'document') || 'date';
     });
+    const [limit, setLimit] = useState(10);
 
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
     const toggleFilter = (filterId: string) => {
@@ -186,7 +187,7 @@ const Notifications = () => {
                 filters.dateTo = dateFilter.to;
             }
 
-            const data = await getNotifications(pageNum, NOTIFICATIONS_PER_PAGE, filters);
+            const data = await getNotifications(pageNum, limit, filters);
 
             if (append) {
                 setNotifications(prev => [...prev, ...data.items]);
@@ -220,7 +221,7 @@ const Notifications = () => {
         setPage(1);
         setNotifications([]);
         fetchNotifications(1);
-    }, [filterType, dateFilter]);
+    }, [filterType, dateFilter, limit]);
 
     useEffect(() => {
         pollingRef.current = setInterval(() => {
@@ -557,7 +558,7 @@ const Notifications = () => {
                     <img src="/icons/notifications/Low_confidence.png" className="notifications-stat-card-icon" alt="Низкая уверенность" />
                     <div className="notifications-stat-card-content">
                         <h1 className="notifications-stat-card-value">{stats?.lowConfidence ?? 0}</h1>
-                        <h5 className="notifications-stat-card-label text-secondary">Низкая уверенность</h5>
+                        <h5 className="notifications-stat-card-label text-secondary">Низ. уверенность</h5>
                     </div>
                 </Card>
 
@@ -579,14 +580,6 @@ const Notifications = () => {
                         )}
                     </div>
                     <div className="notifications-header-actions">
-                        <Tooltip text={groupMode === 'date' ? 'Группировать по документам' : 'Группировать по датам'}>
-                            <button
-                                className={`mark-all-read-btn ${groupMode === 'document' ? 'active' : ''}`}
-                                onClick={() => handleGroupModeChange(groupMode === 'date' ? 'document' : 'date')}
-                            >
-                                {groupMode === 'date' ? 'По документам' : 'По датам'}
-                            </button>
-                        </Tooltip>
                         {notifications.length > 0 && stats && stats.total > 0 && (
                             <Tooltip text="Отметить все уведомления как прочитанные">
                                 <button className="mark-all-read-btn" onClick={handleMarkAllAsRead}>
@@ -626,6 +619,19 @@ const Notifications = () => {
                             selectedLabel={dateFilterLabel}/>
                     </Tooltip>
 
+                    <Tooltip text="Количество уведомлений на странице">
+                        <DropdownButton
+                            options={['5', '10', '20', '50']}
+                            selectedLabel={String(limit)}
+                            onSelect={(value) => {
+                                const newLimit = parseInt(value, 10);
+                                if (!isNaN(newLimit)) setLimit(newLimit);
+                            }}
+                            defaultLabel="10"
+                            isOpen={activeFilter === 'limitSelector'}
+                            onToggle={() => toggleFilter('limitSelector')}/>
+                    </Tooltip>
+
                     <Tooltip text="Сбросить все фильтры">
                         <button
                             className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
@@ -637,6 +643,26 @@ const Notifications = () => {
                                 setDateFilterLabel('Дата');
                             }}>
                             Сбросить фильтры
+                        </button>
+                    </Tooltip>
+                </div>
+
+                <div className="notifications-group-row">
+                    <span className="notifications-group-label-text">Группировка:</span>
+                    <Tooltip text="Группировать по датам">
+                        <button
+                            className={`notifications-group-btn ${groupMode === 'date' ? 'active' : ''}`}
+                            onClick={() => handleGroupModeChange('date')}
+                        >
+                            По датам
+                        </button>
+                    </Tooltip>
+                    <Tooltip text="Группировать по документам">
+                        <button
+                            className={`notifications-group-btn ${groupMode === 'document' ? 'active' : ''}`}
+                            onClick={() => handleGroupModeChange('document')}
+                        >
+                            По документам
                         </button>
                     </Tooltip>
                 </div>
