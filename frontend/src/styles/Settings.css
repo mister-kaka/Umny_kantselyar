@@ -1,11 +1,10 @@
 @import "./global.css";
 
-/* Вкладки */
 .settings-tabs {
   display: flex;
   gap: 0;
-  padding: 0px;
-  margin-bottom: 12px;
+  padding: 0;
+  margin-bottom: 20px;
   overflow-x: auto;
   overflow-y: hidden;
   flex-wrap: nowrap;
@@ -17,29 +16,30 @@
   height: 3px;
 }
 
-.settings-option {
+.settings-tabs .tab {
   color: var(--text-secondary);
   border: none;
-  padding: 8px 16px;
+  padding: 10px 20px;
   cursor: pointer;
   transition: 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
 }
 
-.settings-option.active {
-  background-color: var(--color-accent-light);
-  color: var(--color-accent-hover);
-  border-bottom: 3px solid var(--color-accent-hover);
-  transition: background-color 0.2s;
+.settings-tabs .tab.active {
+  color: var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
 }
 
-.settings-option:hover:not(.active) {
-  background-color: rgba(129, 216, 208, 0.1);
-  transition: 0.2s;
+.settings-tabs .tab:hover:not(.active) {
+  color: var(--color-accent);
 }
 
-/* Форма настроек провайдера */
 .cuttinPaddin {
   padding-top: 15px;
 }
@@ -48,6 +48,15 @@
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+  max-width: 600px;
+}
+
+.settings-form-wide {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  max-width: none;
+  width: 100%;
 }
 
 .settings-form-row {
@@ -58,10 +67,11 @@
 }
 
 .settings-form-label {
-  min-width: 120px;
+  min-width: 200px;
   color: var(--text-primary);
   flex-shrink: 0;
   line-height: 24px;
+  font-size: 13px;
 }
 
 .settings-form-control {
@@ -95,7 +105,6 @@
   flex-wrap: wrap;
 }
 
-/* Статус-сообщения */
 .settings-status {
   display: flex;
   padding: 8px 16px;
@@ -112,10 +121,6 @@
   max-width: 350px;
 }
 
-.compact-view .settings-status {
-  max-height: 35px;
-}
-
 .settings-status.success {
   background-color: rgba(126, 226, 159, 0.12);
   color: var(--color-status-loaded);
@@ -130,12 +135,14 @@
   color: var(--text-tertiary);
 }
 
-.appearance-placeholder {
-  color: var(--text-tertiary);
-  font-style: italic;
+.settings-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
 }
-
-/* для  чекбоксов ++*/
 
 .switch {
   position: relative;
@@ -143,75 +150,281 @@
   width: 44px;
   height: 24px;
   vertical-align: middle;
-  flex-shrink: 0;      
+  flex-shrink: 0;
 }
+
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
+
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: #ccc;
   transition: 0.3s;
   border-radius: 24px;
 }
+
 .slider:before {
   position: absolute;
   content: "";
-  height: 18px; width: 18px;
-  left: 3px; bottom: 3px;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
   background-color: white;
   transition: 0.3s;
   border-radius: 50%;
 }
+
 input:checked + .slider {
   background-color: var(--color-accent);
 }
+
 input:checked + .slider:before {
   transform: translateX(20px);
 }
 
-/* Планшеты и небольшие ноутбуки (1024px и меньше) */
+.settings-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.settings-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background-color: var(--color-bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.settings-chip.active {
+  background-color: var(--color-accent-light);
+  border-color: var(--color-accent);
+  color: var(--color-accent-hover);
+  cursor: pointer;
+}
+
+.settings-chip-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.settings-chip-remove:hover {
+  color: var(--color-status-rejected);
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.settings-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background-color: var(--color-bg-page);
+  border-radius: var(--radius-button);
+  gap: 12px;
+}
+
+.settings-archived {
+  opacity: 0.5;
+}
+
+.settings-file-input {
+  display: none;
+}
+
+.settings-file-label {
+  cursor: pointer;
+}
+
+.routing-rules-info {
+  background-color: var(--color-bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+  margin-bottom: 8px;
+  line-height: 1.6;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.routing-rules-info p {
+  margin: 0;
+}
+
+.routing-rules-info p + p {
+  margin-top: 8px;
+}
+
+.routing-rules-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.template-dept-list {
+  font-size: 12px;
+}
+
+.template-new-title {
+  margin-top: 20px;
+}
+
+.backup-import-title {
+  margin-top: 24px;
+}
+
+.about-system-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.about-system-desc {
+  margin-top: 8px;
+  color: var(--text-secondary);
+}
+
+.about-section-title {
+  margin-top: 20px;
+}
+
+.about-list {
+  padding-left: 20px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.about-copyright {
+  margin-top: 20px;
+  color: var(--text-tertiary);
+}
+
+.security-section-card {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  border-top: 3px solid var(--color-accent);
+}
+
+.security-section-header {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.security-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.security-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.security-avatar--initials {
+  background-color: var(--color-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.security-details-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.settings-notifications-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.settings-notifications-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-notifications-col .settings-form-row {
+  justify-content: space-between;
+}
+
+.settings-notifications-col .settings-form-label {
+  min-width: auto;
+  flex: 1;
+}
+
 @media (max-width: 1024px) {
-  .settings-tabs {
-    gap: 2px;
-  }
-
-  .settings-option {
-    padding: 10px 18px;
-    font-size: 14px;
-  }
-
-  .settings-form {
-    gap: 1.2rem;
-  }
-
-  .settings-actions {
-    gap: 12px;
+  .security-section-card {
+    padding: 16px 20px;
   }
 }
 
-/* Планшеты вертикально (768px и меньше) */
 @media (max-width: 768px) {
+
+  .settings-notifications-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
   .settings-tabs {
+    gap: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 6px;
-    gap: 0;
   }
 
-  .settings-tabs::-webkit-scrollbar {
-    height: 3px;
-  }
-
-  .settings-option {
-    padding: 10px 16px;
-    font-size: 13px;
+  .settings-tabs .tab {
+    padding: 8px 14px;
+    font-size: 12px;
     white-space: nowrap;
     flex-shrink: 0;
+  }
+
+  .settings-form {
+    max-width: none;
   }
 
   .settings-form-row {
@@ -247,210 +460,103 @@ input:checked + .slider:before {
     width: 100%;
     text-align: center;
   }
-}
 
-/* Средние мобильные (650px и меньше) */
-@media (max-width: 650px) {
-  .settings-tabs {
-    margin-bottom: 14px;
+  .settings-list-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .settings-option {
-    padding: 8px 14px;
-    font-size: 12px;
-  }
-
-  .settings-form {
-    gap: 1rem;
-  }
-
-  .settings-form-input {
-    padding: 9px 12px;
-    font-size: 14px;
-  }
-
-  .cuttinPaddin {
-    padding-top: 10px;
-  }
-}
-
-/* Мобильные устройства (480px и меньше) */
-@media (max-width: 480px) {
-  .settings-tabs {
+  .security-section-card {
+    padding: 14px 16px;
     margin-bottom: 16px;
-    gap: 0;
   }
 
-  .settings-option {
-    padding: 8px 12px;
-    font-size: 12px;
-    border-radius: 6px;
-  }
-
-  .settings-option.active {
-    border-bottom-width: 2px;
-  }
-
-  .settings-form {
-    gap: 14px;
-  }
-
-  .settings-form-row {
-    gap: 4px;
-  }
-
-  .settings-form-label {
-    font-size: 12px;
-  }
-
-  .settings-form-input {
-    padding: 10px 12px;
-    font-size: 16px;
-  }
-
-  .apply-button {
-    padding: 10px 14px;
-    font-size: 13px;
-    height: 42px;
-  }
-
-  .settings-status {
-    font-size: 12px;
-    padding: 8px 12px;
-  }
-
-  .cuttinPaddin {
-    padding-top: 8px;
-  }
-}
-
-/* Маленькие мобильные (375px и меньше) */
-@media (max-width: 375px) {
-  .settings-option {
-    padding: 6px 10px;
-    font-size: 11px;
-  }
-
-  .settings-form {
-    gap: 12px;
-  }
-
-  .settings-form-label {
-    font-size: 11px;
-  }
-
-  .settings-form-input {
-    padding: 8px 10px;
+  .security-section-header {
     font-size: 14px;
   }
 
-  .apply-button {
-    padding: 8px 12px;
-    font-size: 12px;
-    height: 40px;
+  .security-avatar {
+    width: 20px;
+    height: 20px;
   }
 
-  .settings-status {
+  .security-avatar--initials {
+    font-size: 10px;
+  }
+
+  .security-details-cell {
+    max-width: 120px;
     font-size: 11px;
-    padding: 6px 10px;
   }
 }
 
-/* Самые маленькие (320px) */
+@media (max-width: 480px) {
+  .settings-tabs .tab {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .settings-section-title {
+    font-size: 14px;
+  }
+
+  .settings-chips {
+    gap: 6px;
+  }
+
+  .settings-chip {
+    font-size: 12px;
+    padding: 3px 10px;
+  }
+
+  .security-section-card {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .security-section-header {
+    font-size: 13px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+}
+
+@media (max-width: 375px) {
+  .security-section-card {
+    padding: 10px;
+  }
+
+  .security-section-header {
+    font-size: 12px;
+  }
+
+  .security-details-cell {
+    max-width: 80px;
+  }
+}
+
 @media (max-width: 320px) {
-  .settings-option {
+  .settings-tabs .tab {
     padding: 6px 8px;
     font-size: 10px;
   }
 
-  .settings-form-label {
-    font-size: 10px;
-  }
-
-  .settings-form-input {
-    padding: 8px 10px;
-    font-size: 13px;
-  }
-
-  .apply-button {
-    padding: 8px 10px;
-    font-size: 11px;
-    height: 38px;
-  }
-
-  .settings-status {
-    font-size: 10px;
+  .security-section-card {
+    padding: 8px;
   }
 }
 
-/* Альбомная ориентация на мобильных */
-@media (max-width: 768px) and (orientation: landscape) {
-  .settings-form-row {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .settings-form-label {
-    min-width: 100px;
-    flex-shrink: 0;
-  }
-
-  .settings-form-control {
-    flex: 1;
-  }
-
-  .settings-actions {
-    flex-direction: row;
-  }
-
-  .apply-button {
-    flex: 1;
-  }
-}
-
-/* Большие экраны (1400px+) */
-@media (min-width: 1400px) {
-  .settings-form {
-    max-width: none;
-  }
-
-  .settings-form-row {
-    gap: 1.5rem;
-  }
-
-  .settings-form-label {
-    min-width: 140px;
-    font-size: 14px;
-  }
-
-  .settings-form-input {
-    font-size: 14px;
-    padding: 10px 14px;
-  }
-}
-
-/* Retina-экраны */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .settings-form-input {
-    border-width: 0.5px;
-  }
-
-  .settings-option.active {
-    border-bottom-width: 2.5px;
-  }
-}
-
-/* Touch-состояния для мобильных */
 @media (hover: none) and (pointer: coarse) {
-  .settings-option:active {
+  .settings-tabs .tab:active {
     opacity: 0.7;
     transform: scale(0.97);
-    transition: transform 0.1s ease;
   }
 
   .apply-button:active {
     transform: scale(0.97);
-    transition: transform 0.1s ease;
+  }
+
+  .settings-chip:active {
+    transform: scale(0.96);
   }
 }
