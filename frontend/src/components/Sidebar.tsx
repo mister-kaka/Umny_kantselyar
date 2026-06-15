@@ -99,7 +99,7 @@ const Sidebar = () => {
             <span className="item-label">Выход из системы</span>
           </button>
           <h6 className={`version-text ${collapsed ? 'collapsed' : ''}`}>
-            Версия 1.0.2<br />© 2026 Умный Канцеляр
+            Версия 1.5.0<br />© 2026 Умный Канцеляр
           </h6>
         </div>
       </div>

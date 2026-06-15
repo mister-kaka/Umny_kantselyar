@@ -24,9 +24,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { translateStatus, getStatusColorClass } from "../../constants/statuses";
 import { formatMoscowDate } from "../../utils/moscowTime";
+import { useSettings } from "../../contexts/SettingsContext";
 
 const Routing = () => {
     const navigate = useNavigate();
+    const { defaultPageLimit } = useSettings();
 
     const [items, setItems] = useState<RoutingDocumentItem[]>([]);
     const [stats, setStats] = useState<RoutingStats | null>(null);
@@ -39,7 +41,7 @@ const Routing = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [limit, setLimit] = useState(10);
+    const [limit, setLimit] = useState(defaultPageLimit);
 
     const [filterType, setFilterType] = useState<"all" | "matched" | "mismatched">("all");
     const [departmentId, setDepartmentId] = useState<number | undefined>(undefined);
@@ -145,9 +147,8 @@ const Routing = () => {
     if (loading) {
         return (
             <div className="routing-page">
-                <div className="routing-header">
-                    <h2 className="routing-title">Контроль маршрутизации</h2>
-                </div>
+                <h2 className="page-title">Контроль маршрутизации</h2>
+                <p className="page-subtitle">Сравнение рекомендаций AI с решениями операторов</p>
                 <div className="routing-stats">
                     {[1, 2, 3].map(i => (
                         <Card key={i}>
@@ -177,10 +178,8 @@ const Routing = () => {
 
     return (
         <div className="routing-page">
-            <div className="routing-header">
-                <h2 className="routing-title">Контроль маршрутизации</h2>
-                <p className="routing-subtitle">Сравнение рекомендаций AI с решениями операторов</p>
-            </div>
+            <h2 className="page-title">Контроль маршрутизации</h2>
+            <p className="page-subtitle">Сравнение рекомендаций AI с решениями операторов</p>
 
             {stats && (
                 <div className="routing-stats">
@@ -277,7 +276,7 @@ const Routing = () => {
                             const newLimit = parseInt(value, 10);
                             if (!isNaN(newLimit)) setLimit(newLimit);
                         }}
-                        defaultLabel="10"
+                        defaultLabel={String(defaultPageLimit)}
                         isOpen={activeFilter === 'limitSelector'}
                         onToggle={() => toggleFilter('limitSelector')}/>
                 </Tooltip>

@@ -13,6 +13,7 @@ import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
 import { formatMoscowDate } from "../../utils/moscowTime";
+import { useSettings } from "../../contexts/SettingsContext";
 
 interface VerificationDocument {
   id: number;
@@ -31,13 +32,14 @@ interface VerificationDocument {
 
 const Verification = () => {
   const navigate = useNavigate();
+  const { defaultPageLimit, showConfidence } = useSettings();
 
   const [data, setData] = useState<{ items: VerificationDocument[]; total: number; totalPages: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filtersError, setFiltersError] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(defaultPageLimit);
 
   const [types, setTypes] = useState<DocumentType[]>([]);
   const [categories, setCategories] = useState<DocumentCategory[]>([]);
@@ -157,6 +159,9 @@ const Verification = () => {
 
   return (
     <div>
+      <h2 className="page-title">Очередь проверки</h2>
+      <p className="page-subtitle">Документы, ожидающие проверки оператором</p>
+
       <Card className="filtersButtsWrapper">
         <Tooltip text="Показать документы только выбранного типа">
           <DropdownButton
@@ -198,7 +203,7 @@ const Verification = () => {
               const newLimit = parseInt(value, 10);
               if (!isNaN(newLimit)) setLimit(newLimit);
             }}
-            defaultLabel="10"
+            defaultLabel={String(defaultPageLimit)}
             isOpen={activeFilter === 'limitSelector'}
             onToggle={() => toggleFilter('limitSelector')}/>
         </Tooltip>
@@ -235,23 +240,23 @@ const Verification = () => {
               <th>Название</th>
               <th>Дата загрузки</th>
               <th>Тип (AI)</th>
-              <th>Уверенность</th>
+              {showConfidence && <th>Уверенность</th>}
               <th>Статус</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="table-status-cell">Загрузка...</td></tr>
+              <tr><td colSpan={showConfidence ? 7 : 6} className="table-status-cell">Загрузка...</td></tr>
             ) : error ? (
               <tr>
-                <td colSpan={7} className="table-error-cell">
+                <td colSpan={showConfidence ? 7 : 6} className="table-error-cell">
                   {error} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
               </tr>
             ) : filtersError && !types.length && !categories.length ? (
               <tr>
-                <td colSpan={7} className="table-error-cell">
+                <td colSpan={showConfidence ? 7 : 6} className="table-error-cell">
                   {filtersError} — <button className="apply-button" onClick={handleRetry}>Повторить</button>
                 </td>
               </tr>
@@ -262,17 +267,19 @@ const Verification = () => {
                   <td>{doc.title}</td>
                   <td>{formatMoscowDate(doc.receivedDate)}</td>
                   <td>{doc.aiDocumentType || doc.documentType || '-'}</td>
-                  <td>
-                    <div className="confidence-cell">
-                      <div className="confidence-bar">
-                        <div
-                          className={`confidence-fill ${getConfidenceClass(formatConfidence(doc.confidenceScore))}`}
-                          style={{ width: `${formatConfidence(doc.confidenceScore)}%` }}
-                        />
+                  {showConfidence && (
+                    <td>
+                      <div className="confidence-cell">
+                        <div className="confidence-bar">
+                          <div
+                            className={`confidence-fill ${getConfidenceClass(formatConfidence(doc.confidenceScore))}`}
+                            style={{ width: `${formatConfidence(doc.confidenceScore)}%` }}
+                          />
+                        </div>
+                        <span className="confidence-text">{formatConfidence(doc.confidenceScore)}%</span>
                       </div>
-                      <span className="confidence-text">{formatConfidence(doc.confidenceScore)}%</span>
-                    </div>
-                  </td>
+                    </td>
+                  )}
                   <td>
                     <span className={`status-badge ${getStatusColorClass(doc.currentStatus)}`}>
                       {translateStatus(doc.currentStatus)}
@@ -298,7 +305,7 @@ const Verification = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="table-empty-cell">
+                <td colSpan={showConfidence ? 7 : 6} className="table-empty-cell">
                   Нет документов, ожидающих проверки
                 </td>
               </tr>

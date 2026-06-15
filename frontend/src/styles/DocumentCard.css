@@ -1,10 +1,8 @@
 .document-page {
   max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px 32px;
+  padding: 0;
   background-color: var(--color-bg-page, #FAFBFC);
   font-family: 'Inter', sans-serif;
-  min-height: 100vh;
 }
 
 .doc-topbar {
@@ -898,8 +896,16 @@
   font-size: 14px;
   resize: vertical;
   min-height: 60px;
-  max-height: 120px;
-  min-height: 60px;
+}
+
+.verification-row--fill {
+  display: flex;
+  flex-direction: column;
+}
+
+.verification-row--fill .verification-textarea {
+  flex: 1;
+  min-height: 120px;
 }
 
 .verification-textarea:focus {

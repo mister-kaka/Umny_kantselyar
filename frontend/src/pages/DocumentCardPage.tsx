@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import "../styles/global.css";
 import "../styles/DocumentCard.css";
-import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument, verifyDocument, routeDocument, getDocumentTypes, getDocumentCategories, getDepartments, createDocumentType, createDocumentCategory, extractText, updateDocument, getComments, addComment, deleteComment, rejectDocument } from '../services/api';
-import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult, DocumentType, DocumentCategory, Department, Comment } from '../types/';
+import { getDocumentById, getDocumentAiResult, analyzeDocument, deleteDocument, verifyDocument, routeDocument, getDocumentTypes, getDocumentCategories, getDepartments, createDocumentType, createDocumentCategory, extractText, updateDocument, getComments, addComment, deleteComment, rejectDocument, getRouteTemplates } from '../services/api';
+import { DocumentCard as DocumentCardType, DocumentFile, DocumentRoute, DocumentAiResult, DocumentType, DocumentCategory, Department, Comment, RouteTemplate } from '../types/';
 import Card from '../components/Card';
 import Tooltip from '../components/Tooltip';
 import { translateStatus, getStatusColorClass } from '../constants/statuses';
 import { formatMoscowDate, formatMoscowDateTime } from '../utils/moscowTime';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
+import { useSettings } from '../contexts/SettingsContext';
 
 type PreviewData = {
   fileName: string;
@@ -40,6 +41,7 @@ const formatConfidence = (value: number | null | undefined): number => {
 
 const DocumentCardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { showConfidence } = useSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from;
@@ -89,6 +91,7 @@ const DocumentCardPage: React.FC = () => {
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [documentCategories, setDocumentCategories] = useState<DocumentCategory[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [routeTemplates, setRouteTemplates] = useState<RouteTemplate[]>([]);
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -150,11 +153,13 @@ const DocumentCardPage: React.FC = () => {
     Promise.all([
       getDocumentTypes(),
       getDocumentCategories(),
-      getDepartments()
-    ]).then(([types, cats, deps]) => {
+      getDepartments(),
+      getRouteTemplates(),
+    ]).then(([types, cats, deps, tmpls]) => {
       setDocumentTypes(types);
       setDocumentCategories(cats);
       setDepartments(deps);
+      setRouteTemplates(tmpls);
     }).catch(() => { });
   }, []);
 
@@ -509,6 +514,14 @@ const DocumentCardPage: React.FC = () => {
     }
   };
 
+  const handleTemplateSelect = (templateId: number) => {
+    const template = routeTemplates.find(t => t.id === templateId);
+    if (template && template.departmentIds?.length) {
+      setVerifyDepartmentId(template.departmentIds[0]);
+      setUserEdited(prev => ({ ...prev, department: true }));
+    }
+  };
+
   const handleGoToDepartment = (e: React.MouseEvent, departmentName: string) => {
     e.stopPropagation();
     const dept = departments.find(d => d.name === departmentName);
@@ -613,12 +626,14 @@ const DocumentCardPage: React.FC = () => {
             </svg>
             Редактировать
           </button>
-          <div
-            className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}
-            data-tooltip="Общая уверенность: OCR (качество распознавания) × 20% + AI-анализ × 80%"
-          >
-            Уверенность: {overallConfidence}% <span className="confidence-info-symbol">ⓘ</span>
-          </div>
+          {showConfidence && (
+            <div
+              className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}
+              data-tooltip="Общая уверенность: OCR (качество распознавания) × 20% + AI-анализ × 80%"
+            >
+              Уверенность: {overallConfidence}% <span className="confidence-info-symbol">ⓘ</span>
+            </div>
+            )}
         </div>
       </div>
 
@@ -720,7 +735,7 @@ const DocumentCardPage: React.FC = () => {
                     <span className="classif-label">Тип документа</span>
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.type || aiResult?.documentTypeSuggested || '-'}</span>
-                      {!data.classification?.isVerified && (
+                      {showConfidence && !data.classification?.isVerified && (
                         <span
                           className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.typeConfidence ?? aiResult?.confidenceScore ?? null))}`}
                           data-tooltip="Точность определения типа документа AI-моделью"
@@ -735,7 +750,7 @@ const DocumentCardPage: React.FC = () => {
                     <span className="classif-label">Категория</span>
                     <div className="classif-right">
                       <span className="classif-value">{data.classification?.category || aiResult?.categorySuggested || '-'}</span>
-                      {!data.classification?.isVerified && (
+                      {showConfidence && !data.classification?.isVerified && (
                         <span
                           className={`confidence-chip ${getConfidenceClass(formatConfidence(data.classification?.categoryConfidence ?? aiResult?.confidenceScore ?? null))}`}
                           data-tooltip="Точность определения категории документа AI-моделью"
@@ -1116,6 +1131,23 @@ const DocumentCardPage: React.FC = () => {
                 <div className="verification-group">
                   <div className="verification-group-title">Маршрутизация</div>
                   <div className="verification-row">
+                    {routeTemplates.length > 0 && (
+                      <div className="verification-row">
+                        <label className="verification-label">Применить правило</label>
+                        <select
+                          className="verification-select"
+                          defaultValue=""
+                          onChange={e => {
+                            if (e.target.value) handleTemplateSelect(Number(e.target.value));
+                          }}
+                        >
+                          <option value="">— Выберите правило —</option>
+                          {routeTemplates.map(t => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <label className="verification-label">Отдел</label>
                     <select
                       className="verification-select"
@@ -1169,7 +1201,7 @@ const DocumentCardPage: React.FC = () => {
                     />
                   </div>
 
-                  <div className="verification-row">
+                  <div className="verification-row verification-row--fill">
                     <label className="verification-label">Комментарий</label>
                     <textarea
                       className="verification-textarea"

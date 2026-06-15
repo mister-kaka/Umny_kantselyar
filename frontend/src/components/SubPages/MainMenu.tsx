@@ -82,10 +82,8 @@ const MainMenu = () => {
 
     return (
         <div>
-            <div className="Heading-main-text">
-                <h2>Добро пожаловать!</h2>
-                <h4 className="text-secondary">Сегодня {date}</h4>
-            </div>
+            <h2 className="page-title">Добро пожаловать!</h2>
+            <p className="page-subtitle">Сегодня {date}</p>
             
             <div className="stats-cards-container">
                 <Card className="stat-card">

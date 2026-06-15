@@ -17,6 +17,7 @@ import "../styles/global.css";
 import "../styles/Dashboard.css";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { SidebarProvider, useSidebar } from "../contexts/SidebarContexts";
+import { SettingsProvider } from "../contexts/SettingsContext";
 import { useState } from "react";
 import type { FileItem, UploadStep } from "../types/index";
 
@@ -80,7 +81,9 @@ const DashboardContent = () => {
 const DashboardPage = () => {
   return (
     <SidebarProvider>
-      <DashboardContent />
+      <SettingsProvider>
+        <DashboardContent />
+      </SettingsProvider>
     </SidebarProvider>
   );
 };

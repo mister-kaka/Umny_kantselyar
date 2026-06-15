@@ -274,10 +274,8 @@ const Analytics = () => {
 
   return (
     <div>
-      <div className="Heading-main-text">
-        <h2>Аналитика</h2>
-        <h4 className="text-secondary">{documents.length} документов в системе</h4>
-      </div>
+      <h2 className="page-title">Аналитика</h2>
+      <p className="page-subtitle">{documents.length} документов в системе</p>
 
       <div className="analytics-stats-cards-container">
         {statCards.map((card, i) => (

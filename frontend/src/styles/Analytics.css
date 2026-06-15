@@ -1,13 +1,9 @@
 @import url("../styles/global.css");
 
 .analytics-page {
-  padding: 24px;
+  padding: 0;
   background-color: var(--color-bg-page);
   font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
 }
 
 .analytics-header {
@@ -241,7 +237,7 @@
 /* 1400px+ */
 @media (min-width: 1400px) {
   .analytics-page {
-    padding: 32px;
+    /* padding: 32px; */
     max-width: 1400px;
     margin: 0 auto;
   }

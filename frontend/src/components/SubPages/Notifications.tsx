@@ -17,6 +17,7 @@ import {
 } from "../../services/api";
 import type { AppNotification, UnreadCount } from "../../types";
 import { toMoscowTime } from "../../utils/moscowTime";
+import { useSettings } from "../../contexts/SettingsContext";
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
     new_document: "Загружен",
@@ -33,6 +34,8 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
     new_login: "Новый вход",
     comment_added: "Комментарий",
     document_deleted: "Документ удалён",
+    reference_created: "Справочник изменён",
+    reference_deleted: "Справочник изменён",
 };
 
 const FILTER_TYPE_OPTIONS = [
@@ -51,6 +54,7 @@ const FILTER_TYPE_OPTIONS = [
     "Новый вход",
     "Комментарий",
     "Документ удалён",
+    "Справочник изменён",
 ];
 
 const FILTER_TYPE_MAP: Record<string, string> = {
@@ -69,6 +73,7 @@ const FILTER_TYPE_MAP: Record<string, string> = {
     "Новый вход": "new_login",
     "Комментарий": "comment_added",
     "Документ удалён": "document_deleted",
+    "Справочник изменён": "reference_created",
 };
 
 const REVERSE_FILTER_TYPE_MAP: Record<string, string> = Object.fromEntries(
@@ -123,6 +128,7 @@ const POLLING_INTERVAL = 30000;
 
 const Notifications = () => {
     const navigate = useNavigate();
+    const { defaultPageLimit } = useSettings();
 
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [stats, setStats] = useState<UnreadCount | null>(null);
@@ -143,7 +149,7 @@ const Notifications = () => {
     const [groupMode, setGroupMode] = useState<'date' | 'document'>(() => {
         return (localStorage.getItem('notifications_group_mode') as 'date' | 'document') || 'date';
     });
-    const [limit, setLimit] = useState(10);
+    const [limit, setLimit] = useState(defaultPageLimit);
 
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
     const toggleFilter = (filterId: string) => {
@@ -491,6 +497,10 @@ const Notifications = () => {
     if (loading) {
         return (
             <div className="notifications-page">
+                <div className="notifications-top-row">
+                    <h2 className="page-title">Уведомления</h2>
+                </div>
+                <p className="page-subtitle">Системные уведомления</p>
                 <div className="notifications-stats-cards-container">
                     {[1, 2, 3, 4].map(i => (
                         <Card key={i} className="notifications-stat-card skeleton-card">
@@ -500,9 +510,8 @@ const Notifications = () => {
                     ))}
                 </div>
                 <Card className="notifications-card">
-                    <div className="notifications-header">
+                    <div className="notifications-filters-row">
                         <div className="skeleton-title" />
-                        <div className="skeleton-button" />
                     </div>
                     <div className="notifications-list">
                         {[1, 2, 3].map(i => (
@@ -523,6 +532,9 @@ const Notifications = () => {
     if (error) {
         return (
             <div className="notifications-page">
+                <div className="notifications-top-row">
+                    <h2 className="page-title">Уведомления</h2>
+                </div>
                 <Card className="error-state-card">
                     <div className="error-state">
                         <p className="error-text">{error}</p>
@@ -537,6 +549,21 @@ const Notifications = () => {
 
     return (
         <div className="notifications-page">
+            <div className="notifications-top-row">
+                <h2 className="page-title">Уведомления</h2>
+                <div className="notifications-header-actions">
+                    <Tooltip text="Перейти к настройкам уведомлений">
+                        <button
+                            className="mark-all-read-btn"
+                            onClick={() => navigate('/dashboard/settings?tab=notifications')}
+                        >
+                            Настройки
+                        </button>
+                    </Tooltip>
+                </div>
+            </div>
+            <p className="page-subtitle">Системные уведомления</p>
+
             <div className="notifications-stats-cards-container">
                 <Card className="notifications-stat-card">
                     <img src="/icons/notifications/Unread.png" className="notifications-stat-card-icon" alt="Непрочитанные" />
@@ -571,83 +598,55 @@ const Notifications = () => {
                 </Card>
             </div>
 
-            <Card className="notifications-card">
-                <div className="notifications-header">
-                    <div className="notifications-title-wrap">
-                        <h2 className="notifications-title">Уведомления</h2>
-                        {stats && stats.total > 0 && (
-                            <span className="unread-count-badge">{stats.total} новых</span>
-                        )}
-                    </div>
-                    <div className="notifications-header-actions">
-                        {notifications.length > 0 && stats && stats.total > 0 && (
-                            <Tooltip text="Отметить все уведомления как прочитанные">
-                                <button className="mark-all-read-btn" onClick={handleMarkAllAsRead}>
-                                    Прочитать все
-                                </button>
-                            </Tooltip>
-                        )}
-                        <Tooltip text="Перейти к настройкам уведомлений">
-                            <button
-                                className="mark-all-read-btn"
-                                onClick={() => navigate('/dashboard/settings?tab=notifications')}
-                            >
-                                Настройки
-                            </button>
-                        </Tooltip>
-                    </div>
-                </div>
+            <Card className="filtersButtsWrapper">
+                <Tooltip text="Фильтр по типу уведомления">
+                    <DropdownButton
+                        options={FILTER_TYPE_OPTIONS}
+                        selectedLabel={REVERSE_FILTER_TYPE_MAP[filterType] || "Все"}
+                        onSelect={handleFilterChange}
+                        icon={<img src="/icons/filters/Status.png" alt="Тип" />}
+                        defaultLabel="Все"
+                        isOpen={activeFilter === 'type'}
+                        onToggle={() => toggleFilter('type')}/>
+                </Tooltip>
 
-                <div className="notifications-filters-row">
-                    <Tooltip text="Фильтр по типу уведомления">
-                        <DropdownButton
-                            options={FILTER_TYPE_OPTIONS}
-                            selectedLabel={REVERSE_FILTER_TYPE_MAP[filterType] || "Все"}
-                            onSelect={handleFilterChange}
-                            icon={<img src="/icons/filters/Status.png" alt="Тип" />}
-                            defaultLabel="Все"
-                            isOpen={activeFilter === 'type'}
-                            onToggle={() => toggleFilter('type')}/>
-                    </Tooltip>
+                <Tooltip text="Фильтр по дате">
+                    <DateFilterDropdown
+                        onFilterChange={handleDateFilterChange}
+                        icon={<img src="/icons/filters/data.png" alt="Дата" />}
+                        isOpen={activeFilter === 'date'}
+                        onToggle={() => toggleFilter('date')}
+                        selectedLabel={dateFilterLabel}/>
+                </Tooltip>
 
-                    <Tooltip text="Фильтр по дате">
-                        <DateFilterDropdown
-                            onFilterChange={handleDateFilterChange}
-                            icon={<img src="/icons/filters/data.png" alt="Дата" />}
-                            isOpen={activeFilter === 'date'}
-                            onToggle={() => toggleFilter('date')}
-                            selectedLabel={dateFilterLabel}/>
-                    </Tooltip>
+                <Tooltip text="Количество уведомлений на странице">
+                    <DropdownButton
+                        options={['5', '10', '20', '50']}
+                        selectedLabel={String(limit)}
+                        onSelect={(value) => {
+                            const newLimit = parseInt(value, 10);
+                            if (!isNaN(newLimit)) setLimit(newLimit);
+                        }}
+                        defaultLabel={String(defaultPageLimit)}
+                        isOpen={activeFilter === 'limitSelector'}
+                        onToggle={() => toggleFilter('limitSelector')}/>
+                </Tooltip>
 
-                    <Tooltip text="Количество уведомлений на странице">
-                        <DropdownButton
-                            options={['5', '10', '20', '50']}
-                            selectedLabel={String(limit)}
-                            onSelect={(value) => {
-                                const newLimit = parseInt(value, 10);
-                                if (!isNaN(newLimit)) setLimit(newLimit);
-                            }}
-                            defaultLabel="10"
-                            isOpen={activeFilter === 'limitSelector'}
-                            onToggle={() => toggleFilter('limitSelector')}/>
-                    </Tooltip>
+                <Tooltip text="Сбросить все фильтры">
+                    <button
+                        className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
+                        disabled={!hasActiveFilters}
+                        onClick={() => {
+                            if (!hasActiveFilters) return;
+                            setFilterType("all");
+                            setDateFilter({ from: null, to: null });
+                            setDateFilterLabel('Дата');
+                        }}>
+                        Сбросить фильтры
+                    </button>
+                </Tooltip>
 
-                    <Tooltip text="Сбросить все фильтры">
-                        <button
-                            className={`removeFiltersButt ${!hasActiveFilters ? 'disabled' : ''}`}
-                            disabled={!hasActiveFilters}
-                            onClick={() => {
-                                if (!hasActiveFilters) return;
-                                setFilterType("all");
-                                setDateFilter({ from: null, to: null });
-                                setDateFilterLabel('Дата');
-                            }}>
-                            Сбросить фильтры
-                        </button>
-                    </Tooltip>
-                </div>
-
-                <div className="notifications-group-row">
+                <div className="notifications-group-row-inline">
                     <span className="notifications-group-label-text">Группировка:</span>
                     <Tooltip text="Группировать по датам">
                         <button
@@ -666,10 +665,21 @@ const Notifications = () => {
                         </button>
                     </Tooltip>
                 </div>
-
+            </Card>
+            
+            <Card className="cuttinPaddin">
                 <div className={`notifications-actions-bar ${selectedIds.size > 0 ? 'selection-mode' : ''}`}>
-                    {selectedIds.size === 0 && (
+                    {selectedIds.size === 0 ? (
                         <>
+                            <Tooltip text="Отметить все уведомления как прочитанные">
+                                <button
+                                    className="mark-all-read-btn"
+                                    onClick={handleMarkAllAsRead}
+                                    disabled={!stats || stats.total === 0}
+                                >
+                                    Прочитать все
+                                </button>
+                            </Tooltip>
                             {hasReadNotifications && (
                                 <Tooltip text="Удалить все прочитанные уведомления">
                                     <button
@@ -682,9 +692,7 @@ const Notifications = () => {
                                 </Tooltip>
                             )}
                         </>
-                    )}
-
-                    {selectedIds.size > 0 && (
+                    ) : (
                         <>
                             <div className="selection-controls">
                                 <label className="file-queue-checkbox">
