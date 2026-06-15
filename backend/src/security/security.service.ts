@@ -289,15 +289,14 @@ export class SecurityService {
                 .getManyAndCount();
 
             const userIds = [...new Set(items.map(item => item.userId))];
-            let userMap = new Map<number, string>();
-
+            let userMap = new Map<number, { fullName: string; avatarUrl: string | null }>();
             if (userIds.length > 0) {
                 const users = await this.userRepository
                     .createQueryBuilder('user')
                     .where('user.id IN (:...ids)', { ids: userIds })
-                    .select(['user.id', 'user.fullName'])
+                    .select(['user.id', 'user.fullName', 'user.avatarUrl'])
                     .getMany();
-                userMap = new Map(users.map(user => [user.id, user.fullName]));
+                userMap = new Map(users.map(user => [user.id, { fullName: user.fullName, avatarUrl: user.avatarUrl }]));
             }
 
             await this.logger.log({
@@ -314,7 +313,8 @@ export class SecurityService {
                 items: items.map(item => ({
                     id: item.id,
                     userId: item.userId,
-                    userName: userMap.get(item.userId) || 'Неизвестно',
+                    userName: userMap.get(item.userId)?.fullName || 'Неизвестно',
+                    userAvatarUrl: userMap.get(item.userId)?.avatarUrl || null,
                     action: item.action,
                     documentId: item.documentId,
                     details: item.details,
