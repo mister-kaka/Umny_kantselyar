@@ -294,6 +294,11 @@ tbody tr {
     grid-template-columns: 65% 35%;
     gap: 16px;
   }
+  
+  /* ДОБАВЛЕНО: Запрещаем контенту сдвигаться на планшете при открытом сайдбаре */
+  .main-content {
+    margin-left: 78px !important; 
+  }
 }
 
 @media (max-width: 768px) {
@@ -305,6 +310,12 @@ tbody tr {
     padding: 12px 16px;
     gap: 12px;
   }
+  
+  /* ДОБАВЛЕНО: Растягиваем последнюю нечетную карточку на 2 колонки */
+  .stat-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
   .stat-card-value {
     font-size: 20px;
   }

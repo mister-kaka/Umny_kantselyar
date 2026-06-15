@@ -139,6 +139,38 @@
   color: var(--text-secondary);
 }
 
+/* ДОБАВЛЕНО: Логика сайдбара и оверлея для планшетов */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    height: 100vh;
+    z-index: 100;
+  }
+  
+  .sidebar:not(.collapsed) {
+    width: 280px;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 99;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  .mobile-overlay.active {
+    display: block;
+    opacity: 1;
+  }
+}
+
 @media (max-width: 768px) {
   .mobile-overlay {
     display: none;
