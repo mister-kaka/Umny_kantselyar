@@ -13,6 +13,7 @@ import { DateFilterDropdown } from "../DropdownButton";
 import DropdownButton from "../DropdownButton";
 import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
+import { formatMoscowDate } from "../../utils/moscowTime";
 
 const DocumentsListPage = () => {
   const navigate = useNavigate();

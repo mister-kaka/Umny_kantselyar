@@ -4,6 +4,7 @@ import type { Profile, UpdateProfileData, ChangePasswordData, Session, LoginHist
 import Card from '../components/Card';
 import '../styles/ProfilePage.css';
 import '../styles/global.css';
+import { formatMoscowDate, formatMoscowDateTime } from '../utils/moscowTime';
 
 const ProfilePage = () => {
     const [profile, setProfile] = useState<Profile | null>(null);
@@ -272,23 +273,8 @@ const ProfilePage = () => {
         return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    const formatDateTime = (dateString: string) => {
-        return new Date(dateString).toLocaleString('ru-RU', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
+    const formatDate = (dateString: string) => formatMoscowDate(dateString);
+    const formatDateTime = (dateString: string) => formatMoscowDateTime(dateString);
 
     const truncateUserAgent = (ua: string | null): string => {
         if (!ua) return 'Неизвестное устройство';

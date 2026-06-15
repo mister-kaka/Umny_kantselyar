@@ -9,6 +9,7 @@ import { DashboardData, GroupedDepartment } from "../../types";
 import { NavLink, useNavigate } from 'react-router-dom';
 import "../../styles/MainMenu.css";
 import { translateStatus, getStatusColorClass } from "../../constants/statuses";
+import { formatMoscowDate } from "../../utils/moscowTime";
 
 export const groupByDepartment = (data: DashboardData | null): GroupedDepartment[] => {
     if (!data?.departmentRouteStatuses) return [];
@@ -69,10 +70,7 @@ const MainMenu = () => {
 
     const groupedDepartments = groupByDepartment(data);
 
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU');
-    };
+    const formatDate = (dateString: string): string => formatMoscowDate(dateString);
 
     if (loading) return <p>Загрузка...</p>;
     if (error) return (

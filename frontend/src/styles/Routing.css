@@ -1,0 +1,302 @@
+@import url("../styles/global.css");
+@import url("../styles/Dashboard.css");
+
+.routing-page {
+  padding: 0;
+}
+
+.routing-header {
+  margin-bottom: 24px;
+}
+
+.routing-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.routing-subtitle {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.routing-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.routing-stats .card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px;
+  min-height: 110px;
+  border-top: 3px solid var(--color-accent);
+  transition: all 0.2s ease;
+}
+
+.routing-stats .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.routing-stat-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.routing-stat-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.routing-stat-content {
+  flex: 1;
+}
+
+.routing-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.routing-stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.routing-row {
+  cursor: pointer;
+}
+
+.routing-row--matched {
+  border-left: 3px solid #7EE29F;
+}
+
+.routing-row--mismatched {
+  border-left: 3px solid #E87373;
+}
+
+.routing-cell-reg {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.routing-cell-title {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.routing-cell-date {
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.routing-department-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.routing-table-dept-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.routing-table-dept-link:hover {
+  background-color: rgba(129, 216, 208, 0.12);
+}
+
+.routing-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.routing-avatar--initials {
+  background-color: var(--color-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.routing-operator-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.routing-reason-text {
+  font-size: 12px;
+  color: var(--color-accent);
+  cursor: help;
+  border-bottom: 1px dashed var(--color-accent);
+}
+
+.routing-reason-empty {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.routing-loading {
+  text-align: center;
+  padding: 48px 24px;
+  font-size: 14px;
+  color: var(--text-tertiary);
+}
+
+.routing-error {
+  text-align: center;
+  padding: 48px 24px;
+  font-size: 14px;
+  color: var(--color-status-rejected);
+}
+
+.routing-error .apply-button {
+  margin-left: 8px;
+}
+
+.routing-empty {
+  text-align: center;
+  padding: 48px 24px;
+  font-size: 14px;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 1024px) {
+  .routing-stats {
+    gap: 16px;
+  }
+
+  .routing-stats .card {
+    padding: 16px 20px;
+  }
+
+  .routing-stat-value {
+    font-size: 22px;
+  }
+
+  .routing-cell-title {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .routing-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .routing-stats .card {
+    padding: 14px 16px;
+    min-height: 80px;
+  }
+
+  .routing-stat-icon-wrap {
+    width: 36px;
+    height: 36px;
+  }
+
+  .routing-stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .routing-stat-value {
+    font-size: 20px;
+  }
+
+  .routing-stat-label {
+    font-size: 11px;
+  }
+
+  .routing-cell-title {
+    max-width: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .routing-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .routing-stats .card {
+    min-height: 60px;
+    padding: 12px;
+  }
+
+  .routing-stat-icon-wrap {
+    width: 28px;
+    height: 28px;
+  }
+
+  .routing-stat-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .routing-stat-value {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 375px) {
+  .routing-stat-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 320px) {
+  .routing-stats {
+    gap: 8px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .routing-row:active {
+    background-color: rgba(129, 216, 208, 0.08);
+  }
+
+  .routing-table-dept-link:active {
+    transform: scale(0.92);
+  }
+
+  .routing-row,
+  .routing-table-dept-link {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

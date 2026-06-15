@@ -611,7 +611,7 @@ const UploadPage: React.FC<UploadPageProps> = ({
 
           <div className="upload-actions">
             {step === "error" && !isProcessing && <button className="upload-btn-primary" onClick={() => handleRetry()}>Повторить всё</button>}
-            {step === "success" && !isProcessing && <button className="upload-btn-primary" onClick={() => navigate('/dashboard/documents')}>К списку документов</button>}
+            {step === "success" && !isProcessing && <button className="upload-btn-primary" onClick={() => navigate('/dashboard/verification')}>Приступить к проверке</button>}
             {hasProcessedFiles && !isProcessing && (
               <button className="upload-btn-secondary upload-btn-sm" onClick={removeProcessed}>Удалить обработанные</button>
             )}

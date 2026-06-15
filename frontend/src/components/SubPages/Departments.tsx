@@ -1,218 +1,482 @@
-// import React from 'react';
-// import './Departments.css';
-
 import "../../styles/global.css";
+import "../../styles/Dashboard.css";
+import "../../styles/Departments.css";
+
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Card from "../Card";
+import Tooltip from "../Tooltip";
+import { getDepartmentStats, createDepartment, deleteDepartment, restoreDepartment } from "../../services/api";
+import { DepartmentStats } from "../../types";
+import { formatMoscowDate } from "../../utils/moscowTime";
 
 const Departments = () => {
+    const navigate = useNavigate();
+
+    const [departments, setDepartments] = useState<DepartmentStats[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [sortBy, setSortBy] = useState<"name" | "count">("count");
+    const [showArchived, setShowArchived] = useState(false);
+
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newDepartmentName, setNewDepartmentName] = useState("");
+    const [adding, setAdding] = useState(false);
+    const [addError, setAddError] = useState("");
+
+    const [showArchiveModal, setShowArchiveModal] = useState(false);
+    const [archivingDept, setArchivingDept] = useState<DepartmentStats | null>(null);
+    const [archiving, setArchiving] = useState(false);
+    const [archiveError, setArchiveError] = useState("");
+
+    const [showRestoreModal, setShowRestoreModal] = useState(false);
+    const [restoringDept, setRestoringDept] = useState<DepartmentStats | null>(null);
+    const [restoring, setRestoring] = useState(false);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            setError("");
+            const data = await getDepartmentStats(showArchived);
+            setDepartments(data);
+        } catch (err) {
+            console.error(err);
+            setError("Ошибка загрузки подразделений");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [showArchived]);
+
+    const sortedDepartments = [...departments].sort((a, b) => {
+        if (sortBy === "name") {
+            return a.name.localeCompare(b.name, 'ru');
+        }
+        return b.routedCount - a.routedCount;
+    });
+
+    const maxRouted = Math.max(...departments.map(d => d.routedCount), 1);
+    const totalDocs = departments.reduce((sum, d) => sum + d.routedCount, 0);
+
+    const getLoadClass = (count: number) => {
+        const ratio = count / maxRouted;
+        if (ratio >= 0.7) return "department-load-fill--high";
+        if (ratio >= 0.3) return "department-load-fill--medium";
+        return "department-load-fill--low";
+    };
+
+    const getLoadTooltip = (count: number) => {
+        if (totalDocs === 0) return "Нет направленных документов";
+        if (count === 0) return "Нет направленных документов";
+        const ratio = count / maxRouted;
+        if (ratio >= 0.7) return `Высокая загруженность. ${count} из ${totalDocs} документов направлено в этот отдел`;
+        if (ratio >= 0.3) return `Средняя загруженность. ${count} из ${totalDocs} документов направлено в этот отдел`;
+        return `Низкая загруженность. ${count} из ${totalDocs} документов направлено в этот отдел`;
+    };
+
+    const formatDate = (dateString: string | null) => formatMoscowDate(dateString);
+
+    const handleCardClick = (id: number) => {
+        navigate(`/dashboard/departments/${id}`);
+    };
+
+    const handleAddDepartment = async () => {
+        if (!newDepartmentName.trim()) {
+            setAddError("Введите название отдела");
+            return;
+        }
+
+        try {
+            setAdding(true);
+            setAddError("");
+            await createDepartment(newDepartmentName.trim());
+            setNewDepartmentName("");
+            setShowAddModal(false);
+            await fetchData();
+        } catch (err: any) {
+            const message = err?.response?.data?.message || "Ошибка при создании отдела";
+            setAddError(message);
+        } finally {
+            setAdding(false);
+        }
+    };
+
+    const handleArchiveClick = (e: React.MouseEvent, dept: DepartmentStats) => {
+        e.stopPropagation();
+        setArchivingDept(dept);
+        setArchiveError("");
+        setShowArchiveModal(true);
+    };
+
+    const handleArchiveConfirm = async () => {
+        if (!archivingDept) return;
+
+        try {
+            setArchiving(true);
+            setArchiveError("");
+            await deleteDepartment(archivingDept.id);
+            setShowArchiveModal(false);
+            setArchivingDept(null);
+            await fetchData();
+        } catch (err: any) {
+            const message = err?.response?.data?.message || "Ошибка при архивации отдела";
+            setArchiveError(message);
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    const handleRestoreClick = (e: React.MouseEvent, dept: DepartmentStats) => {
+        e.stopPropagation();
+        setRestoringDept(dept);
+        setShowRestoreModal(true);
+    };
+
+    const handleRestoreConfirm = async () => {
+        if (!restoringDept) return;
+
+        try {
+            setRestoring(true);
+            await restoreDepartment(restoringDept.id);
+            setShowRestoreModal(false);
+            setRestoringDept(null);
+            await fetchData();
+        } catch (err: any) {
+            console.error(err);
+        } finally {
+            setRestoring(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="departments-page">
+                <div className="departments-header">
+                    <div>
+                        <h2 className="departments-title">Подразделения</h2>
+                        <span className="departments-count">0 отделов</span>
+                    </div>
+                </div>
+                <div className="departments-skeleton">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <Card key={i}>
+                            <div className="skeleton-icon"></div>
+                            <div className="skeleton-line skeleton-line--name"></div>
+                            <div className="skeleton-line skeleton-line--count"></div>
+                            <div className="skeleton-line skeleton-line--bar"></div>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="departments-page">
+                <div className="departments-error">
+                    <p>{error}</p>
+                    <button className="apply-button" onClick={fetchData}>Повторить</button>
+                </div>
+            </div>
+        );
+    }
+
     return (
-    <div>
-        Подразделения
-    </div>
-    )
+        <div className="departments-page">
+            <div className="departments-header">
+                <div>
+                    <h2 className="departments-title">
+                        {showArchived ? 'Архивные подразделения' : 'Подразделения'}
+                    </h2>
+                    <span className="departments-count">
+                        {departments.length} {departments.length === 1 ? 'отдел' : departments.length < 5 ? 'отдела' : 'отделов'}
+                    </span>
+                </div>
+                {!showArchived && (
+                    <button className="departments-add-btn" onClick={() => setShowAddModal(true)}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M7 3v8M3 7h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                        Добавить отдел
+                    </button>
+                )}
+            </div>
 
-}
-export default Departments
+            <div className="departments-filter-row">
+                <span className="departments-sort-label">Отделы:</span>
+                <Tooltip text="Показать активные подразделения">
+                    <button
+                        className={`departments-filter-btn ${!showArchived ? "active" : ""}`}
+                        onClick={() => setShowArchived(false)}
+                    >
+                        Активные
+                    </button>
+                </Tooltip>
+                <Tooltip text="Показать архивные подразделения">
+                    <button
+                        className={`departments-filter-btn ${showArchived ? "active" : ""}`}
+                        onClick={() => setShowArchived(true)}
+                    >
+                        Архивные
+                    </button>
+                </Tooltip>
+            </div>
 
-// const departments = [
-//   {
-//     id: 1,
-//     name: 'Отдел кадров',
-//     code: 'HR',
-//     isActive: true,
-//     documentsCount: 12
-//   },
-//   {
-//     id: 2,
-//     name: 'Юридический отдел',
-//     code: 'LAW',
-//     isActive: true,
-//     documentsCount: 8
-//   },
-//   {
-//     id: 3,
-//     name: 'Финансовый отдел',
-//     code: 'FIN',
-//     isActive: false,
-//     documentsCount: 3
-//   }
-// ];
+            <div className="departments-sort">
+                <span className="departments-sort-label">Сортировка:</span>
+                <Tooltip text="Сортировать по количеству направленных документов">
+                    <button
+                        className={`departments-sort-btn ${sortBy === "count" ? "active" : ""}`}
+                        onClick={() => setSortBy("count")}
+                    >
+                        По загруженности
+                    </button>
+                </Tooltip>
+                <Tooltip text="Сортировать по алфавиту">
+                    <button
+                        className={`departments-sort-btn ${sortBy === "name" ? "active" : ""}`}
+                        onClick={() => setSortBy("name")}
+                    >
+                        По названию
+                    </button>
+                </Tooltip>
+            </div>
 
-// // import React, { useEffect, useState } from 'react';
-// // import { getDepartments, getDashboard } from '../../services/api';
-// // import { Department, DashboardData } from '../../types';
-// // import './Departments.css';
+            {departments.length > 0 ? (
+                <div className="departments-grid">
+                    {sortedDepartments.map(dept => (
+                        <Card
+                            key={dept.id}
+                            onClick={() => handleCardClick(dept.id)}
+                        >
+                            <div className="department-card-icon">
+                                <img
+                                    src={`/icons/departments/${dept.code}.png`}
+                                    alt={dept.name}
+                                    className="department-card-icon-img"
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        const parent = target.parentElement;
+                                        if (parent) {
+                                            parent.innerHTML = `<span class="department-card-icon-fallback">${dept.name.charAt(0)}</span>`;
+                                        }
+                                    }}
+                                />
+                            </div>
 
-// // const Departments: React.FC = () => {
-// //   const [departments, setDepartments] = useState<Department[]>([]);
-// //   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-// //   const [loading, setLoading] = useState(true);
-// //   const [error, setError] = useState<string | null>(null);
+                            <h3 className="department-card-name">{dept.name}</h3>
 
-// //   useEffect(() => {
-// //     fetchDepartments();
-// //   }, []);
+                            <div className="department-card-stats">
+                                <span className="department-card-stats-value">{dept.routedCount}</span>
+                                <span className="department-card-stats-label">
+                                    {dept.routedCount === 1 ? 'документ' : dept.routedCount < 5 ? 'документа' : 'документов'}
+                                </span>
+                            </div>
 
-// // const fetchDepartments = async () => {
-// //   try {
-// //     setLoading(true);
+                            {!showArchived && (
+                                <div 
+                                    className="department-card-load tooltip-wrapper tooltip-bottom"
+                                    data-tooltip={getLoadTooltip(dept.routedCount)}
+                                >
+                                    <div className="department-load-bar">
+                                        <div
+                                            className={`department-load-fill ${getLoadClass(dept.routedCount)}`}
+                                            style={{ width: `${(dept.routedCount / maxRouted) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
-// //     const [departmentsData, dashboardData] = await Promise.all([
-// //       getDepartments(),
-// //       getDashboard()
-// //     ]);
+                            {dept.lastRoutedTitle && (
+                                <div className="department-card-last">
+                                    <span className="department-card-last-label">Последний:</span>
+                                    <span className="department-card-last-title">{dept.lastRoutedTitle}</span>
+                                    <span className="department-card-last-date">{formatDate(dept.lastRoutedAt)}</span>
+                                </div>
+                            )}
 
-// //     setDepartments(departmentsData);
-// //     setDashboard(dashboardData);
+                            <div className="department-card-footer">
+                                {showArchived ? (
+                                    <Tooltip text="Восстановить отдел из архива">
+                                        <button
+                                            className="department-card-restore-btn"
+                                            onClick={(e) => handleRestoreClick(e, dept)}
+                                        >
+                                            Восстановить
+                                        </button>
+                                    </Tooltip>
+                                ) : (
+                                    <Tooltip text="Архивировать отдел">
+                                        <button
+                                            className="department-card-archive-btn"
+                                            onClick={(e) => handleArchiveClick(e, dept)}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                                <path d="M2 4h10M5 4V2h4v2M4 4v8h6V4M5.5 6.5v3M8.5 6.5v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                        </button>
+                                    </Tooltip>
+                                )}
+                                <div className="department-card-action">
+                                    <span className="department-card-action-text">Подробнее</span>
+                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                        <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            ) : (
+                <div className="departments-empty">
+                    <p className="departments-empty-text">
+                        {showArchived ? 'Нет архивных подразделений' : 'Нет подразделений'}
+                    </p>
+                    {showArchived && (
+                        <button className="departments-sort-btn" onClick={() => setShowArchived(false)}>
+                            К активным подразделениям
+                        </button>
+                    )}
+                </div>
+            )}
 
-// //     setError(null);
-// //   } catch (error) {
-// //     console.error(error);
-// //     setError('Не удалось загрузить список отделов');
-// //   } finally {
-// //     setLoading(false);
-// //   }
-// // };
+            {showAddModal && (
+                <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Добавить отдел</h3>
+                            <button className="modal-close" onClick={() => setShowAddModal(false)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <label className="modal-label">Название отдела</label>
+                            <input
+                                type="text"
+                                className="profile-input"
+                                value={newDepartmentName}
+                                onChange={(e) => {
+                                    setNewDepartmentName(e.target.value);
+                                    setAddError("");
+                                }}
+                                placeholder="например, Транспортный отдел"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !adding) {
+                                        handleAddDepartment();
+                                    }
+                                }}
+                            />
+                            {addError && (
+                                <p style={{ color: 'var(--color-status-rejected)', fontSize: '13px', marginTop: '8px' }}>
+                                    {addError}
+                                </p>
+                            )}
+                        </div>
+                        <div className="modal-footer">
+                            <button className="modal-btn-cancel" onClick={() => setShowAddModal(false)}>
+                                Отмена
+                            </button>
+                            <button
+                                className="modal-btn-confirm"
+                                onClick={handleAddDepartment}
+                                disabled={adding || !newDepartmentName.trim()}
+                            >
+                                {adding ? 'Добавление...' : 'Добавить'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-// // const getDocumentsCount = (departmentId: number): number => {
-// //   if (!dashboard) return 0;
+            {showArchiveModal && archivingDept && (
+                <div className="modal-overlay" onClick={() => setShowArchiveModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Архивировать отдел</h3>
+                            <button className="modal-close" onClick={() => setShowArchiveModal(false)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <p className="archive-modal-name">«{archivingDept.name}»</p>
+                            <p className="archive-modal-description">
+                                Отдел будет скрыт из общего списка подразделений.
+                            </p>
+                            <div className="archive-modal-info">
+                                <div className="archive-modal-info-row">
+                                    <span className="archive-modal-info-label">Документов в истории</span>
+                                    <span className="archive-modal-info-value">{archivingDept.routedCount}</span>
+                                </div>
+                                <div className="archive-modal-info-row">
+                                    <span className="archive-modal-info-label">Последний документ</span>
+                                    <span className="archive-modal-info-value archive-modal-info-value--small">
+                                        {archivingDept.lastRoutedTitle || '—'}
+                                    </span>
+                                </div>
+                            </div>
+                            <p className="archive-modal-note">
+                                История маршрутов сохранится. Отдел можно будет восстановить в любой момент.
+                            </p>
+                            {archiveError && (
+                                <p className="archive-modal-error">{archiveError}</p>
+                            )}
+                        </div>
+                        <div className="modal-footer">
+                            <button className="modal-btn-cancel" onClick={() => setShowArchiveModal(false)}>
+                                Отмена
+                            </button>
+                            <button
+                                className="modal-btn-confirm"
+                                onClick={handleArchiveConfirm}
+                                disabled={archiving}
+                            >
+                                {archiving ? 'Архивация...' : 'Архивировать'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-// //   return dashboard.departmentRouteStatuses
-// //     .filter((item) => item.departmentId === departmentId)
-// //     .reduce((sum, item) => sum + item.count, 0);
-// // };
+            {showRestoreModal && restoringDept && (
+                <div className="modal-overlay" onClick={() => setShowRestoreModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Восстановить отдел</h3>
+                            <button className="modal-close" onClick={() => setShowRestoreModal(false)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <p className="archive-modal-name">«{restoringDept.name}»</p>
+                            <p className="archive-modal-description">
+                                Отдел снова появится в общем списке подразделений.
+                            </p>
+                            <div className="archive-modal-info">
+                                <div className="archive-modal-info-row">
+                                    <span className="archive-modal-info-label">Документов в истории</span>
+                                    <span className="archive-modal-info-value">{restoringDept.routedCount}</span>
+                                </div>
+                            </div>
+                            <p className="archive-modal-note">
+                                Все данные и история маршрутов сохранены.
+                            </p>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="modal-btn-cancel" onClick={() => setShowRestoreModal(false)}>
+                                Отмена
+                            </button>
+                            <button
+                                className="modal-btn-confirm"
+                                onClick={handleRestoreConfirm}
+                                disabled={restoring}
+                            >
+                                {restoring ? 'Восстановление...' : 'Восстановить'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
-// // if (loading) {
-// //   return (
-// //     <div className="departments-loading">
-// //       Загрузка подразделений...
-// //     </div>
-// //   );
-// // }
-
-// // if (error) {
-// //   return (
-// //     <div className="departments-error">
-// //       {error}
-// //     </div>
-// //   );
-// // }
-
-// // return (
-// //   <div className="departments-page">
-// //     <div className="departments-header">
-// //       <h1>Подразделения</h1>
-// //       <p className="departments-subtitle">
-// //         Список подразделений и текущая нагрузка
-// //       </p>
-// //     </div>
-
-// //     <div className="departments-grid">
-// //       {departments.map((dept) => (
-// //         <div key={dept.id} className="department-card">
-
-// //           <div className="department-card-header">
-// //             <h3 className="department-name">{dept.name}</h3>
-
-// //             <span
-// //               className={`department-status ${
-// //                 dept.isActive
-// //                   ? 'status-active'
-// //                   : 'status-inactive'
-// //               }`}
-// //             >
-// //               {dept.isActive ? 'Активен' : 'Неактивен'}
-// //             </span>
-// //           </div>
-
-// //           <div className="department-card-body">
-
-// //             <div className="department-code">
-// //               <span className="label">Код</span>
-// //               <span className="value">{dept.code}</span>
-// //             </div>
-
-// //             <div className="department-documents">
-// //               <span className="label">Документов</span>
-
-// //               <span className="documents-count">
-// //                 {getDocumentsCount(dept.id)}
-// //               </span>
-// //             </div>
-
-// //           </div>
-// //         </div>
-// //       ))}
-// //     </div>
-// //   </div>
-// // );
-// // };
-
-// // export default Departments;
-
-// const Departments: React.FC = () => {
-//   return (
-//     <div className="departments-page">
-//       <div className="departments-header">
-//         <h1>Подразделения</h1>
-
-//         <p className="departments-subtitle">
-//           Список подразделений и текущая нагрузка
-//         </p>
-//       </div>
-
-//       <div className="departments-grid">
-//         {departments.map((dept) => (
-//           <div
-//             key={dept.id}
-//             className="department-card"
-//           >
-
-//             <div className="department-card-header">
-//               <h3 className="department-name">
-//                 {dept.name}
-//               </h3>
-
-//               <span
-//                 className={`department-status ${
-//                   dept.isActive
-//                     ? 'status-active'
-//                     : 'status-inactive'
-//                 }`}
-//               >
-//                 {dept.isActive
-//                   ? 'Активен'
-//                   : 'Неактивен'}
-//               </span>
-//             </div>
-
-//             <div className="department-card-body">
-
-//               <div className="department-code">
-//                 <span className="label">
-//                   Код
-//                 </span>
-
-//                 <span className="value">
-//                   {dept.code}
-//                 </span>
-//               </div>
-
-//               <div className="department-documents">
-//                 <span className="label">
-//                   Документов
-//                 </span>
-
-//                 <span className="documents-count">
-//                   {dept.documentsCount}
-//                 </span>
-//               </div>
-
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Departments;
+export default Departments;

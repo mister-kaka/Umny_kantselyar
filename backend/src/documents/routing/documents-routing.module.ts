@@ -3,10 +3,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DocumentsRoutingService } from './documents-routing.service';
 import { Document } from '../../entities/document.entity';
 import { DocumentRoute } from '../../entities/document-route.entity';
+import { User } from '../../entities/user.entity';
 import { LoggerModule } from '../../logger/logger.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Document, DocumentRoute]), LoggerModule],
+    imports: [TypeOrmModule.forFeature([Document, DocumentRoute, User]), LoggerModule],
     providers: [DocumentsRoutingService],
     exports: [DocumentsRoutingService],
 })
