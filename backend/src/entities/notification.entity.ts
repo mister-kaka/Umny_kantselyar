@@ -16,7 +16,9 @@ export type NotificationType =
     | 'settings_changed'
     | 'new_login'
     | 'comment_added'
-    | 'document_deleted';
+    | 'document_deleted'
+    | 'reference_created'
+    | 'reference_deleted';
 
 @Entity('notifications')
 export class Notification {
