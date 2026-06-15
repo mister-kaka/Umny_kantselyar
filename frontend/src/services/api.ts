@@ -597,3 +597,43 @@ export const getAnalyticsData = async (): Promise<AnalyticsData> => {
     throw error;
   }
 }; 
+
+//удаление типов и категорий
+export const deleteDocumentType = async (id: number): Promise<void> => {
+  await api.delete(`/document-types/${id}`);
+};
+
+export const deleteDocumentCategory = async (id: number): Promise<void> => {
+  await api.delete(`/document-categories/${id}`);
+};
+
+//шаблоны маршрутизации
+export const createRouteTemplate = async (data: { name: string; description?: string; departmentIds: number[] }): Promise<RouteTemplate> => {
+  const res = await api.post<RouteTemplate>('/documents/route-templates', data);
+  return res.data;
+};
+
+export const deleteRouteTemplate = async (id: number): Promise<void> => {
+  await api.delete(`/documents/route-templates/${id}`);
+};
+
+//экспорт / импорт
+export const exportData = async (): Promise<Blob> => {
+  const response = await api.get('/settings/export', { responseType: 'blob' });
+  return response.data;
+};
+
+export const importData = async (file: File): Promise<{ message: string; counts: Record<string, number> }> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await api.post<{ message: string; counts: Record<string, number> }>('/settings/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data;
+};
+
+//о системе
+export const getAbout = async (): Promise<{ version: string }> => {
+  const res = await api.get<{ version: string }>('/settings/about');
+  return res.data;
+};
