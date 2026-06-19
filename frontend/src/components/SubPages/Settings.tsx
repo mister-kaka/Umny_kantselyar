@@ -108,6 +108,9 @@ const Settings: React.FC = () => {
 
   const [aboutVersion, setAboutVersion] = useState("");
 
+  const [refsStatus, setRefsStatus] = useState<{ type: string; category: string; dept: string }>({ type: '', category: '', dept: '' });
+  const [refsStatusType, setRefsStatusType] = useState<{ type: '' | 'success' | 'error'; category: '' | 'success' | 'error'; dept: '' | 'success' | 'error' }>({ type: '', category: '', dept: '' });
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -256,7 +259,7 @@ const Settings: React.FC = () => {
         apiKey, baseUrl: baseUrl || null,
       });
       setAiSettings(updated);
-      setSettingsStatus("Настройки сохранены!"); setStatusType("success");
+      setSettingsStatus("Настройки сохранены"); setStatusType("success");
     } catch { setErrorMsg("Ошибка сохранения"); }
   };
 
@@ -271,7 +274,7 @@ const Settings: React.FC = () => {
         apiKey, baseUrl: baseUrl || null,
       });
       if (result.status === 'success') {
-        setSettingsStatus("Успешное подключение!"); setStatusType("success");
+        setSettingsStatus("Подключение успешно"); setStatusType("success");
       } else {
         setErrorMsg(`Ошибка: ${result.message}`);
       }
@@ -307,7 +310,7 @@ const Settings: React.FC = () => {
       } else {
         document.documentElement.classList.remove('compact-view');
       }
-      setSettingsStatus('Настройки интерфейса сохранены!');
+      setSettingsStatus('Настройки интерфейса сохранены');
       setStatusType('success');
     } catch {
       setErrorMsg('Ошибка сохранения интерфейса');
@@ -336,7 +339,7 @@ const Settings: React.FC = () => {
       };
       const updated = await updateNotificationSettings(payload);
       setNotifications(updated);
-      setSettingsStatus('Настройки уведомлений сохранены!');
+      setSettingsStatus('Настройки уведомлений сохранены');
       setStatusType('success');
     } catch {
       setErrorMsg('Ошибка сохранения уведомлений');
@@ -346,7 +349,7 @@ const Settings: React.FC = () => {
   const handleLogoutAll = async () => {
     try {
       await logoutAll();
-      setSettingsStatus("Выход со всех устройств выполнен!"); setStatusType("success");
+      setSettingsStatus("Выход со всех устройств выполнен"); setStatusType("success");
       fetchSecurityData();
     } catch {
       setErrorMsg("Ошибка при выходе");
@@ -386,62 +389,118 @@ const Settings: React.FC = () => {
   }, [activeTab]);
 
   const handleCreateType = async () => {
-    if (!newTypeName.trim()) return;
+    if (!newTypeName.trim()) {
+      setRefsStatus(prev => ({ ...prev, type: 'Введите название типа' }));
+      setRefsStatusType(prev => ({ ...prev, type: 'error' }));
+      return;
+    }
     try {
       const created = await createDocumentType(newTypeName.trim());
       setDocTypes(prev => [...prev, created]);
-      setNewTypeName("");
-    } catch {}
-  };
+      setNewTypeName('');
+      setRefsStatus(prev => ({ ...prev, type: 'Тип создан' }));
+      setRefsStatusType(prev => ({ ...prev, type: 'success' }));
+    } catch (err: any) {
+      setRefsStatus(prev => ({ ...prev, type: 'Такой тип уже существует' }));
+      setRefsStatusType(prev => ({ ...prev, type: 'error' }));
+    }
+  };  
 
   const handleDeleteType = async (id: number) => {
     try {
       await deleteDocumentType(id);
       setDocTypes(prev => prev.filter(t => t.id !== id));
-    } catch {}
+      setRefsStatus(prev => ({ ...prev, type: 'Тип удалён' }));
+      setRefsStatusType(prev => ({ ...prev, type: 'success' }));
+    } catch (err: any) {
+      const message = err?.response?.data?.message || 'Не удалось удалить тип';
+      setRefsStatus(prev => ({ ...prev, type: message }));
+      setRefsStatusType(prev => ({ ...prev, type: 'error' }));
+    }
   };
 
   const handleCreateCategory = async () => {
-    if (!newCategoryName.trim()) return;
+    if (!newCategoryName.trim()) {
+      setRefsStatus(prev => ({ ...prev, category: 'Введите название категории' }));
+      setRefsStatusType(prev => ({ ...prev, category: 'error' }));
+      return;
+    }
     try {
       const created = await createDocumentCategory(newCategoryName.trim());
       setDocCategories(prev => [...prev, created]);
-      setNewCategoryName("");
-    } catch {}
+      setNewCategoryName('');
+      setRefsStatus(prev => ({ ...prev, category: 'Категория создана' }));
+      setRefsStatusType(prev => ({ ...prev, category: 'success' }));
+    } catch (err: any) {
+      setRefsStatus(prev => ({ ...prev, category: 'Такая категория уже существует' }));
+      setRefsStatusType(prev => ({ ...prev, category: 'error' }));
+    }
   };
 
   const handleDeleteCategory = async (id: number) => {
     try {
       await deleteDocumentCategory(id);
       setDocCategories(prev => prev.filter(c => c.id !== id));
-    } catch {}
+      setRefsStatus(prev => ({ ...prev, category: 'Категория удалена' }));
+      setRefsStatusType(prev => ({ ...prev, category: 'success' }));
+    } catch (err: any) {
+      const message = err?.response?.data?.message || 'Не удалось удалить категорию';
+      setRefsStatus(prev => ({ ...prev, category: message }));
+      setRefsStatusType(prev => ({ ...prev, category: 'error' }));
+    }
   };
 
   const handleCreateDept = async () => {
-    if (!newDeptName.trim()) return;
+    if (!newDeptName.trim()) {
+      setRefsStatus(prev => ({ ...prev, dept: 'Введите название отдела' }));
+      setRefsStatusType(prev => ({ ...prev, dept: 'error' }));
+      return;
+    }
     try {
       const created = await createDepartment(newDeptName.trim());
       setDepartments(prev => [...prev, created]);
-      setNewDeptName("");
-    } catch {}
-  };
+      setNewDeptName('');
+      setRefsStatus(prev => ({ ...prev, dept: 'Отдел создан' }));
+      setRefsStatusType(prev => ({ ...prev, dept: 'success' }));
+    } catch (err: any) {
+        const message = err?.response?.data?.message || '';
+        if (message.includes('разархивируйте')) {
+          setRefsStatus(prev => ({ ...prev, dept: 'Отдел в архиве. Восстановите его' }));
+        } else {
+          setRefsStatus(prev => ({ ...prev, dept: 'Такой отдел уже существует' }));
+        }
+        setRefsStatusType(prev => ({ ...prev, dept: 'error' }));
+    }};
 
   const handleArchiveDept = async (id: number) => {
     try {
       await deleteDepartment(id);
       setDepartments(prev => prev.map(d => d.id === id ? { ...d, isActive: false } : d));
-    } catch {}
+      setRefsStatus(prev => ({ ...prev, dept: 'Отдел архивирован' }));
+      setRefsStatusType(prev => ({ ...prev, dept: 'success' }));
+    } catch {
+      setRefsStatus(prev => ({ ...prev, dept: 'Не удалось архивировать' }));
+      setRefsStatusType(prev => ({ ...prev, dept: 'error' }));
+    }
   };
 
   const handleRestoreDept = async (id: number) => {
     try {
       await restoreDepartment(id);
       setDepartments(prev => prev.map(d => d.id === id ? { ...d, isActive: true } : d));
-    } catch {}
+      setRefsStatus(prev => ({ ...prev, dept: 'Отдел восстановлен' }));
+      setRefsStatusType(prev => ({ ...prev, dept: 'success' }));
+    } catch {
+      setRefsStatus(prev => ({ ...prev, dept: 'Не удалось восстановить' }));
+      setRefsStatusType(prev => ({ ...prev, dept: 'error' }));
+    }
   };
 
   const handleCreateTemplate = async () => {
-    if (!newTemplateTypeId || !newTemplateCategoryId || !newTemplateDeptId) return;
+    if (!newTemplateTypeId || !newTemplateCategoryId || !newTemplateDeptId) {
+      setErrorMsg('Заполните все поля правила');
+      return;
+    }
     try {
       const created = await createRouteTemplate({
         name: `${docTypes.find(t => t.id === newTemplateTypeId)?.name || ''} → ${departments.find(d => d.id === newTemplateDeptId)?.name || ''}`,
@@ -451,14 +510,22 @@ const Settings: React.FC = () => {
       setNewTemplateTypeId(undefined);
       setNewTemplateCategoryId(undefined);
       setNewTemplateDeptId(undefined);
-    } catch {}
+      setSettingsStatus('Правило создано');
+      setStatusType('success');
+    } catch {
+      setErrorMsg('Не удалось создать правило');
+    }
   };
 
   const handleDeleteTemplate = async (id: number) => {
     try {
       await deleteRouteTemplate(id);
       setTemplates(prev => prev.filter(t => t.id !== id));
-    } catch {}
+      setSettingsStatus('Правило удалено');
+      setStatusType('success');
+    } catch {
+      setErrorMsg('Не удалось удалить правило');
+    }
   };
 
   const handleExport = async () => {
@@ -472,7 +539,7 @@ const Settings: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      setSettingsStatus("Данные экспортированы!"); setStatusType("success");
+      setSettingsStatus("Данные экспортированы"); setStatusType("success");
     } catch {
       setErrorMsg("Ошибка экспорта");
     }
@@ -483,9 +550,9 @@ const Settings: React.FC = () => {
     if (!file) return;
     try {
       const result = await importData(file);
-      setSettingsStatus(`Импортировано: ${JSON.stringify(result.counts)}`); setStatusType("success");
+      setSettingsStatus(`Данные импортированы`); setStatusType("success");
     } catch {
-      setErrorMsg("Ошибка импорта");
+      setErrorMsg("Ошибка импорта. Проверьте формат файла.");
     }
   };
 
@@ -502,7 +569,7 @@ const Settings: React.FC = () => {
     return parts.length ? parts.join(' ') : t.name;
   };
 
-    const ACTION_LABELS: Record<string, string> = {
+  const ACTION_LABELS: Record<string, string> = {
     'login': 'Вход в систему',
     'logout_all': 'Выход со всех устройств',
     'profile_update': 'Обновление профиля',
@@ -856,6 +923,7 @@ const Settings: React.FC = () => {
                 <div className="settings-form-row">
                   <input className="settings-form-input" value={newTypeName} onChange={e => setNewTypeName(e.target.value)} placeholder="Новый тип" onKeyDown={e => e.key === 'Enter' && handleCreateType()} />
                   <button className="apply-button" onClick={handleCreateType}>Добавить</button>
+                  {refsStatus.type && <span className={`refs-inline-status ${refsStatusType.type}`}>{refsStatus.type}</span>}
                 </div>
 
                 <h4 className="settings-section-title">Категории</h4>
@@ -870,6 +938,7 @@ const Settings: React.FC = () => {
                 <div className="settings-form-row">
                   <input className="settings-form-input" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Новая категория" onKeyDown={e => e.key === 'Enter' && handleCreateCategory()} />
                   <button className="apply-button" onClick={handleCreateCategory}>Добавить</button>
+                  {refsStatus.category && <span className={`refs-inline-status ${refsStatusType.category}`}>{refsStatus.category}</span>}
                 </div>
 
                 <h4 className="settings-section-title">Отделы</h4>
@@ -885,9 +954,14 @@ const Settings: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                <div className="settings-form-row">
+                 <div className="settings-form-row">
                   <input className="settings-form-input" value={newDeptName} onChange={e => setNewDeptName(e.target.value)} placeholder="Новый отдел" onKeyDown={e => e.key === 'Enter' && handleCreateDept()} />
                   <button className="apply-button" onClick={handleCreateDept}>Добавить</button>
+                  {refsStatus.dept && <span className={`refs-inline-status ${refsStatusType.dept}`}>{refsStatus.dept}</span>}
+                </div>
+
+                <div className="settings-actions">
+                  {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
                 </div>
               </div>
             </Card>
@@ -974,6 +1048,7 @@ const Settings: React.FC = () => {
                     disabled={!newTemplateTypeId || !newTemplateCategoryId || !newTemplateDeptId}>
                     Создать правило
                   </button>
+                  {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
                 </div>
               </div>
             </Card>

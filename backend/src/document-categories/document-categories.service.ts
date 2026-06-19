@@ -59,9 +59,20 @@ export class DocumentCategoriesService {
 
   async create(name: string, userId: number): Promise<DocumentCategoryDto> {
     try {
+      const existingByName = await this.documentCategoryRepository.findOne({ where: { name } });
+      if (existingByName) {
+        throw new HttpException('Категория с таким названием уже существует', HttpStatus.CONFLICT);
+      }
+
+      const code = transliterate(name).toLowerCase().replace(/\s+/g, '_');
+      const existingByCode = await this.documentCategoryRepository.findOne({ where: { code } });
+      if (existingByCode) {
+        throw new HttpException('Категория с таким кодом уже существует', HttpStatus.CONFLICT);
+      }
+
       const category = this.documentCategoryRepository.create({
         name,
-        code: transliterate(name).toLowerCase().replace(/\s+/g, '_'),
+        code,
         description: 'Создана оператором',
       });
       const saved = await this.documentCategoryRepository.save(category);
@@ -86,6 +97,8 @@ export class DocumentCategoriesService {
       return { id: saved.id, name: saved.name, code: saved.code, description: saved.description };
 
     } catch (error) {
+      if (error instanceof HttpException) throw error;
+
       const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
 
       await this.logger.log({
@@ -110,6 +123,19 @@ export class DocumentCategoriesService {
       const category = await this.documentCategoryRepository.findOne({ where: { id } });
       if (!category) {
         throw new HttpException('Категория не найдена', HttpStatus.NOT_FOUND);
+      }
+
+      const count = await this.documentCategoryRepository.manager
+        .createQueryBuilder()
+        .from('documents', 'd')
+        .where('d.category_id = :id', { id })
+        .getCount();
+
+      if (count > 0) {
+        throw new HttpException(
+          `Невозможно удалить категорию «${category.name}»: с ней связано ${count} документов`,
+          HttpStatus.CONFLICT,
+        );
       }
 
       await this.documentCategoryRepository.remove(category);

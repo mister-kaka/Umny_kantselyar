@@ -59,9 +59,20 @@ export class DocumentTypesService {
 
   async create(name: string, userId: number): Promise<DocumentTypeDto> {
     try {
+      const existingByName = await this.documentTypeRepository.findOne({ where: { name } });
+      if (existingByName) {
+        throw new HttpException('Тип документа с таким названием уже существует', HttpStatus.CONFLICT);
+      }
+
+      const code = transliterate(name).toLowerCase().replace(/\s+/g, '_');
+      const existingByCode = await this.documentTypeRepository.findOne({ where: { code } });
+      if (existingByCode) {
+        throw new HttpException('Тип документа с таким кодом уже существует', HttpStatus.CONFLICT);
+      }
+
       const type = this.documentTypeRepository.create({
         name,
-        code: transliterate(name).toLowerCase().replace(/\s+/g, '_'),
+        code,
         description: 'Создан оператором',
       });
       const saved = await this.documentTypeRepository.save(type);
@@ -86,6 +97,8 @@ export class DocumentTypesService {
       return { id: saved.id, name: saved.name, code: saved.code, description: saved.description };
 
     } catch (error) {
+      if (error instanceof HttpException) throw error;
+
       const errorMessage = error instanceof Error ? error.message : 'Ошибка сервера';
 
       await this.logger.log({
@@ -110,6 +123,19 @@ export class DocumentTypesService {
       const type = await this.documentTypeRepository.findOne({ where: { id } });
       if (!type) {
         throw new HttpException('Тип документа не найден', HttpStatus.NOT_FOUND);
+      }
+
+      const count = await this.documentTypeRepository.manager
+        .createQueryBuilder()
+        .from('documents', 'd')
+        .where('d.document_type_id = :id', { id })
+        .getCount();
+
+      if (count > 0) {
+        throw new HttpException(
+          `Невозможно удалить тип «${type.name}»: с ним связано ${count} документов`,
+          HttpStatus.CONFLICT,
+        );
       }
 
       await this.documentTypeRepository.remove(type);
