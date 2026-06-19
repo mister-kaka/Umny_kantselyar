@@ -138,6 +138,7 @@ const Analytics = () => {
   }
 
   const themeColors = getThemeColors();
+  const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
 
   const donutOptions: ApexCharts.ApexOptions = {
     labels: typeStats.map(t => t.name),
@@ -163,6 +164,7 @@ const Analytics = () => {
             total: {
               show: true,
               label: 'Всего',
+              color: themeColors.textPrimary,
               formatter: () => `${typeStats.reduce((a, b) => a + b.value, 0)}`
             }
           }
@@ -172,7 +174,7 @@ const Analytics = () => {
     dataLabels: { enabled: false },
     stroke: { width: 0 },
     tooltip: {
-      theme: 'light',
+      theme: currentTheme,
       y: { formatter: val => `${val} шт.` }
     },
     states: {
@@ -200,10 +202,10 @@ const Analytics = () => {
       axisTicks: { show: false }
     },
     yaxis: { labels: { style: { colors: themeColors.textSecondary, fontWeight: 500 }, maxWidth: 200 } },
-    grid: { borderColor: '#f0f0f0', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+    grid: { borderColor: themeColors.borderColor, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
     legend: { show: false },
     tooltip: {
-      theme: 'light',
+      theme: currentTheme,
       y: { formatter: val => `${val} шт.` }
     }
   };
@@ -231,8 +233,11 @@ const Analytics = () => {
       tickAmount: 4,
       labels: { formatter: val => Math.floor(val).toString(), style: { colors: themeColors.textSecondary } }
     },
-    grid: { borderColor: '#f0f0f0', strokeDashArray: 4 },
-    tooltip: { theme: 'light', y: { formatter: val => `${val} шт.` } }
+    grid: { borderColor: themeColors.borderColor, strokeDashArray: 4 },
+    tooltip: { 
+      theme: currentTheme,
+      y: { formatter: val => `${val} шт.` } 
+    }
   };
 
   const statusBarOptions: ApexCharts.ApexOptions = {
@@ -258,7 +263,7 @@ const Analytics = () => {
     grid: { borderColor: themeColors.borderColor, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
     legend: { show: false },
     tooltip: {
-      theme: 'light',
+      theme: currentTheme,
       y: { formatter: val => `${val} шт.` }
     }
   };

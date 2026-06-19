@@ -8,6 +8,7 @@ import "../styles/DepartmentDetail.css";
 import { getDepartmentDetail, deleteDepartment, restoreDepartment } from "../services/api";
 import { DepartmentDetail } from "../types";
 import { formatMoscowDate, formatMoscowDateTime } from "../utils/moscowTime";
+import { useSettings } from "../contexts/SettingsContext";
 import {
     AreaChart,
     Area,
@@ -30,6 +31,12 @@ const DepartmentDetailPage = () => {
     const [error, setError] = useState("");
     const [page, setPage] = useState(1);
     const limit = 10;
+
+    const { theme } = useSettings();
+    const isDark = theme === 'dark';
+    const gridColor = isDark ? '#334155' : '#f0f0f0';
+    const textColor = isDark ? '#94a3b8' : '#696969';
+    const tooltipBg = isDark ? '#1e293b' : '#ffffff';
 
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [archiving, setArchiving] = useState(false);
@@ -366,23 +373,23 @@ const DepartmentDetailPage = () => {
                                         <stop offset="100%" stopColor="#81D8D0" stopOpacity={0.05} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="4" stroke="#f0f0f0" />
+                                <CartesianGrid strokeDasharray="4" stroke={gridColor} />
                                 <XAxis
                                     dataKey="month"
-                                    tick={{ fontSize: 12, fill: '#696969' }}
+                                    tick={{ fontSize: 12, fill: textColor }}
                                     tickFormatter={(val: string) => {
                                         const [y, m] = val.split('-');
                                         const date = new Date(Number(y), Number(m) - 1);
                                         return date.toLocaleDateString('ru-RU', { month: 'short' });
                                     }}
-                                    label={{ value: 'Месяц', position: 'insideBottom', offset: -5, style: { fill: '#696969', fontSize: 12 } }}
+                                    label={{ value: 'Месяц', position: 'insideBottom', offset: -5, style: { fill: textColor, fontSize: 12 } }}
                                 />
                                 <YAxis
                                     min={0}
                                     allowDecimals={false}
                                     tickCount={4}
-                                    tick={{ fontSize: 12, fill: '#696969' }}
-                                    label={{ value: 'Документов', angle: -90, position: 'insideLeft', offset: 10, style: { fill: '#696969', fontSize: 12 } }}
+                                    tick={{ fontSize: 12, fill: textColor }}
+                                    label={{ value: 'Документов', angle: -90, position: 'insideLeft', offset: 10, style: { fill: textColor, fontSize: 12 } }}
                                 />
                                 <RechartsTooltip
                                     contentStyle={{
@@ -390,6 +397,7 @@ const DepartmentDetailPage = () => {
                                         borderRadius: '8px',
                                         boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                                         fontSize: '12px',
+                                        backgroundColor: tooltipBg,
                                     }}
                                     labelFormatter={(val: any) => {
                                         const str = String(val);
