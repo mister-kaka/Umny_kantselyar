@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS route_templates CASCADE;
 DROP TABLE IF EXISTS login_history CASCADE;
 DROP TABLE IF EXISTS user_interface_settings CASCADE;
 DROP TABLE IF EXISTS user_notification_settings CASCADE;
+DROP TABLE IF EXISTS system_settings CASCADE;
 DROP TABLE IF EXISTS document_ai_results CASCADE;
 DROP TABLE IF EXISTS ai_settings CASCADE;
 DROP TABLE IF EXISTS document_classifications CASCADE;
@@ -23,7 +24,6 @@ DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS departments CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS user_sessions CASCADE;
-
 -- расширния
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -66,6 +66,9 @@ CREATE TABLE users (
     role_id INTEGER REFERENCES roles(id),
     department_id INTEGER REFERENCES departments(id),
     status VARCHAR(20) DEFAULT 'active',
+    is_blocked BOOLEAN DEFAULT FALSE,
+    password_reset_token VARCHAR(255),
+    password_reset_expires TIMESTAMP,
     avatar_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -300,6 +303,14 @@ CREATE TABLE search_log (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE system_settings (
+    id SERIAL PRIMARY KEY,
+    key VARCHAR(100) UNIQUE NOT NULL,
+    value JSONB NOT NULL,
+    description TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE user_sessions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -402,14 +413,14 @@ INSERT INTO document_categories (name, code, description) VALUES
 ('Юридические документы', 'legal_docs', 'Документы, требующие юридической оценки'),
 ('Финансовые документы', 'financial_docs', 'Документы, связанные с финансами и оплатами');
 
-INSERT INTO users (full_name, email, password_hash, role_id, department_id, status) VALUES 
-('Москалева Александра', 'alexandra@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', 1, 1, 'active'),
-('Нехланова Алина', 'alina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 5, 'active'),
-('Мельникова Виолетта', 'violetta@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 2, 'active'),
-('Ефанов Егор', 'egor@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 2, 'active'),
-('Мейсарош Карина', 'karina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 4, 'active'),
-('Мотовилова Мария', 'maria.m@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 6, 'active'),
-('Начинова Мария', 'maria.n@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', 1, 1, 'active');
+INSERT INTO users (full_name, email, password_hash, role_id, department_id, status, is_blocked) VALUES 
+('Москалева Александра', 'alexandra@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', 1, 1, 'active', FALSE),
+('Нехланова Алина', 'alina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 5, 'active', FALSE),
+('Мельникова Виолетта', 'violetta@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 2, 'active', FALSE),
+('Ефанов Егор', 'egor@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 2, 'active', FALSE),
+('Мейсарош Карина', 'karina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 4, 'active', FALSE),
+('Мотовилова Мария', 'maria.m@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 6, 'active', FALSE),
+('Начинова Мария', 'maria.n@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', 1, 1, 'active', FALSE);
 
 INSERT INTO documents (registration_number, title, received_date, document_type_id, category_id, sender_name, current_status, confidence_score, created_by, verified_at, routed_at, rejected_at, current_department_id) VALUES 
 ('ВХ-2026-001', 'Договор на поставку оборудования', '2026-04-01', 1, 3, 'ООО "ТехноПоставка"', 'in_review', 0.95, 1, NULL, NULL, NULL, 4),
@@ -574,6 +585,13 @@ INSERT INTO notifications (user_id, type, title, message, document_id, is_read, 
 (5, 'ai_complete', 'AI-анализ завершён', 'Документ ВХ-2026-013: низкая уверенность (78%)', 13, FALSE, '2026-04-10 11:00:00'),
 (1, 'overdue_verification', 'Просроченная проверка', 'Документ ВХ-2026-009 ожидает проверки более 24 часов', 9, FALSE, '2026-04-10 08:00:00'),
 (7, 'routed', 'Документ направлен в отдел', 'ВХ-2026-015 направлен в Бухгалтерию', 15, TRUE, '2026-04-11 14:00:00');
+
+INSERT INTO system_settings (key, value, description) VALUES
+('upload_limits', '{"maxFileSizeMB": 50, "maxFilesPerBatch": 15}', 'Ограничения загрузки файлов'),
+('allowed_formats', '{"formats": ["pdf", "docx", "txt", "xlsx", "jpg", "png", "tiff"]}', 'Разрешённые форматы файлов'),
+('auto_backup', '{"enabled": false, "time": "03:00", "keepCopies": 7}', 'Настройки автоматического бэкапа'),
+('cleanup_rules', '{"documentsOlderMonths": 12, "notificationsOlderMonths": 3}', 'Правила очистки данных'),
+('logging_level', '{"level": "info"}', 'Уровень логирования');
 
 -- синонимы для поиска
 
