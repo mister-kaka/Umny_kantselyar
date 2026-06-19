@@ -8,6 +8,8 @@ import * as mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import type { FileItem, UploadStep } from "../../types";
 
+import { getThemedIcon } from "../../utils/getThemedIcon";
+
 type PreviewData = {
   fileName: string;
   content: string;
@@ -87,6 +89,14 @@ const UploadPage: React.FC<UploadPageProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const location = useLocation();
+
+  const [themeKey, setThemeKey] = useState(0);
+  
+      useEffect(() => {
+          const observer = new MutationObserver(() => setThemeKey(prev => prev + 1));
+          observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+          return () => observer.disconnect();
+      }, []);
 
   useEffect(() => {
     const savedScan = localStorage.getItem("pending_scan");
@@ -458,9 +468,10 @@ const UploadPage: React.FC<UploadPageProps> = ({
                 onMouseLeave={() => setScanHover(false)}
               >
                 <img 
-                  src={scanHover ? "/icons/upload/Scan_active.png" : "/icons/upload/Scan.png"} 
+                  key={themeKey}
+                  src={getThemedIcon(scanHover ? "/icons/upload/Scan_active.png" : "/icons/upload/Scan.png")}
                   className="Casual-icon" 
-                  alt="Сканировать" 
+                  alt="Сканировать"
                 />
                 Сканировать
               </button>
@@ -474,7 +485,7 @@ const UploadPage: React.FC<UploadPageProps> = ({
               onClick={() => fileInputRef.current?.click()} role="button" tabIndex={0}
               onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}>
               <input ref={fileInputRef} type="file" multiple accept=".pdf,.docx,.txt,.xlsx,.jpg,.jpeg,.png,.tiff" className="file-input-hidden" onChange={handleFileSelect} />
-              <div className="upload-icon-wrap"><img src="/icons/upload/UploadIcon.png" className="upload-icon-img" alt="" /></div>
+              <div className="upload-icon-wrap"><img src={getThemedIcon("/icons/upload/UploadIcon.png")} className="upload-icon-img" alt="" /></div>
               <p className="upload-text">Перетащите файлы в эту область</p>
               <p className="upload-hint">PDF, DOCX, TXT, XLSX, JPG, PNG, TIFF - до {MAX_SIZE_MB} МБ каждый</p>
             </div>
