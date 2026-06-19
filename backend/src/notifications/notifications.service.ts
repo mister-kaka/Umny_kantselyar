@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { Notification, NotificationType } from '../entities/notification.entity';
+import { UserNotificationSettings } from '../entities/user-notification-settings.entity';
 import { AppLoggerService } from '../logger/app-logger.service';
 import { NotificationListResponseDto, UnreadCountDto, NotificationFilterDto } from './dto/notification.dto';
 import { AuditLogService } from '../audit/audit-log.service';
@@ -12,6 +13,8 @@ export class NotificationsService {
     constructor(
         @InjectRepository(Notification)
         private notificationRepository: Repository<Notification>,
+        @InjectRepository(UserNotificationSettings)
+        private userNotificationSettingsRepository: Repository<UserNotificationSettings>,
         private readonly logger: AppLoggerService,
         private readonly auditLogService: AuditLogService,
         private readonly notificationsGateway: NotificationsGateway,
@@ -38,6 +41,35 @@ export class NotificationsService {
         message: string,
         documentId?: number,
     ): Promise<void> {
+        const settings = await this.userNotificationSettingsRepository.findOne({
+            where: { userId },
+        });
+
+        if (settings) {
+            const settingsMap: Record<string, boolean> = {
+                'new_document': settings.newDocument,
+                'document_ready': settings.documentReady,
+                'extract_error': settings.extractError,
+                'pending_verification': settings.pendingVerification,
+                'routed': settings.routedToDepartment,
+                'rejected': settings.rejected,
+                'verified': settings.verified,
+                'low_confidence': settings.lowConfidence,
+                'password_changed': settings.passwordChanged,
+                'profile_updated': settings.profileUpdated,
+                'settings_changed': settings.settingsChanged,
+                'new_login': settings.newLogin,
+                'comment_added': settings.commentAdded,
+                'document_deleted': settings.documentDeleted,
+                'reference_created': settings.referenceCreated,
+                'reference_deleted': settings.referenceDeleted,
+            };
+
+            if (settingsMap[type] === false) {
+                return;
+            }
+        }
+
         const notification = this.notificationRepository.create({
             userId,
             type,
