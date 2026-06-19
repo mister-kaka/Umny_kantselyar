@@ -560,3 +560,20 @@ input:checked + .slider:before {
     transform: scale(0.96);
   }
 }
+
+.refs-inline-status {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: var(--radius-button);
+    white-space: nowrap;
+}
+
+.refs-inline-status.success {
+    color: var(--color-status-loaded);
+    background-color: rgba(126, 226, 159, 0.12);
+}
+
+.refs-inline-status.error {
+    color: var(--color-status-rejected);
+    background-color: rgba(232, 115, 115, 0.1);
+}

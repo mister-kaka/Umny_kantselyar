@@ -75,11 +75,23 @@ export class DepartmentsService {
 
   async create(name: string, userId: number): Promise<DepartmentDto> {
     try {
-      const code = transliterate(name).toLowerCase().replace(/\s+/g, '_');
+      const existingByName = await this.departmentRepository.findOne({ where: { name } });
+      if (existingByName) {
+        if (existingByName.isActive) {
+          throw new HttpException('Отдел с таким названием уже существует', HttpStatus.CONFLICT);
+        } else {
+          throw new HttpException('Отдел с таким названием уже существует, разархивируйте его', HttpStatus.CONFLICT);
+        }
+      }
 
-      const existing = await this.departmentRepository.findOne({ where: { code } });
-      if (existing) {
-        throw new HttpException('Отдел с таким кодом уже существует', HttpStatus.CONFLICT);
+      const code = transliterate(name).toLowerCase().replace(/\s+/g, '_');
+      const existingByCode = await this.departmentRepository.findOne({ where: { code } });
+      if (existingByCode) {
+        if (existingByCode.isActive) {
+          throw new HttpException('Отдел с таким кодом уже существует', HttpStatus.CONFLICT);
+        } else {
+          throw new HttpException('Отдел с таким кодом уже существует, разархивируйте его', HttpStatus.CONFLICT);
+        }
       }
 
       const department = this.departmentRepository.create({

@@ -23,7 +23,8 @@
 
 .tableAndSubCardsContainer {
   display: grid;
-  grid-template-columns: 70% 30%;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
   align-items: start;
 }
 
@@ -295,11 +296,10 @@ tbody tr {
   }
 
   .tableAndSubCardsContainer {
-    grid-template-columns: 65% 35%;
+    grid-template-columns: 2fr 1fr;
     gap: 16px;
   }
-  
-  /* ДОБАВЛЕНО: Запрещаем контенту сдвигаться на планшете при открытом сайдбаре */
+
   .main-content {
     margin-left: 78px !important; 
   }
@@ -314,8 +314,7 @@ tbody tr {
     padding: 12px 16px;
     gap: 12px;
   }
-  
-  /* ДОБАВЛЕНО: Растягиваем последнюю нечетную карточку на 2 колонки */
+
   .stat-card:last-child:nth-child(odd) {
     grid-column: 1 / -1;
   }
