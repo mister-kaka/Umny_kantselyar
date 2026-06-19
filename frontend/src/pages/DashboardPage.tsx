@@ -13,6 +13,7 @@ import Settings from "../components/SubPages/Settings";
 import Notifications from "../components/SubPages/Notifications";
 import Scanner from "../components/Scanner";
 import ProfilePage from "./ProfilePage";
+import ScrollToTop from "../components/ScrollToTop";
 import "../styles/global.css";
 import "../styles/Dashboard.css";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
@@ -74,6 +75,7 @@ const DashboardContent = () => {
           </Routes>
         </div>
       </main>
+      <ScrollToTop />
     </div>
   );
 };
