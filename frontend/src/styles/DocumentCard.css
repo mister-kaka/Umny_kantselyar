@@ -1614,6 +1614,31 @@
   background-color: rgba(129, 216, 208, 0.1);
 }
 
+.doc-header-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.doc-header-icon-btn:hover {
+  color: var(--color-accent);
+  background-color: rgba(129, 216, 208, 0.08);
+}
+
+.doc-header-icon-btn--danger:hover {
+  color: var(--color-status-rejected);
+  background-color: rgba(232, 115, 115, 0.08);
+}
+
+
 @media (max-width: 1024px) {
   .document-page {
     padding: 20px 24px;
