@@ -15,6 +15,7 @@ import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
 import { formatMoscowDate } from "../../utils/moscowTime";
 import { useSettings } from "../../contexts/SettingsContext";
+import { getThemedIcon } from "../../utils/getThemedIcon";
 
 const DocumentsListPage = () => {
   const navigate = useNavigate();
@@ -36,6 +37,14 @@ const DocumentsListPage = () => {
     categoryId: undefined as number | undefined,
     status: undefined as string | undefined,
   });
+
+  const [themeKey, setThemeKey] = useState(0);
+  
+  useEffect(() => {
+    const observer = new MutationObserver(() => setThemeKey(prev => prev + 1));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
 
   const [dateFilter, setDateFilter] = useState<{ from: string | null; to: string | null }>({
     from: null,
@@ -230,7 +239,7 @@ const DocumentsListPage = () => {
             onFilterChange={(range) => {
               setDateFilter({ from: range.from, to: range.to });
             }}
-            icon={<img src="/icons/filters/data.png" alt="📅" />}
+            icon={<img src={getThemedIcon("/icons/filters/data.png")} key={themeKey} alt="📅" />}
             isOpen={activeFilter === 'date'}
             onToggle={() => toggleFilter('date')}/>
         </Tooltip>
@@ -244,7 +253,7 @@ const DocumentsListPage = () => {
               setFilters(prev => ({ ...prev, typeId: id }));
               setSelectedLabels(prev => ({ ...prev, docType: name }));
             }}
-            icon={<img src="/icons/filters/Document_type.png" alt="📄" />}
+            icon={<img src={getThemedIcon("/icons/filters/Document_type.png")} key={themeKey} alt="📄" />}
             defaultLabel="Тип документа"
             isOpen={activeFilter === 'docType'}
             onToggle={() => toggleFilter('docType')}/>
@@ -259,7 +268,7 @@ const DocumentsListPage = () => {
               setFilters(prev => ({ ...prev, categoryId: id }));
               setSelectedLabels(prev => ({ ...prev, category: name }));
             }}
-            icon={<img src="/icons/filters/Category.png" alt="🗂️" />}
+            icon={<img src={getThemedIcon("/icons/filters/Category.png")} key={themeKey} alt="🗂️" />}
             defaultLabel="Категория"
             isOpen={activeFilter === 'category'}
             onToggle={() => toggleFilter('category')}/>
@@ -275,7 +284,7 @@ const DocumentsListPage = () => {
               setFilters(prev => ({ ...prev, status: ENGStatus }));
               setSelectedLabels(prev => ({ ...prev, status: RUSStatus }));
             }}
-            icon={<img src="/icons/filters/Status.png" alt="🟢🟡🔴" />}
+            icon={<img src={getThemedIcon("/icons/filters/Status.png")} key={themeKey} alt="🟢🟡🔴" />}
             defaultLabel="Статус"
             isOpen={activeFilter === 'status'}
             onToggle={() => toggleFilter('status')}/>

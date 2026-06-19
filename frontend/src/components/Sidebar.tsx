@@ -1,12 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/global.css";
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useSidebar } from "../contexts/SidebarContexts";
 import "../styles/Sidebar.css";
+import { getThemedIcon } from "../utils/getThemedIcon";
+import { getAbout } from "../services/api";
 
 const Sidebar = () => {
   const { collapsed, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
+  const [themeKey, setThemeKey] = useState(0);
+  const [version, setVersion] = useState("1.5.0");
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setThemeKey(prev => prev + 1);
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    getAbout()
+      .then(res => setVersion(res.version))
+      .catch(() => setVersion("1.5.0"));
+  }, []);
 
   const menuItems = [
     {path: "/dashboard/main", label: "Главная", icon: "/icons/sidebar/MainMenu.png", iconActive: "/icons/sidebar/MainMenu_active.png", alt: "🏠"},
@@ -84,7 +105,12 @@ const Sidebar = () => {
               >
                 {({ isActive }) => (
                   <>
-                    <img src={isActive ? item.iconActive : item.icon} className="Casual-icon" alt={item.alt} />
+                    <img
+                      key={themeKey}
+                      src={isActive ? item.iconActive : getThemedIcon(item.icon)}
+                      className="Casual-icon"
+                      alt={item.alt}
+                    />
                     <span className="item-label">{item.label}</span>
                   </>
                 )}
@@ -95,11 +121,16 @@ const Sidebar = () => {
 
         <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
           <button onClick={handleLogout} className="sidebar-item out-button">
-            <img src="/icons/sidebar/Exit.png" className="Casual-icon" alt="Выход" />
+            <img
+              key={themeKey}
+              src={getThemedIcon("/icons/sidebar/Exit.png")}
+              className="Casual-icon"
+              alt="Выход"
+            />
             <span className="item-label">Выход из системы</span>
           </button>
           <h6 className={`version-text ${collapsed ? 'collapsed' : ''}`}>
-            Версия 1.5.0<br />© 2026 Умный Канцеляр
+            Версия {version}<br />© 2026 Умный Канцеляр
           </h6>
         </div>
       </div>

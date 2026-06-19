@@ -14,6 +14,7 @@ import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
 import { formatMoscowDate } from "../../utils/moscowTime";
 import { useSettings } from "../../contexts/SettingsContext";
+import { getThemedIcon } from "../../utils/getThemedIcon";
 
 interface VerificationDocument {
   id: number;
@@ -53,6 +54,14 @@ const Verification = () => {
     docType: 'Тип документа',
     category: 'Категория',
   });
+
+  const [themeKey, setThemeKey] = useState(0);
+  
+  useEffect(() => {
+    const observer = new MutationObserver(() => setThemeKey(prev => prev + 1));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
 
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (filterId: string) => {
@@ -173,7 +182,7 @@ const Verification = () => {
               setFilters(prev => ({ ...prev, typeId: id }));
               setSelectedLabels(prev => ({ ...prev, docType: name }));
             }}
-            icon={<img src="/icons/filters/Document_type.png" alt="Тип" />}
+            icon={<img src={getThemedIcon("/icons/filters/Document_type.png")} key={themeKey} alt="Тип" />}
             defaultLabel="Тип документа"
             isOpen={activeFilter === 'docType'}
             onToggle={() => toggleFilter('docType')}/>
@@ -189,7 +198,7 @@ const Verification = () => {
               setFilters(prev => ({ ...prev, categoryId: id }));
               setSelectedLabels(prev => ({ ...prev, category: name }));
             }}
-            icon={<img src="/icons/filters/Category.png" alt="Категория" />}
+            icon={<img src={getThemedIcon("/icons/filters/Category.png")} key={themeKey} alt="Категория" />}
             defaultLabel="Категория"
             isOpen={activeFilter === 'category'}
             onToggle={() => toggleFilter('category')}/>

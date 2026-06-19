@@ -626,6 +626,27 @@ const DocumentCardPage: React.FC = () => {
             </svg>
             Редактировать
           </button>
+
+          {(from !== 'archive' && from !== 'search') && (
+            <Tooltip text="Перейти в архив документов">
+              <button className="doc-header-icon-btn" onClick={() => navigate('/dashboard/documents')}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 2h10a1 1 0 011 1v2a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 6h12v7a1 1 0 01-1 1H3a1 1 0 01-1-1V6z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 9h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </Tooltip>
+          )}
+
+          <Tooltip text="Удалить документ">
+            <button className="doc-header-icon-btn doc-header-icon-btn--danger" onClick={handleDelete}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 4h12M6 4V2h4v2M3 4v10l1 1h8l1-1V4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </Tooltip>
+
           {showConfidence && (
             <div
               className={`confidence-badge ${getConfidenceClass(overallConfidence)}`}
@@ -633,9 +654,9 @@ const DocumentCardPage: React.FC = () => {
             >
               Уверенность: {overallConfidence}% <span className="confidence-info-symbol">ⓘ</span>
             </div>
-            )}
+          )}
         </div>
-      </div>
+      </div> 
 
       <div className="doc-info-panel">
         <div className="doc-info-item">
@@ -1353,23 +1374,6 @@ const DocumentCardPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      <div className="doc-bottom-actions">
-        <button className="delete-doc-btn" onClick={handleDelete}>
-          Удалить документ
-        </button>
-      </div>
-
-      {from !== 'archive' && from !== 'search' && from !== 'notifications' && from !== 'routing' && from !== 'departments' && from !== 'department-detail' && (
-        <div className="doc-bottom-link">
-          <a href="/dashboard/documents" onClick={(e) => { e.preventDefault(); navigate('/dashboard/documents'); }}>
-            В архив документов
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </a>
-        </div>
-      )}
 
       {showEditModal && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>

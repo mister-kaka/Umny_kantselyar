@@ -12,6 +12,7 @@ import Tooltip from "./Tooltip";
 import { getProfile, getUnreadCount, getNotifications, markAsRead, markAllAsRead } from "../services/api";
 import type { Profile, UnreadCount, AppNotification } from "../types";
 import { io } from 'socket.io-client';
+import { getThemedIcon } from "../utils/getThemedIcon";
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
     new_document: "Загружен",
@@ -53,8 +54,20 @@ const Header = () => {
     const [unreadCount, setUnreadCount] = useState<UnreadCount | null>(null);
     const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
     const [markingAllRead, setMarkingAllRead] = useState(false);
+    const [themeKey, setThemeKey] = useState(0);
     const menuRef = useRef<HTMLDivElement>(null);
     const notificationsRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setThemeKey(prev => prev + 1);
+        });
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme'],
+        });
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -215,20 +228,20 @@ const Header = () => {
 
             <Tooltip text="Загрузка документов" position="bottom">
                 <button className="button-primary header-action-btn" onClick={() => navigate('/dashboard/incoming')}>
-                    <img src="/icons/header/Upload.png" className="Casual-icon" alt="Загрузка" />
+                    <img key={themeKey} src={getThemedIcon("/icons/header/Upload.png")} className="Casual-icon" alt="Загрузка" />
                 </button>
             </Tooltip>
 
             <Tooltip text="Сканировать документ с камеры" position="bottom">
                 <button className="button-secondary-with-border header-action-btn" onClick={() => setShowScanner(true)}>
-                    <img src="/icons/header/Scan.png" className="Casual-icon" alt="Сканировать" />
+                    <img key={themeKey} src={getThemedIcon("/icons/header/Scan.png")} className="Casual-icon" alt="Сканировать" />
                 </button>
             </Tooltip>
 
             <div className="header-notifications-wrapper" ref={notificationsRef}>
                 <Tooltip text="Уведомления" position="bottom">
                     <button className="button-secondary header-action-btn header-notifications-btn" onClick={handleNotificationsClick}>
-                        <img src="/icons/header/Notifications.png" className="Casual-icon" alt="Уведомления" />
+                        <img key={themeKey} src={getThemedIcon("/icons/header/Notifications.png")} className="Casual-icon" alt="Уведомления" />
                         {unreadCount && unreadCount.total > 0 && (
                             <span className="header-notifications-badge">{unreadCount.total > 99 ? '99+' : unreadCount.total}</span>
                         )}
@@ -358,7 +371,7 @@ const Header = () => {
                             className="profile-dropdown-item"
                             onClick={handleNavigateToProfile}
                         >
-                            <img src="/icons/header/User.png" className="Casual-icon" alt="Профиль" />
+                            <img key={themeKey} src={getThemedIcon("/icons/header/User.png")} className="Casual-icon" alt="Профиль" />
                             <span>Мой профиль</span>
                         </button>
 
@@ -369,7 +382,7 @@ const Header = () => {
                                 setShowProfileMenu(false);
                             }}
                         >
-                            <img src="/icons/sidebar/Settings.png" className="Casual-icon" alt="Настройки" />
+                            <img key={themeKey} src={getThemedIcon("/icons/sidebar/Settings.png")} className="Casual-icon" alt="Настройки" />
                             <span>Настройки</span>
                         </button>
 
@@ -379,7 +392,7 @@ const Header = () => {
                             className="profile-dropdown-item profile-dropdown-logout"
                             onClick={handleLogout}
                         >
-                            <img src="/icons/sidebar/Exit.png" className="Casual-icon" alt="Выйти" />
+                            <img key={themeKey} src={getThemedIcon("/icons/sidebar/Exit.png")} className="Casual-icon" alt="Выйти" />
                             <span>Выйти</span>
                         </button>
                     </div>

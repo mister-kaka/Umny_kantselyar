@@ -58,23 +58,25 @@ const Departments = () => {
         return b.routedCount - a.routedCount;
     });
 
-    const maxRouted = Math.max(...departments.map(d => d.routedCount), 1);
     const totalDocs = departments.reduce((sum, d) => sum + d.routedCount, 0);
 
     const getLoadClass = (count: number) => {
-        const ratio = count / maxRouted;
-        if (ratio >= 0.7) return "department-load-fill--high";
-        if (ratio >= 0.3) return "department-load-fill--medium";
-        return "department-load-fill--low";
+        if (count <= 25) return "department-load-fill--low";
+        if (count <= 50) return "department-load-fill--medium";
+        return "department-load-fill--high";
+    };
+
+    const getDocWord = (count: number): string => {
+        if (count === 1) return 'документ';
+        if (count < 5) return 'документа';
+        return 'документов';
     };
 
     const getLoadTooltip = (count: number) => {
-        if (totalDocs === 0) return "Нет направленных документов";
         if (count === 0) return "Нет направленных документов";
-        const ratio = count / maxRouted;
-        if (ratio >= 0.7) return `Высокая загруженность. ${count} из ${totalDocs} документов направлено в этот отдел`;
-        if (ratio >= 0.3) return `Средняя загруженность. ${count} из ${totalDocs} документов направлено в этот отдел`;
-        return `Низкая загруженность. ${count} из ${totalDocs} документов направлено в этот отдел`;
+        if (count <= 25) return `Низкая загруженность. ${count} ${getDocWord(count)} направлено в этот отдел`;
+        if (count <= 50) return `Средняя загруженность. ${count} ${getDocWord(count)} направлено в этот отдел`;
+        return `Высокая загруженность. ${count} ${getDocWord(count)} направлено в этот отдел`;
     };
 
     const formatDate = (dateString: string | null) => formatMoscowDate(dateString);
@@ -286,7 +288,7 @@ const Departments = () => {
                                     <div className="department-load-bar">
                                         <div
                                             className={`department-load-fill ${getLoadClass(dept.routedCount)}`}
-                                            style={{ width: `${(dept.routedCount / maxRouted) * 100}%` }}
+                                            style={{ width: `${Math.min((dept.routedCount / 75) * 100, 100)}%` }}
                                         />
                                     </div>
                                 </div>

@@ -8,6 +8,7 @@ import "../styles/DepartmentDetail.css";
 import { getDepartmentDetail, deleteDepartment, restoreDepartment } from "../services/api";
 import { DepartmentDetail } from "../types";
 import { formatMoscowDate, formatMoscowDateTime } from "../utils/moscowTime";
+import { useSettings } from "../contexts/SettingsContext";
 import {
     AreaChart,
     Area,
@@ -30,6 +31,12 @@ const DepartmentDetailPage = () => {
     const [error, setError] = useState("");
     const [page, setPage] = useState(1);
     const limit = 10;
+
+    const { theme } = useSettings();
+    const isDark = theme === 'dark';
+    const gridColor = isDark ? '#334155' : '#f0f0f0';
+    const textColor = isDark ? '#94a3b8' : '#696969';
+    const tooltipBg = isDark ? '#1e293b' : '#ffffff';
 
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [archiving, setArchiving] = useState(false);
@@ -230,15 +237,27 @@ const DepartmentDetailPage = () => {
 
             <div className="dept-detail-header">
                 <div className="dept-detail-header-icon">
-                    <span className="dept-detail-header-icon-text">{data.name.charAt(0)}</span>
-                </div>
+                    <img
+                        src={`/icons/departments/${data.code}.png`}
+                        alt={data.name}
+                        className="dept-detail-header-icon-img"
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                                parent.innerHTML = `<span class="dept-detail-header-icon-text">${data.name.charAt(0)}</span>`;
+                            }
+                        }}
+                    />
+</              div>
                 <h2 className="dept-detail-title">{data.name}</h2>
             </div>
 
             <div className="dept-detail-stats">
                 <Card>
                     <div className="dept-stat-icon-wrap">
-                        <img src="/icons/dashboard/Total_incoming.png" className="dept-stat-icon" alt="Всего" />
+                        <img src="/icons/departments/Total_incoming.png" className="dept-stat-icon" alt="Всего" />
                     </div>
                     <div className="dept-stat-content">
                         <div className="dept-stat-value">{data.totalRouted}</div>
@@ -247,7 +266,7 @@ const DepartmentDetailPage = () => {
                 </Card>
                 <Card>
                     <div className="dept-stat-icon-wrap">
-                        <img src="/icons/dashboard/In_processing.png" className="dept-stat-icon" alt="Первое" />
+                        <img src="/icons/departments/first.png" className="dept-stat-icon" alt="Первое" />
                     </div>
                     <div className="dept-stat-content">
                         <div className="dept-stat-value">{formatDate(data.firstRoutedAt)}</div>
@@ -256,7 +275,7 @@ const DepartmentDetailPage = () => {
                 </Card>
                 <Card>
                     <div className="dept-stat-icon-wrap">
-                        <img src="/icons/dashboard/Require_verification.png" className="dept-stat-icon" alt="Последнее" />
+                        <img src="/icons/departments/last.png" className="dept-stat-icon" alt="Последнее" />
                     </div>
                     <div className="dept-stat-content">
                         <div className="dept-stat-value">{formatDate(data.lastRoutedAt)}</div>
@@ -366,23 +385,23 @@ const DepartmentDetailPage = () => {
                                         <stop offset="100%" stopColor="#81D8D0" stopOpacity={0.05} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="4" stroke="#f0f0f0" />
+                                <CartesianGrid strokeDasharray="4" stroke={gridColor} />
                                 <XAxis
                                     dataKey="month"
-                                    tick={{ fontSize: 12, fill: '#696969' }}
+                                    tick={{ fontSize: 12, fill: textColor }}
                                     tickFormatter={(val: string) => {
                                         const [y, m] = val.split('-');
                                         const date = new Date(Number(y), Number(m) - 1);
                                         return date.toLocaleDateString('ru-RU', { month: 'short' });
                                     }}
-                                    label={{ value: 'Месяц', position: 'insideBottom', offset: -5, style: { fill: '#696969', fontSize: 12 } }}
+                                    label={{ value: 'Месяц', position: 'insideBottom', offset: -5, style: { fill: textColor, fontSize: 12 } }}
                                 />
                                 <YAxis
                                     min={0}
                                     allowDecimals={false}
                                     tickCount={4}
-                                    tick={{ fontSize: 12, fill: '#696969' }}
-                                    label={{ value: 'Документов', angle: -90, position: 'insideLeft', offset: 10, style: { fill: '#696969', fontSize: 12 } }}
+                                    tick={{ fontSize: 12, fill: textColor }}
+                                    label={{ value: 'Документов', angle: -90, position: 'insideLeft', offset: 10, style: { fill: textColor, fontSize: 12 } }}
                                 />
                                 <RechartsTooltip
                                     contentStyle={{
@@ -390,6 +409,7 @@ const DepartmentDetailPage = () => {
                                         borderRadius: '8px',
                                         boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                                         fontSize: '12px',
+                                        backgroundColor: tooltipBg,
                                     }}
                                     labelFormatter={(val: any) => {
                                         const str = String(val);

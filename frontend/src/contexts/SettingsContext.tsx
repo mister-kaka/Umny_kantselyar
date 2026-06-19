@@ -22,11 +22,17 @@ export const useSettings = () => {
     return ctx;
 };
 
+const savedTheme = (localStorage.getItem('app_theme') as 'light' | 'dark') || 'light';
+
+if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [compactView, setCompactView] = useState(false);
     const [showConfidence, setShowConfidence] = useState(true);
     const [defaultPageLimit, setDefaultPageLimit] = useState(10);
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
+    const [theme, setTheme] = useState<'light' | 'dark'>(savedTheme);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -37,6 +43,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 setShowConfidence(settings.showConfidence);
                 setDefaultPageLimit(settings.defaultPageLimit);
                 setTheme(settings.theme);
+                localStorage.setItem('app_theme', settings.theme);
+                document.documentElement.setAttribute('data-theme', settings.theme);
+                if (settings.compactView) {
+                    document.documentElement.classList.add('compact-view');
+                } else {
+                    document.documentElement.classList.remove('compact-view');
+                }
             } catch {
                 // use defaults
             } finally {
@@ -57,6 +70,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const handleSetTheme = useCallback((value: 'light' | 'dark') => {
         setTheme(value);
+        localStorage.setItem('app_theme', value);
         document.documentElement.setAttribute('data-theme', value);
     }, []);
 

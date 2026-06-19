@@ -18,6 +18,7 @@ import {
 import type { AppNotification, UnreadCount } from "../../types";
 import { toMoscowTime } from "../../utils/moscowTime";
 import { useSettings } from "../../contexts/SettingsContext";
+import { getThemedIcon } from "../../utils/getThemedIcon";
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
     new_document: "Загружен",
@@ -150,6 +151,14 @@ const Notifications = () => {
         return (localStorage.getItem('notifications_group_mode') as 'date' | 'document') || 'date';
     });
     const [limit, setLimit] = useState(defaultPageLimit);
+
+    const [themeKey, setThemeKey] = useState(0);
+    
+    useEffect(() => {
+        const observer = new MutationObserver(() => setThemeKey(prev => prev + 1));
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return () => observer.disconnect();
+    }, []);
 
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
     const toggleFilter = (filterId: string) => {
@@ -604,7 +613,7 @@ const Notifications = () => {
                         options={FILTER_TYPE_OPTIONS}
                         selectedLabel={REVERSE_FILTER_TYPE_MAP[filterType] || "Все"}
                         onSelect={handleFilterChange}
-                        icon={<img src="/icons/filters/Status.png" alt="Тип" />}
+                        icon={<img src={getThemedIcon("/icons/filters/Category.png")} key={themeKey} alt="Тип" />}
                         defaultLabel="Все"
                         isOpen={activeFilter === 'type'}
                         onToggle={() => toggleFilter('type')}/>
@@ -613,7 +622,7 @@ const Notifications = () => {
                 <Tooltip text="Фильтр по дате">
                     <DateFilterDropdown
                         onFilterChange={handleDateFilterChange}
-                        icon={<img src="/icons/filters/data.png" alt="Дата" />}
+                        icon={<img src={getThemedIcon("/icons/filters/data.png")} key={themeKey} alt="Дата" />}
                         isOpen={activeFilter === 'date'}
                         onToggle={() => toggleFilter('date')}
                         selectedLabel={dateFilterLabel}/>

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { searchDocuments, searchAi } from './../services/api';
 import { DocumentListItem, AiSearchResponse } from './../types';
 import { translateStatus, getStatusColorClass } from '../constants/statuses';
+import { getThemedIcon } from "../utils/getThemedIcon";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -94,10 +95,22 @@ const Search: React.FC = () => {
   const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>(getHistory);
   const [showHistory, setShowHistory] = useState(false);
+  const [themeKey, setThemeKey] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const debouncedQuery = useDebounce(query, mode === 'fast' ? 400 : 600);
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setThemeKey(prev => prev + 1);
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   const fetchFastSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -281,7 +294,7 @@ const Search: React.FC = () => {
     <div ref={containerRef} className="Search-dropdown">
       <div className="Search">
         <span className="Search-icon">
-          <img src="/icons/header/Search.png" alt="🔍" className="Search-icon" />
+          <img key={themeKey} src={getThemedIcon("/icons/header/Search.png")} alt="🔍" className="Search-icon" />
         </span>
         <input
           ref={inputRef}
