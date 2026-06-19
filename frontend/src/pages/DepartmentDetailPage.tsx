@@ -237,8 +237,20 @@ const DepartmentDetailPage = () => {
 
             <div className="dept-detail-header">
                 <div className="dept-detail-header-icon">
-                    <span className="dept-detail-header-icon-text">{data.name.charAt(0)}</span>
-                </div>
+                    <img
+                        src={`/icons/departments/${data.code}.png`}
+                        alt={data.name}
+                        className="dept-detail-header-icon-img"
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                                parent.innerHTML = `<span class="dept-detail-header-icon-text">${data.name.charAt(0)}</span>`;
+                            }
+                        }}
+                    />
+</              div>
                 <h2 className="dept-detail-title">{data.name}</h2>
             </div>
 

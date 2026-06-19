@@ -583,6 +583,12 @@
   100% { background-position: 200% 0; }
 }
 
+.dept-detail-header-icon-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
 @media (max-width: 1024px) {
   .dept-detail-stats {
     gap: 16px;
