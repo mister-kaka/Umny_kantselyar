@@ -407,6 +407,7 @@ const Settings: React.FC = () => {
   };  
 
   const handleDeleteType = async (id: number) => {
+    if (!window.confirm('Удалить тип документа? Это действие нельзя отменить.')) return;
     try {
       await deleteDocumentType(id);
       setDocTypes(prev => prev.filter(t => t.id !== id));
@@ -438,6 +439,7 @@ const Settings: React.FC = () => {
   };
 
   const handleDeleteCategory = async (id: number) => {
+    if (!window.confirm('Удалить категорию? Это действие нельзя отменить.')) return;
     try {
       await deleteDocumentCategory(id);
       setDocCategories(prev => prev.filter(c => c.id !== id));
@@ -518,6 +520,7 @@ const Settings: React.FC = () => {
   };
 
   const handleDeleteTemplate = async (id: number) => {
+     if (!window.confirm('Удалить правило маршрутизации?')) return;
     try {
       await deleteRouteTemplate(id);
       setTemplates(prev => prev.filter(t => t.id !== id));
