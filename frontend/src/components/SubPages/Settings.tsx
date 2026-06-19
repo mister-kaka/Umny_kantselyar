@@ -316,7 +316,24 @@ const Settings: React.FC = () => {
 
   const saveNotifications = async () => {
     try {
-      const payload: NotificationSettings = { ...notifications };
+      const payload: NotificationSettings = {
+        newDocument: notifications.newDocument,
+        documentReady: notifications.documentReady,
+        extractError: notifications.extractError,
+        pendingVerification: notifications.pendingVerification,
+        routedToDepartment: notifications.routedToDepartment,
+        rejected: notifications.rejected,
+        verified: notifications.verified,
+        lowConfidence: notifications.lowConfidence,
+        passwordChanged: notifications.passwordChanged,
+        profileUpdated: notifications.profileUpdated,
+        settingsChanged: notifications.settingsChanged,
+        newLogin: notifications.newLogin,
+        commentAdded: notifications.commentAdded,
+        documentDeleted: notifications.documentDeleted,
+        referenceCreated: notifications.referenceCreated,
+        referenceDeleted: notifications.referenceDeleted,
+      };
       const updated = await updateNotificationSettings(payload);
       setNotifications(updated);
       setSettingsStatus('Настройки уведомлений сохранены!');
@@ -735,7 +752,7 @@ const Settings: React.FC = () => {
                         ) : sessions.map(s => (
                           <tr key={s.id}>
                             <td>{truncateUA(s.userAgent)}</td>
-                            <td>{s.ipAddress || '-Ы'}</td>
+                            <td>{s.ipAddress || '-'}</td>
                             <td>{formatMoscowDateTime(s.createdAt)}</td>
                             <td>
                               <button className="apply-button" onClick={() => handleLogoutSession(s.id)}>Завершить</button>
