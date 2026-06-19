@@ -26,6 +26,8 @@ import { translateStatus, getStatusColorClass } from "../../constants/statuses";
 import { formatMoscowDate } from "../../utils/moscowTime";
 import { useSettings } from "../../contexts/SettingsContext";
 
+import { getThemedIcon } from "../../utils/getThemedIcon";
+
 const Routing = () => {
     const navigate = useNavigate();
     const { defaultPageLimit } = useSettings();
@@ -51,6 +53,14 @@ const Routing = () => {
     const toggleFilter = (filterId: string) => {
         setActiveFilter(prev => (prev === filterId ? null : filterId));
     };
+
+    const [themeKey, setThemeKey] = useState(0);
+
+    useEffect(() => {
+        const observer = new MutationObserver(() => setThemeKey(prev => prev + 1));
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return () => observer.disconnect();
+    }, []);
 
     const fetchData = async () => {
         try {
@@ -226,7 +236,7 @@ const Routing = () => {
                             };
                             setFilterType(map[label] || "all");
                         }}
-                        icon={<img src="/icons/filters/Status.png" alt="Тип" />}
+                        icon={<img src={getThemedIcon("/icons/filters/Differences.png")} key={themeKey} alt="Тип" />}
                         defaultLabel="Все"
                         isOpen={activeFilter === 'type'}
                         onToggle={() => toggleFilter('type')}/>
@@ -244,7 +254,7 @@ const Routing = () => {
                                 setDepartmentId(dep?.id);
                             }
                         }}
-                        icon={<img src="/icons/filters/Document_type.png" alt="Отдел" />}
+                        icon={<img src={getThemedIcon("/icons/filters/Departments.png")} key={themeKey} alt="Отдел" />}
                         defaultLabel="Все отделы"
                         isOpen={activeFilter === 'department'}
                         onToggle={() => toggleFilter('department')}/>
@@ -262,7 +272,7 @@ const Routing = () => {
                                 setOperatorId(op?.id);
                             }
                         }}
-                        icon={<img src="/icons/filters/Category.png" alt="Оператор" />}
+                        icon={<img src={getThemedIcon("/icons/filters/Operators.png")} key={themeKey} alt="Оператор" />}
                         defaultLabel="Все операторы"
                         isOpen={activeFilter === 'operator'}
                         onToggle={() => toggleFilter('operator')}/>

@@ -238,7 +238,7 @@ const DepartmentDetailPage = () => {
             <div className="dept-detail-stats">
                 <Card>
                     <div className="dept-stat-icon-wrap">
-                        <img src="/icons/dashboard/Total_incoming.png" className="dept-stat-icon" alt="Всего" />
+                        <img src="/icons/departments/Total_incoming.png" className="dept-stat-icon" alt="Всего" />
                     </div>
                     <div className="dept-stat-content">
                         <div className="dept-stat-value">{data.totalRouted}</div>
@@ -247,7 +247,7 @@ const DepartmentDetailPage = () => {
                 </Card>
                 <Card>
                     <div className="dept-stat-icon-wrap">
-                        <img src="/icons/dashboard/In_processing.png" className="dept-stat-icon" alt="Первое" />
+                        <img src="/icons/departments/first.png" className="dept-stat-icon" alt="Первое" />
                     </div>
                     <div className="dept-stat-content">
                         <div className="dept-stat-value">{formatDate(data.firstRoutedAt)}</div>
@@ -256,7 +256,7 @@ const DepartmentDetailPage = () => {
                 </Card>
                 <Card>
                     <div className="dept-stat-icon-wrap">
-                        <img src="/icons/dashboard/Require_verification.png" className="dept-stat-icon" alt="Последнее" />
+                        <img src="/icons/departments/last.png" className="dept-stat-icon" alt="Последнее" />
                     </div>
                     <div className="dept-stat-content">
                         <div className="dept-stat-value">{formatDate(data.lastRoutedAt)}</div>
