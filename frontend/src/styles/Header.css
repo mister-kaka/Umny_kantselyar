@@ -1100,8 +1100,8 @@
 
   .notifications-dropdown {
     right: -30px;
-    min-width: 240px;
-    max-width: 280px;
+    min-width: 200px;
+    max-width: 200px;
   }
 
   .Search-dropdown-menu {
@@ -1191,6 +1191,40 @@
 
   .search-ai-dots span {
     font-size: 13px;
+  }
+
+  .header-action-btn,
+  .button-secondary-with-border,
+  .button-primary.header-action-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .header-action-btn .Casual-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .profile-image,
+  .profile-image-initials {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .Search {
+    height: 30px;
+  }
+
+  .Search-input {
+    font-size: 14px;
+  }
+
+  .header-notifications-wrapper {
+    margin-left: -15px;
   }
 }
 
@@ -1341,6 +1375,40 @@
   .Search-footer {
     font-size: 7px;
     padding: 5px 8px;
+  }
+
+    .header-action-btn,
+  .button-secondary-with-border,
+  .button-primary.header-action-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .header-action-btn .Casual-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .profile-image,
+  .profile-image-initials {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .Search {
+    height: 30px;
+  }
+
+  .Search-input {
+    font-size: 14px;
+  }
+
+  .header-notifications-wrapper {
+    margin-left: -15px;
   }
 }
 

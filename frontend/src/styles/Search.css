@@ -469,7 +469,7 @@
   .Search-input {
     margin-left: 28px;
     margin-right: 6px;
-    font-size: 14px;
+    font-size: 14px !important;
   }
 
   .Search-controls {
@@ -589,7 +589,7 @@
   .Search-input {
     margin-left: 24px;
     margin-right: 4px;
-    font-size: 16px;
+    font-size: 13px !important;
   }
 
   .Search-controls {
@@ -708,7 +708,7 @@
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 376px) {
   .Search {
     height: 38px;
     padding-left: 6px;
@@ -723,7 +723,7 @@
   .Search-input {
     margin-left: 22px;
     margin-right: 2px;
-    font-size: 16px;
+    font-size: 12px !important;
   }
 
   .Search-controls {
@@ -829,6 +829,15 @@
   .search-ai-dots span {
     font-size: 13px;
   }
+
+  .header .button-primary.header-action-btn,
+  .header .button-secondary-with-border.header-action-btn {
+    display: none !important;
+  }
+
+    .header-notifications-wrapper {
+    margin-left: -15px; 
+  }
 }
 
 @media (max-width: 320px) {
@@ -846,7 +855,7 @@
   .Search-input {
     margin-left: 18px;
     margin-right: 1px;
-    font-size: 16px;
+    font-size: 12px !important;
   }
 
   .search-mode-btn {
@@ -931,6 +940,10 @@
     font-size: 7px;
     padding: 5px 8px;
   }
+    .header .button-primary.header-action-btn,
+  .header .button-secondary-with-border.header-action-btn {
+    display: none !important;
+  }
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -960,6 +973,6 @@
   }
 
   .Search-input {
-    font-size: 16px;
+    font-size: 14px;
   }
 }
