@@ -183,32 +183,60 @@ const Analytics = () => {
   };
 
   const barOptions: ApexCharts.ApexOptions = {
-    chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-    plotOptions: {
-      bar: { horizontal: true, borderRadius: 4, barHeight: '40%', distributed: true }
-    },
-    colors: CLEAN_PALETTE,
-    dataLabels: {
-      enabled: true,
-      textAnchor: 'start',
-      style: { colors: [themeColors.textPrimary], fontSize: '11px', fontWeight: 500 },
-      formatter: (val) => val.toString(),
-      offsetX: 16,
-    },
-    xaxis: {
-      categories: categoryStats.map(c => c.name),
-      labels: { style: { colors: themeColors.textSecondary } },
-      axisBorder: { show: false },
-      axisTicks: { show: false }
-    },
-    yaxis: { labels: { style: { colors: themeColors.textSecondary, fontWeight: 500 }, maxWidth: 200 } },
-    grid: { borderColor: themeColors.borderColor, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
-    legend: { show: false },
-    tooltip: {
-      theme: currentTheme,
-      y: { formatter: val => `${val} шт.` }
+  chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+  plotOptions: {
+    bar: {
+      horizontal: true,
+      borderRadius: 4,
+      barHeight: '40%',
+      distributed: true,
+      dataLabels: {
+        position: 'top', // ← жёстко ставим подписи сверху столбца
+      }
     }
-  };
+  },
+  colors: CLEAN_PALETTE,
+  dataLabels: {
+    enabled: true,
+    textAnchor: 'start',
+    style: {
+      colors: [themeColors.textPrimary],
+      fontSize: '11px',
+      fontWeight: 500
+    },
+    formatter: (val) => val.toString(),
+    offsetX: 8,      // ← фиксированный отступ от конца линии
+    offsetY: 0,       // ← не смещаем по вертикали
+    dropShadow: {
+      enabled: false, // ← отключаем тень, чтобы не плыло
+    }
+  },
+  xaxis: {
+    categories: categoryStats.map(c => c.name),
+    labels: {
+      show: true,
+      style: { colors: themeColors.textSecondary },
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+  },
+  yaxis: {
+    labels: {
+      style: { colors: themeColors.textSecondary, fontWeight: 500 },
+      maxWidth: 200
+    }
+  },
+  grid: {
+    borderColor: themeColors.borderColor,
+    xaxis: { lines: { show: true } },
+    yaxis: { lines: { show: false } }
+  },
+  legend: { show: false },
+  tooltip: {
+    theme: currentTheme,
+    y: { formatter: val => `${val} шт.` }
+  }
+};
 
   const areaOptions: ApexCharts.ApexOptions = {
     chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
@@ -241,32 +269,60 @@ const Analytics = () => {
   };
 
   const statusBarOptions: ApexCharts.ApexOptions = {
-    chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-    plotOptions: {
-      bar: { horizontal: true, borderRadius: 4, barHeight: '40%', distributed: true }
-    },
-    colors: statusStats.map(s => s.color),
-    dataLabels: {
-      enabled: true,
-      textAnchor: 'start',
-      style: { colors: [themeColors.textPrimary], fontSize: '11px', fontWeight: 500 },
-      formatter: val => val.toString(),
-      offsetX: 16,
-    },
-    xaxis: {
-      categories: statusStats.map(s => s.label),
-      labels: { style: { colors: themeColors.textSecondary } },
-      axisBorder: { show: false },
-      axisTicks: { show: false }
-    },
-    yaxis: { labels: { style: { colors: themeColors.textSecondary, fontWeight: 500 }, maxWidth: 200 } },
-    grid: { borderColor: themeColors.borderColor, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
-    legend: { show: false },
-    tooltip: {
-      theme: currentTheme,
-      y: { formatter: val => `${val} шт.` }
+  chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+  plotOptions: {
+    bar: {
+      horizontal: true,
+      borderRadius: 4,
+      barHeight: '40%',
+      distributed: true,
+      dataLabels: {
+        position: 'top',
+      }
     }
-  };
+  },
+  colors: statusStats.map(s => s.color),
+  dataLabels: {
+    enabled: true,
+    textAnchor: 'start',
+    style: {
+      colors: [themeColors.textPrimary],
+      fontSize: '11px',
+      fontWeight: 500
+    },
+    formatter: val => val.toString(),
+    offsetX: 8,
+    offsetY: 0,
+    dropShadow: {
+      enabled: false,
+    }
+  },
+  xaxis: {
+    categories: statusStats.map(s => s.label),
+    labels: {
+      show: true,
+      style: { colors: themeColors.textSecondary },
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+  },
+  yaxis: {
+    labels: {
+      style: { colors: themeColors.textSecondary, fontWeight: 500 },
+      maxWidth: 200
+    }
+  },
+  grid: {
+    borderColor: themeColors.borderColor,
+    xaxis: { lines: { show: true } },
+    yaxis: { lines: { show: false } }
+  },
+  legend: { show: false },
+  tooltip: {
+    theme: currentTheme,
+    y: { formatter: val => `${val} шт.` }
+  }
+};
 
   const statCards = [
     { value: analyticsData?.totalDocuments || 0, label: 'Всего документов', icon: '/icons/analytics/total.png' },
