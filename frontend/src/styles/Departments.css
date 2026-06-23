@@ -1,10 +1,6 @@
 @import url("../styles/global.css");
 @import url("../styles/Dashboard.css");
 
-.departments-page {
-  padding: 0;
-}
-
 .departments-header {
   display: flex;
   justify-content: space-between;
