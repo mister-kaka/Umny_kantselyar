@@ -1,10 +1,6 @@
 @import url("../styles/global.css");
 @import url("../styles/Dashboard.css");
 
-.notifications-page {
-  padding: 0;
-}
-
 .notifications-top-row {
   display: flex;
   justify-content: space-between;
@@ -18,6 +14,10 @@
   margin-bottom: 0;
 }
 
+.compact-view .notifications-top-row{
+  margin-bottom: 0px;
+}
+
 .notifications-header-actions {
   display: flex;
   align-items: center;
@@ -29,52 +29,6 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin-bottom: 24px;
-}
-
-.notifications-stat-card {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background-color: var(--color-bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-card);
-  padding: 20px 24px;
-  min-height: 100px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
-  border-top: 3px solid var(--color-accent);
-}
-
-.notifications-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-  border-color: var(--color-accent);
-}
-
-.notifications-stat-card-icon {
-  width: 46px;
-  height: 46px;
-  object-fit: contain;
-}
-
-.notifications-stat-card-content {
-  flex: 1;
-}
-
-.notifications-stat-card-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.2;
-  margin-bottom: 4px;
-}
-
-.notifications-stat-card-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-tertiary);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
 }
 
 .notifications-card {
@@ -203,9 +157,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: var(--color-status-rejected);
-  color: white;
-  border: none;
+  background: none;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
   padding: 8px 16px;
   border-radius: var(--radius-button);
   font-size: 13px;
@@ -213,7 +167,6 @@
   cursor: pointer;
   font-family: inherit;
   transition: all 0.2s ease;
-  animation: fadeInRight 0.2s ease;
 }
 
 .mass-delete-btn:hover {
@@ -585,8 +538,10 @@
 
 @media (max-width: 1024px) {
   .notifications-stats-cards-container {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+    width: 100% !important;
   }
 
   .notifications-stat-card {
@@ -610,546 +565,321 @@
   }
 }
 
+
 @media (max-width: 768px) {
   .notifications-top-row {
-    flex-direction: column;
-    align-items: stretch;
+    flex-wrap: nowrap !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
   }
-
+  
   .notifications-header-actions {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .notifications-stats-cards-container {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .notifications-stat-card {
-    padding: 14px 16px;
-    gap: 12px;
-    border-top-width: 2px;
-  }
-
-  .notifications-stat-card-icon {
-    width: 36px;
-    height: 36px;
-  }
-
-  .notifications-stat-card-value {
-    font-size: 24px;
-    margin-bottom: 2px;
-  }
-
-  .notifications-stat-card-label {
-    font-size: 11px;
-  }
-
-  .mark-all-read-btn {
-    min-height: 44px;
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-
-  .notifications-group-btn {
-    min-height: 44px;
-    padding: 6px 14px;
-    font-size: 12px;
-  }
-
-  .notifications-group-label-text {
-    font-size: 12px;
-  }
-
-  .notifications-actions-bar {
-    padding: 10px 14px;
-    min-height: 48px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .selection-controls {
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .selected-count {
-    font-size: 14px;
-  }
-
-  .delete-read-btn,
-  .mass-delete-btn {
-    min-height: 44px;
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-
-  .notification-item {
-    padding: 12px 14px;
-    gap: 10px;
-  }
-
-  .notification-type-badge {
-    font-size: 10px;
-    padding: 2px 7px;
-  }
-
-  .notification-time {
-    font-size: 10px;
-  }
-
-  .notification-message {
-    font-size: 13px;
-  }
-
-  .notification-item.expanded .notification-message {
-    padding: 10px 12px;
-    font-size: 13px;
-    margin-top: 8px;
-  }
-
-  .unread-dot {
-    width: 7px;
-    height: 7px;
-    margin-top: 5px;
-  }
-
-  .timeline-event {
-    padding: 8px 10px;
-    font-size: 12px;
-    gap: 8px;
-  }
-
-  .timeline-event-time {
-    font-size: 10px;
-    min-width: 45px;
-  }
-
-  .timeline-event-text {
-    font-size: 12px;
-  }
-
-  .notification-doc-btn {
-    min-height: 44px;
-    padding: 8px 14px;
-    font-size: 13px;
-    margin-top: 10px;
-  }
-
-  .notification-doc-btn-inline {
-    min-height: auto;
-    padding: 5px 10px;
-    font-size: 12px;
-  }
-
-  .notifications-group {
-    margin-bottom: 16px;
-  }
-
-  .notifications-group-label {
-    font-size: 11px;
-    margin-bottom: 6px;
-  }
-
-  .empty-state {
-    padding: 36px 20px;
-  }
-
-  .empty-text {
-    font-size: 13px;
-  }
-
-  .error-state-card {
-    padding: 36px 20px !important;
-  }
-
-  .error-text {
-    font-size: 13px;
-    margin-bottom: 16px;
+    flex-shrink: 0 !important;
   }
 }
 
 @media (max-width: 480px) {
-  .notifications-stats-cards-container {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 16px;
+  .notifications-page {
+    padding: 0 4px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
-  .notifications-stat-card {
-    padding: 12px 14px;
-    gap: 10px;
+  .notifications-page * {
+    box-sizing: border-box !important;
   }
 
-  .notifications-stat-card-icon {
-    width: 30px;
-    height: 30px;
+  .notifications-top-row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
   }
 
-  .notifications-stat-card-value {
-    font-size: 22px;
+  .notifications-top-row .page-title {
+    font-size: 18px !important;
+    margin: 0 !important;
+    flex-shrink: 1 !important;
   }
 
-  .notifications-stat-card-label {
-    font-size: 10px;
+  .notifications-header-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
   }
 
-  .notifications-card {
-    padding: 14px;
+  .notifications-header-actions .mark-all-read-btn {
+    width: auto !important;
+    min-height: 32px !important;
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+    white-space: nowrap !important;
   }
 
   .mark-all-read-btn {
-    min-height: 38px;
-    padding: 7px 12px;
-    font-size: 12px;
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 36px !important;
+    font-size: 12px !important;
+    padding: 6px 12px !important;
   }
 
-  .notifications-group-btn {
-    min-height: 44px;
-    padding: 5px 12px;
-    font-size: 12px;
+  .filtersButtsWrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    width: 100% !important;
   }
 
-  .notifications-group-label-text {
-    font-size: 12px;
+  .filtersButtsWrapper > *,
+  .filtersButtsWrapper button,
+  .filtersButtsWrapper .dropdown-button {
+    width: 100% !important;
+  }
+
+  .notifications-stats-cards-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+    width: 100% !important;
+  }
+
+  .notifications-stat-card {
+    padding: 10px 10px !important;
+    gap: 8px !important;
+    min-height: auto !important;
+    min-width: 0 !important;
+  }
+
+  .notifications-stat-card-icon {
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .notifications-stat-card-content {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .notifications-stat-card-value {
+    font-size: 18px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .notifications-stat-card-label {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    width: 100% !important;
   }
 
   .notifications-actions-bar {
-    padding: 10px 12px;
-    min-height: 44px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .notifications-actions-bar.selection-mode {
-    padding: 12px;
+    padding: 10px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    min-height: auto !important;
+    width: 100% !important;
   }
 
   .selection-controls {
-    width: 100%;
-    justify-content: space-between;
-    gap: 8px;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
   }
 
   .selected-count {
-    font-size: 14px;
-    flex: 1;
+    font-size: 13px !important;
+    text-align: center !important;
   }
 
-  .delete-read-btn,
+  .delete-read-btn, 
   .mass-delete-btn {
-    flex: 1;
-    min-height: 44px;
-    justify-content: center;
-    font-size: 13px;
-    padding: 8px 12px;
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 38px !important;
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+    margin: 0 !important;
   }
 
-  .mass-delete-btn {
-    width: 100%;
+  .notifications-group-row-inline {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .notifications-group-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 36px !important;
+    font-size: 12px !important;
   }
 
   .notification-item {
-    padding: 10px 12px;
-    gap: 8px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    padding: 10px !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .notification-checkbox,
+  .unread-dot {
+    flex-shrink: 0 !important;
+  }
+
+  .notification-content {
+    flex: 1 !important;
+    min-width: 0 !important;
   }
 
   .notification-title-row {
-    flex-wrap: wrap;
-    gap: 4px;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    width: 100% !important;
+  }
+
+  .notification-type-badge {
+    font-size: 9px !important;
+    padding: 1px 6px !important;
+  }
+
+  .notification-time {
+    font-size: 9px !important;
+    margin-left: auto !important;
   }
 
   .notification-message {
-    font-size: 12px;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    margin-top: 4px !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    width: 100% !important;
   }
 
   .notification-item.expanded .notification-message {
-    padding: 8px 10px;
-    font-size: 12px;
-    margin-top: 6px;
+    padding: 8px !important;
+    font-size: 12px !important;
+    margin-top: 6px !important;
   }
 
-  .notification-doc-btn {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
-    min-height: 40px;
-    margin-top: 8px;
-    float: none;
+  .notification-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .notification-doc-btn-inline {
-    width: auto;
-    min-height: auto;
-    padding: 5px 10px;
-    font-size: 11px;
-  }
-
-  .timeline-event {
-    padding: 8px;
-    font-size: 11px;
-    gap: 6px;
+  .notification-title-row {
+    order: 1;
     flex-wrap: wrap;
   }
 
-  .timeline-event-time {
-    min-width: auto;
-    font-size: 10px;
+  .notification-message {
+    order: 2;
   }
 
-  .timeline-event-text {
-    font-size: 11px;
-    flex: 1;
-    min-width: 140px;
+  .notification-doc-btn-inline {
+    order: 3;
+    width: 100% !important;
+    text-align: center !important;
+    margin-top: 10px !important;
+    margin-bottom: 4px !important;
+    justify-content: center !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    background-color: var(--color-accent) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: var(--radius-button) !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
   }
 
-  .notifications-group-label {
-    font-size: 10px;
-    margin-bottom: 6px;
-    padding-left: 2px;
+  .date-filter-dropdown {
+    width: 100% !important;
   }
 
-  .notifications-list {
-    gap: 6px;
+  .date-filter-dropdown .dropdown-button {
+    width: 100% !important;
+    justify-content: space-between !important;
   }
 
-  .notifications-load-more {
-    margin-top: 16px;
-  }
-
-  .empty-state {
-    padding: 32px 16px;
-  }
-
-  .empty-text {
-    font-size: 13px;
-  }
-
-  .error-state-card {
-    padding: 32px 16px !important;
-  }
-
-  .error-text {
-    font-size: 13px;
-    margin-bottom: 14px;
+  .filtersButtsWrapper .dropdown-button {
+    justify-content: center !important;
+    text-align: center !important;
   }
 }
 
 @media (max-width: 375px) {
   .notifications-stats-cards-container {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .notifications-stat-card {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-
-  .notifications-stat-card-icon {
-    width: 26px;
-    height: 26px;
-  }
-
-  .notifications-stat-card-value {
-    font-size: 20px;
-  }
-
-  .notifications-stat-card-label {
-    font-size: 9px;
-  }
-
-  .mark-all-read-btn {
-    padding: 6px 10px;
-    font-size: 11px;
-    min-height: 36px;
-  }
-
-  .notifications-group-btn {
-    padding: 4px 10px;
-    font-size: 11px;
-    min-height: 44px;
-  }
-
-  .notifications-group-label-text {
-    font-size: 11px;
-  }
-
-  .notification-item {
-    padding: 8px 10px;
-    gap: 6px;
-  }
-
-  .notification-type-badge {
-    font-size: 9px;
-    padding: 1px 6px;
-  }
-
-  .notification-time {
-    font-size: 9px;
-  }
-
-  .notification-message {
-    font-size: 11px;
-  }
-
-  .notification-item.expanded .notification-message {
-    padding: 6px 8px;
-    font-size: 11px;
-  }
-
-  .delete-read-btn,
-  .mass-delete-btn {
-    font-size: 12px;
-    min-height: 42px;
-    padding: 6px 10px;
-  }
-
-  .timeline-event {
-    padding: 6px 8px;
-    font-size: 10px;
-  }
-
-  .timeline-event-time {
-    font-size: 9px;
-    min-width: 40px;
-  }
-
-  .timeline-event-text {
-    font-size: 10px;
-  }
-
-  .notification-doc-btn {
-    min-height: 38px;
-    font-size: 12px;
-    padding: 6px 12px;
-  }
-
-  .notification-doc-btn-inline {
-    font-size: 10px;
-    padding: 4px 8px;
-  }
-
-  .empty-text {
-    font-size: 12px;
+    grid-template-columns: 1fr !important;
   }
 }
 
 @media (max-width: 320px) {
+  .notifications-top-row {
+    flex-wrap: nowrap !important;
+  }
+
   .notifications-stats-cards-container {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    grid-template-columns: 1fr !important;
+    gap: 4px !important;
   }
 
-  .notifications-stat-card {
-    padding: 10px 14px;
-    gap: 10px;
+    .notification-doc-btn-inline {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    min-height: 28px !important;
+    margin-top: 8px !important;
   }
 
-  .notifications-stat-card-icon {
-    width: 28px;
-    height: 28px;
-  }
-
-  .notifications-stat-card-value {
-    font-size: 20px;
-  }
-
-  .notifications-header-actions {
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
-  }
-
-  .mark-all-read-btn {
-    width: 100%;
-  }
-
-  .notifications-group-btn {
-    width: 100%;
-    text-align: center;
-  }
-
-  .notification-item {
-    padding: 8px;
-    gap: 6px;
-  }
-
-  .notification-message {
-    font-size: 10px;
-  }
-
-  .notification-doc-btn {
-    min-height: 36px;
-    font-size: 11px;
-  }
-
-  .notification-doc-btn-inline {
-    font-size: 10px;
-    padding: 4px 8px;
+    .mark-all-read-btn {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    min-height: 28px !important;
   }
 
   .delete-read-btn,
   .mass-delete-btn {
-    font-size: 11px;
-    min-height: 38px;
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    min-height: 28px !important;
   }
 
-  .timeline-event {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-  }
-
-  .timeline-event-time {
-    min-width: auto;
-  }
-
-  .empty-state {
-    padding: 24px 12px;
-  }
-
-  .empty-text {
-    font-size: 12px;
-  }
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .notification-item:active {
-    background-color: rgba(129, 216, 208, 0.08);
-    transform: scale(0.99);
-    transition: transform 0.1s ease;
-  }
-
-  .mark-all-read-btn:active,
-  .delete-read-btn:active,
-  .mass-delete-btn:active {
-    transform: scale(0.97);
-    transition: transform 0.1s ease;
-  }
-
-  .mass-delete-btn:active {
-    opacity: 0.85;
-  }
-
-  .notification-doc-btn:active {
-    transform: scale(0.97);
-  }
-
-  .notifications-group-btn:active {
-    transform: scale(0.96);
-  }
-
-  .notification-item,
-  .mark-all-read-btn,
-  .delete-read-btn,
-  .mass-delete-btn,
-  .notification-doc-btn,
   .notifications-group-btn {
-    -webkit-tap-highlight-color: transparent;
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    min-height: 28px !important;
+  }
+
+  .notification-doc-btn-inline {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    min-height: 28px !important;
+    margin-top: 8px !important;
   }
 }
