@@ -4,6 +4,9 @@ import { DocumentType, DocumentCategory, DocumentListItem, AnalyticsData } from 
 import '../../styles/Analytics.css';
 import { getStatusHexColor, translateStatus } from '../../constants/statuses';
 import '../../styles/global.css';
+import Card from '../Card';
+import '../../styles/MainMenu.css'
+
 const Chart = lazy(() => import('react-apexcharts'));
 
 const CLEAN_PALETTE = ['#81D8D0', '#5DBFBB', '#7EADE2', '#3BA6A5', '#BBDFFB', '#A2C5C3', '#C7D9D8', '#E1EDED'];
@@ -183,32 +186,60 @@ const Analytics = () => {
   };
 
   const barOptions: ApexCharts.ApexOptions = {
-    chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-    plotOptions: {
-      bar: { horizontal: true, borderRadius: 4, barHeight: '40%', distributed: true }
-    },
-    colors: CLEAN_PALETTE,
-    dataLabels: {
-      enabled: true,
-      textAnchor: 'start',
-      style: { colors: [themeColors.textPrimary], fontSize: '11px', fontWeight: 500 },
-      formatter: (val) => val.toString(),
-      offsetX: 16,
-    },
-    xaxis: {
-      categories: categoryStats.map(c => c.name),
-      labels: { style: { colors: themeColors.textSecondary } },
-      axisBorder: { show: false },
-      axisTicks: { show: false }
-    },
-    yaxis: { labels: { style: { colors: themeColors.textSecondary, fontWeight: 500 }, maxWidth: 200 } },
-    grid: { borderColor: themeColors.borderColor, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
-    legend: { show: false },
-    tooltip: {
-      theme: currentTheme,
-      y: { formatter: val => `${val} шт.` }
+  chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+  plotOptions: {
+    bar: {
+      horizontal: true,
+      borderRadius: 4,
+      barHeight: '40%',
+      distributed: true,
+      dataLabels: {
+        position: 'top', // ← жёстко ставим подписи сверху столбца
+      }
     }
-  };
+  },
+  colors: CLEAN_PALETTE,
+  dataLabels: {
+    enabled: true,
+    textAnchor: 'start',
+    style: {
+      colors: [themeColors.textPrimary],
+      fontSize: '11px',
+      fontWeight: 500
+    },
+    formatter: (val) => val.toString(),
+    offsetX: 8,      // ← фиксированный отступ от конца линии
+    offsetY: 0,       // ← не смещаем по вертикали
+    dropShadow: {
+      enabled: false, // ← отключаем тень, чтобы не плыло
+    }
+  },
+  xaxis: {
+    categories: categoryStats.map(c => c.name),
+    labels: {
+      show: true,
+      style: { colors: themeColors.textSecondary },
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+  },
+  yaxis: {
+    labels: {
+      style: { colors: themeColors.textSecondary, fontWeight: 500 },
+      maxWidth: 200
+    }
+  },
+  grid: {
+    borderColor: themeColors.borderColor,
+    xaxis: { lines: { show: true } },
+    yaxis: { lines: { show: false } }
+  },
+  legend: { show: false },
+  tooltip: {
+    theme: currentTheme,
+    y: { formatter: val => `${val} шт.` }
+  }
+};
 
   const areaOptions: ApexCharts.ApexOptions = {
     chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
@@ -241,32 +272,60 @@ const Analytics = () => {
   };
 
   const statusBarOptions: ApexCharts.ApexOptions = {
-    chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-    plotOptions: {
-      bar: { horizontal: true, borderRadius: 4, barHeight: '40%', distributed: true }
-    },
-    colors: statusStats.map(s => s.color),
-    dataLabels: {
-      enabled: true,
-      textAnchor: 'start',
-      style: { colors: [themeColors.textPrimary], fontSize: '11px', fontWeight: 500 },
-      formatter: val => val.toString(),
-      offsetX: 16,
-    },
-    xaxis: {
-      categories: statusStats.map(s => s.label),
-      labels: { style: { colors: themeColors.textSecondary } },
-      axisBorder: { show: false },
-      axisTicks: { show: false }
-    },
-    yaxis: { labels: { style: { colors: themeColors.textSecondary, fontWeight: 500 }, maxWidth: 200 } },
-    grid: { borderColor: themeColors.borderColor, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
-    legend: { show: false },
-    tooltip: {
-      theme: currentTheme,
-      y: { formatter: val => `${val} шт.` }
+  chart: { toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+  plotOptions: {
+    bar: {
+      horizontal: true,
+      borderRadius: 4,
+      barHeight: '40%',
+      distributed: true,
+      dataLabels: {
+        position: 'top',
+      }
     }
-  };
+  },
+  colors: statusStats.map(s => s.color),
+  dataLabels: {
+    enabled: true,
+    textAnchor: 'start',
+    style: {
+      colors: [themeColors.textPrimary],
+      fontSize: '11px',
+      fontWeight: 500
+    },
+    formatter: val => val.toString(),
+    offsetX: 8,
+    offsetY: 0,
+    dropShadow: {
+      enabled: false,
+    }
+  },
+  xaxis: {
+    categories: statusStats.map(s => s.label),
+    labels: {
+      show: true,
+      style: { colors: themeColors.textSecondary },
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+  },
+  yaxis: {
+    labels: {
+      style: { colors: themeColors.textSecondary, fontWeight: 500 },
+      maxWidth: 200
+    }
+  },
+  grid: {
+    borderColor: themeColors.borderColor,
+    xaxis: { lines: { show: true } },
+    yaxis: { lines: { show: false } }
+  },
+  legend: { show: false },
+  tooltip: {
+    theme: currentTheme,
+    y: { formatter: val => `${val} шт.` }
+  }
+};
 
   const statCards = [
     { value: analyticsData?.totalDocuments || 0, label: 'Всего документов', icon: '/icons/analytics/total.png' },
@@ -282,25 +341,25 @@ const Analytics = () => {
       <h2 className="page-title">Аналитика</h2>
       <p className="page-subtitle">{documents.length} документов в системе</p>
 
-      <div className="analytics-stats-cards-container">
+      <div className="stats-cards-container">
         {statCards.map((card, i) => (
-          <div className="analytics-stat-card" key={i}>
-            <div className="analytics-stat-card-icon-wrap">
+          <Card className="stat-card" key={i}>
+            <div className="stat-card-icon-wrap">
               <img src={card.icon} className="analytics-stat-icon" alt={card.label} />
             </div>
-            <div className="analytics-stat-card-content">
-              <div className="analytics-stat-card-value">
+            <div className="stat-card-content">
+              <div className="stat-card-value">
                 {card.value}
                 {card.suffix && <span className="analytics-stat-card-suffix">{card.suffix}</span>}
               </div>
               <div className="analytics-stat-card-label">{card.label}</div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       <div className="charts-grid">
-        <div className="chart-card">
+        <Card className="chart-card">
           <div className="chart-card-header">
             <h3>Типы документов</h3>
             <span className="chart-card-count">{typeStats.length}</span>
@@ -320,9 +379,9 @@ const Analytics = () => {
               <div className="empty-chart">{typeStats.length === 0 ? 'Нет данных' : 'Загрузка графика...'}</div>
             )}
           </div>
-        </div>
+        </Card>
 
-        <div className="chart-card">
+        <Card className="chart-card">
           <div className="chart-card-header">
             <h3>Категории</h3>
             <span className="chart-card-count">{categoryStats.length}</span>
@@ -342,9 +401,9 @@ const Analytics = () => {
               <div className="empty-chart">{categoryStats.length === 0 ? 'Нет данных' : 'Загрузка графика...'}</div>
             )}
           </div>
-        </div>
+        </Card>
 
-        <div className="chart-card full-width">
+        <Card className="chart-card full-width">
           <div className="chart-card-header">
             <h3>Динамика поступлений</h3>
             <span className="chart-card-count">14 дней</span>
@@ -362,9 +421,9 @@ const Analytics = () => {
               </Suspense>
             )}
           </div>
-        </div>
+        </Card>
 
-        <div className="chart-card full-width">
+        <Card className="chart-card full-width">
           <div className="chart-card-header">
             <h3>Статусы обработки</h3>
           </div>
@@ -383,7 +442,7 @@ const Analytics = () => {
               <div className="empty-chart">{statusStats.length === 0 ? 'Нет данных' : 'Загрузка графика...'}</div>
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
