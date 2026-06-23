@@ -1,9 +1,6 @@
 @import url("../styles/global.css");
 @import url("../styles/Dashboard.css");
 
-.routing-page {
-  padding: 0;
-}
 
 .routing-header {
   margin-bottom: 24px;
@@ -20,13 +17,6 @@
   font-size: 14px;
   color: var(--text-tertiary);
   margin: 0;
-}
-
-.routing-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: 24px;
 }
 
 .routing-stats .card {
