@@ -164,7 +164,7 @@ const Departments = () => {
                 </div>
                 <div className="departments-skeleton">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <Card key={i}>
+                        <Card className="card-hover" key={i}>
                             <div className="skeleton-icon"></div>
                             <div className="skeleton-line skeleton-line--name"></div>
                             <div className="skeleton-line skeleton-line--count"></div>
@@ -251,7 +251,7 @@ const Departments = () => {
             {departments.length > 0 ? (
                 <div className="departments-grid">
                     {sortedDepartments.map(dept => (
-                        <Card
+                        <Card className="card-hover"
                             key={dept.id}
                             onClick={() => handleCardClick(dept.id)}
                         >
