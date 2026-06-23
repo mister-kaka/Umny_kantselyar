@@ -811,7 +811,7 @@ const Settings: React.FC = () => {
           {activeTab === "security" && (
             <Card className="cuttinPaddin">
               <div className={isWideTab ? "settings-form-wide" : "settings-form"}>
-                <div className="security-section-card">
+                <Card className="security-section-card">
                   <div className="security-section-header">Активные сессии ({sessions.length})</div>
                   {secLoading ? <p>Загрузка...</p> : secError ? <p>{secError}</p> : (
                     <Table>
@@ -832,9 +832,9 @@ const Settings: React.FC = () => {
                       </tbody>
                     </Table>
                   )}
-                </div>
+                </Card>
 
-                <div className="security-section-card">
+                <Card className="security-section-card">
                   <div className="security-section-header">История входов</div>
                   {secLoading ? <p>Загрузка...</p> : secError ? <p>{secError}</p> : (
                     <Table
@@ -858,9 +858,9 @@ const Settings: React.FC = () => {
                       </tbody>
                     </Table>
                   )}
-                </div>
+                </Card>
 
-                <div className="security-section-card">
+                <Card className="security-section-card">
                   <div className="security-section-header">Журнал действий</div>
                   {secLoading ? <p>Загрузка...</p> : secError ? <p>{secError}</p> : (
                     <Table
@@ -901,7 +901,7 @@ const Settings: React.FC = () => {
                       </tbody>
                     </Table>
                   )}
-                </div>
+                </Card>
 
                 <div className="settings-actions">
                   <button className="apply-button" onClick={handleLogoutAll}>Выйти со всех устройств</button>
