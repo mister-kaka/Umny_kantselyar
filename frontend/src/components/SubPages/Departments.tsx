@@ -155,11 +155,11 @@ const Departments = () => {
 
     if (loading) {
         return (
-            <div className="departments-page">
+            <div>
                 <div className="departments-header">
                     <div>
-                        <h2 className="departments-title">Подразделения</h2>
-                        <span className="departments-count">0 отделов</span>
+                        <h2 className="page-title">Подразделения</h2>
+                        <span className="page-subtitle">0 отделов</span>
                     </div>
                 </div>
                 <div className="departments-skeleton">
@@ -178,7 +178,7 @@ const Departments = () => {
 
     if (error) {
         return (
-            <div className="departments-page">
+            <div>
                 <div className="departments-error">
                     <p>{error}</p>
                     <button className="apply-button" onClick={fetchData}>Повторить</button>
@@ -188,13 +188,13 @@ const Departments = () => {
     }
 
     return (
-        <div className="departments-page">
+        <div>
             <div className="departments-header">
                 <div>
-                    <h2 className="departments-title">
+                    <h2 className="page-title">
                         {showArchived ? 'Архивные подразделения' : 'Подразделения'}
                     </h2>
-                    <span className="departments-count">
+                    <span className="page-subtitle">
                         {departments.length} {departments.length === 1 ? 'отдел' : departments.length < 5 ? 'отдела' : 'отделов'}
                     </span>
                 </div>
