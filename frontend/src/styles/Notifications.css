@@ -632,6 +632,25 @@
     box-sizing: border-box !important;
   }
 
+   .notifications-card {
+    margin: 0 !important;
+    padding: 8px 4px !important;
+    border-radius: 4px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .notifications-list {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .notification-item {
+    padding: 8px 6px !important;
+    border-radius: 6px !important;
+  }
+
+
   .notifications-page * {
     box-sizing: border-box !important;
   }

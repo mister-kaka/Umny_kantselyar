@@ -1640,7 +1640,6 @@
 
 
 
-/* Статус в инфо-панели — только под текст */
 .doc-info-item .status-badge {
   display: inline-block;
   width: auto;
@@ -1950,9 +1949,22 @@
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 376px) {
   .document-page {
-    padding: 15px;
+    padding: 1px 1px; 
+    width: 100%;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  .doc-info-panel {
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .tab-content {
+    padding: 16px 12px;
   }
 
   .doc-title {
@@ -1975,6 +1987,33 @@
     flex-wrap: wrap;
     gap: 4px;
     align-items: center;
+  }
+
+  /* 1. УМЕНЬШАЕМ КНОПКУ НАЗАД */
+  .back-to-list-btn,
+  .back-to-list-btn--primary {
+    font-size: 12px !important;    /* делаем шрифт компактнее */
+    padding: 2px 4px !important;   /* ужимаем внутренние отступы */
+  }
+
+
+  .doc-header {
+    margin-bottom: 8px !important; /* уменьшаем отступ от всего хедера до контента карточки */
+    gap: 4px !important;           /* ужимаем зазор между строками при переносе */
+  }
+
+  .doc-header-left,
+  .doc-header-right {
+    gap: 6px !important;           /* делаем элементы внутри групп плотнее друг к другу */
+  }
+
+  .doc-title {
+    font-size: 18px !important;    /* чуть уменьшаем сам заголовок, чтобы он не занимал пол-экрана */
+  }
+
+  /* 3. ПОЛНОСТЬЮ СКРЫВАЕМ УВЕРЕННОСТЬ */
+  .confidence-badge {
+    display: none !important;      /* убирает плашку "Уверенность: 94%" из верстки */
   }
 
   .edit-doc-btn {
@@ -2039,7 +2078,6 @@
     padding: 8px;
   }
 
-  /* Общая информация — 1 колонка */
   .info-block .info-row {
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -2055,7 +2093,6 @@
     font-size: 12px !important;
   }
 
-  /* Классификация — 1 колонка */
   .classif-item {
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -2080,13 +2117,12 @@
     padding: 2px 8px;
   }
 
-  /* Краткая сводка — по левому краю */
   .ai-summary-text {
     text-align: left !important;
     font-size: 12px !important;
   }
 
-  /* Контакты — по левому краю */
+  /* Контакты */
   .source-contacts {
     text-align: left !important;
     align-items: flex-start !important;
