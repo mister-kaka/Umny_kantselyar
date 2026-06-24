@@ -1578,7 +1578,6 @@
   margin-top: 2px;
 }
 
-/* Контакты в источнике документа — каждый с новой строки */
 .source-contacts {
   display: flex;
   flex-direction: column;
@@ -1989,31 +1988,29 @@
     align-items: center;
   }
 
-  /* 1. УМЕНЬШАЕМ КНОПКУ НАЗАД */
   .back-to-list-btn,
   .back-to-list-btn--primary {
-    font-size: 12px !important;    /* делаем шрифт компактнее */
-    padding: 2px 4px !important;   /* ужимаем внутренние отступы */
+    font-size: 12px !important;
+    padding: 2px 4px !important;
   }
 
 
   .doc-header {
-    margin-bottom: 8px !important; /* уменьшаем отступ от всего хедера до контента карточки */
-    gap: 4px !important;           /* ужимаем зазор между строками при переносе */
+    margin-bottom: 8px !important;
+    gap: 4px !important;  
   }
 
   .doc-header-left,
   .doc-header-right {
-    gap: 6px !important;           /* делаем элементы внутри групп плотнее друг к другу */
+    gap: 6px !important; 
   }
 
   .doc-title {
-    font-size: 18px !important;    /* чуть уменьшаем сам заголовок, чтобы он не занимал пол-экрана */
+    font-size: 18px !important;
   }
 
-  /* 3. ПОЛНОСТЬЮ СКРЫВАЕМ УВЕРЕННОСТЬ */
   .confidence-badge {
-    display: none !important;      /* убирает плашку "Уверенность: 94%" из верстки */
+    display: none !important;
   }
 
   .edit-doc-btn {

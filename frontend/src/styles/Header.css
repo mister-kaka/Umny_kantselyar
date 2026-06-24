@@ -550,7 +550,7 @@
 
   .mobile-header-arrow {
     display: flex;
-    margin-right: 4px;
+    margin-right: 8px;
     flex-shrink: 0;
     padding: 8px 6px;
   }
@@ -1000,30 +1000,7 @@
     padding: 12px;
   }
 
-    .notifications-top-row {
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-  }
-
-  .notifications-top-row .page-title {
-    font-size: 18px !important;
-    margin: 0 !important;
-  }
-
-  .notifications-header-actions {
-    width: auto !important;
-    flex-shrink: 0 !important;
-  }
-
-  .mark-all-read-btn {
-    width: auto !important;
-    min-height: 32px !important;
-    font-size: 11px !important;
-    padding: 4px 10px !important;
-  }
+  
 }
 
 @media (max-width: 375px) {
