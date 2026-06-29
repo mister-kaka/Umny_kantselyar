@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Delete, Param, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { DocumentCategoriesService } from './document-categories.service';
 import { DocumentCategoryDto } from './dto/document-category.dto';
 import { Request } from 'express';
@@ -8,6 +10,7 @@ interface RequestWithUser extends Request {
     user: {
         userId: number;
         email: string;
+        role: string;
     };
 }
 
@@ -33,7 +36,8 @@ export class DocumentCategoriesController {
     }
 
     @Delete(':id')
-    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles('admin')
     async delete(
         @Param('id', ParseIntPipe) id: number,
         @Req() req: RequestWithUser,

@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards, ParseIntPipe, HttpException, UploadedFile, Req, UseInterceptors, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { DocumentsListService } from './list/documents-list.service';
@@ -25,6 +27,7 @@ interface RequestWithUser extends Request {
     user: {
         userId: number;
         email: string;
+        role: string;
     };
 }
 
@@ -87,7 +90,8 @@ export class DocumentsController {
         return this.routingService.createRouteTemplate(dto, req.user.userId);
     }
 
-    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles('admin')
     @Delete('route-templates/:id')
     async deleteRouteTemplate(
         @Param('id', ParseIntPipe) id: number,

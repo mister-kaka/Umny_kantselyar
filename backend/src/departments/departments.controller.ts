@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Delete, Patch, Param, Query, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { DepartmentsService } from './departments.service';
 import { DepartmentDto } from './dto/department.dto';
 import { DepartmentStatsDto } from './dto/department-stats.dto';
@@ -11,6 +13,7 @@ interface RequestWithUser extends Request {
     user: {
         userId: number;
         email: string;
+        role: string;
     };
 }
 
@@ -43,7 +46,8 @@ export class DepartmentsController {
   }
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
   async create(
     @Req() req: RequestWithUser,
     @Body() dto: CreateDepartmentDto,
@@ -52,7 +56,8 @@ export class DepartmentsController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
   async deactivate(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: RequestWithUser,
@@ -61,7 +66,8 @@ export class DepartmentsController {
   }
 
   @Patch(':id/restore')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
   async restore(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: RequestWithUser,

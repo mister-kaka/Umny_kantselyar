@@ -51,11 +51,19 @@ export class AuthService {
       throw new HttpException('Пароль обязателен', HttpStatus.BAD_REQUEST);
     }
 
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: ['role'],
+    });
 
     if (!user) {
       await this.logger.log({ ...logBase, status: 'error', statusCode: 401, message: 'Пользователь не найден' });
       throw new HttpException('Пользователь не найден', HttpStatus.UNAUTHORIZED);
+    }
+
+    if (user.isBlocked) {
+      await this.logger.log({ ...logBase, status: 'error', statusCode: 403, message: 'Пользователь заблокирован' });
+      throw new HttpException('Пользователь заблокирован', HttpStatus.FORBIDDEN);
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
@@ -66,7 +74,7 @@ export class AuthService {
 
     await this.logger.log({ ...logBase, status: 'success', statusCode: 200, message: 'Успешный вход' });
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id, email: user.email, role: user.role.code };
     const token = this.jwtService.sign(payload);
 
     const ipAddress = this.getRequestIp(req);

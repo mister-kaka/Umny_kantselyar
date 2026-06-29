@@ -12,6 +12,7 @@ import { DocumentAiResult } from '../../entities/document-ai-result.entity';
 import { User } from '../../entities/user.entity';
 import { DocumentType } from '../../entities/document-type.entity';
 import { DocumentCategory } from '../../entities/document-category.entity';
+import { SystemSettings } from '../../entities/system-settings.entity';
 import { LoggerModule } from '../../logger/logger.module';
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { AuditLogModule } from '../../audit/audit-log.module';
@@ -30,6 +31,7 @@ import { AuditLogModule } from '../../audit/audit-log.module';
             User,
             DocumentType,
             DocumentCategory,
+            SystemSettings,
         ]),
         LoggerModule,
         NotificationsModule,
