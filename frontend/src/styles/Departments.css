@@ -609,7 +609,7 @@
   100% { background-position: 200% 0; }
 }
 
-/* ===== 1024px ===== */
+/* Адаптив */
 @media (max-width: 1024px) {
   .departments-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -621,7 +621,6 @@
   }
 }
 
-/* ===== 768px ===== */
 @media (max-width: 768px) {
   .departments-header {
     flex-direction: column;
@@ -677,7 +676,6 @@
   }
 }
 
-/* ===== 480px ===== */
 @media (max-width: 480px) {
   .departments-title {
     font-size: 20px;
@@ -728,7 +726,6 @@
   }
 }
 
-/* ===== 375px ===== */
 @media (max-width: 375px) {
   .departments-grid .card {
     padding: 10px;
@@ -758,7 +755,6 @@
   }
 }
 
-/* ===== 320px ===== */
 @media (max-width: 320px) {
   .departments-title {
     font-size: 16px;
