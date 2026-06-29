@@ -63,6 +63,7 @@ export class NotificationsService {
                 'document_deleted': settings.documentDeleted,
                 'reference_created': settings.referenceCreated,
                 'reference_deleted': settings.referenceDeleted,
+                'admin_message': settings.adminMessage,
             };
 
             if (settingsMap[type] === false) {

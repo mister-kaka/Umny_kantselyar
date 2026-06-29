@@ -375,6 +375,7 @@ export class SettingsService {
           documentDeleted: false,
           referenceCreated: true,
           referenceDeleted: true,
+          adminMessage: true,
         });
         settings = await this.userNotificationSettingsRepository.save(settings);
       }
@@ -408,6 +409,7 @@ export class SettingsService {
         documentDeleted: settings.documentDeleted,
         referenceCreated: settings.referenceCreated,
         referenceDeleted: settings.referenceDeleted,
+        adminMessage: settings.adminMessage,
         updatedAt: settings.updatedAt,
       };
 
@@ -458,6 +460,7 @@ export class SettingsService {
       if (dto.documentDeleted !== undefined) settings.documentDeleted = dto.documentDeleted;
       if (dto.referenceCreated !== undefined) settings.referenceCreated = dto.referenceCreated;
       if (dto.referenceDeleted !== undefined) settings.referenceDeleted = dto.referenceDeleted;
+       if (dto.adminMessage !== undefined) settings.adminMessage = dto.adminMessage;
 
       settings.updatedAt = new Date();
       const saved = await this.userNotificationSettingsRepository.save(settings);
@@ -500,6 +503,7 @@ export class SettingsService {
         documentDeleted: saved.documentDeleted,
         referenceCreated: saved.referenceCreated,
         referenceDeleted: saved.referenceDeleted,
+        adminMessage: saved.adminMessage,
         updatedAt: saved.updatedAt,
       };
 

@@ -56,5 +56,8 @@ export class NotificationSettingsResponseDto {
     referenceDeleted!: boolean;
 
     @Expose()
+    adminMessage!: boolean;
+
+    @Expose()
     updatedAt!: Date;
 }
