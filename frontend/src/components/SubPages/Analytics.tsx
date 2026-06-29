@@ -4,6 +4,9 @@ import { DocumentType, DocumentCategory, DocumentListItem, AnalyticsData } from 
 import '../../styles/Analytics.css';
 import { getStatusHexColor, translateStatus } from '../../constants/statuses';
 import '../../styles/global.css';
+import Card from '../Card';
+import '../../styles/MainMenu.css'
+
 const Chart = lazy(() => import('react-apexcharts'));
 
 const CLEAN_PALETTE = ['#81D8D0', '#5DBFBB', '#7EADE2', '#3BA6A5', '#BBDFFB', '#A2C5C3', '#C7D9D8', '#E1EDED'];
@@ -338,25 +341,25 @@ const Analytics = () => {
       <h2 className="page-title">Аналитика</h2>
       <p className="page-subtitle">{documents.length} документов в системе</p>
 
-      <div className="analytics-stats-cards-container">
+      <div className="stats-cards-container">
         {statCards.map((card, i) => (
-          <div className="analytics-stat-card" key={i}>
-            <div className="analytics-stat-card-icon-wrap">
+          <Card className="stat-card" key={i}>
+            <div className="stat-card-icon-wrap">
               <img src={card.icon} className="analytics-stat-icon" alt={card.label} />
             </div>
-            <div className="analytics-stat-card-content">
-              <div className="analytics-stat-card-value">
+            <div className="stat-card-content">
+              <div className="stat-card-value">
                 {card.value}
                 {card.suffix && <span className="analytics-stat-card-suffix">{card.suffix}</span>}
               </div>
               <div className="analytics-stat-card-label">{card.label}</div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       <div className="charts-grid">
-        <div className="chart-card">
+        <Card className="chart-card">
           <div className="chart-card-header">
             <h3>Типы документов</h3>
             <span className="chart-card-count">{typeStats.length}</span>
@@ -376,9 +379,9 @@ const Analytics = () => {
               <div className="empty-chart">{typeStats.length === 0 ? 'Нет данных' : 'Загрузка графика...'}</div>
             )}
           </div>
-        </div>
+        </Card>
 
-        <div className="chart-card">
+        <Card className="chart-card">
           <div className="chart-card-header">
             <h3>Категории</h3>
             <span className="chart-card-count">{categoryStats.length}</span>
@@ -398,9 +401,9 @@ const Analytics = () => {
               <div className="empty-chart">{categoryStats.length === 0 ? 'Нет данных' : 'Загрузка графика...'}</div>
             )}
           </div>
-        </div>
+        </Card>
 
-        <div className="chart-card full-width">
+        <Card className="chart-card full-width">
           <div className="chart-card-header">
             <h3>Динамика поступлений</h3>
             <span className="chart-card-count">14 дней</span>
@@ -418,9 +421,9 @@ const Analytics = () => {
               </Suspense>
             )}
           </div>
-        </div>
+        </Card>
 
-        <div className="chart-card full-width">
+        <Card className="chart-card full-width">
           <div className="chart-card-header">
             <h3>Статусы обработки</h3>
           </div>
@@ -439,7 +442,7 @@ const Analytics = () => {
               <div className="empty-chart">{statusStats.length === 0 ? 'Нет данных' : 'Загрузка графика...'}</div>
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

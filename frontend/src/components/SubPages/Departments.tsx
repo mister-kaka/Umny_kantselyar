@@ -155,16 +155,16 @@ const Departments = () => {
 
     if (loading) {
         return (
-            <div className="departments-page">
+            <div>
                 <div className="departments-header">
                     <div>
-                        <h2 className="departments-title">Подразделения</h2>
-                        <span className="departments-count">0 отделов</span>
+                        <h2 className="page-title">Подразделения</h2>
+                        <span className="page-subtitle">0 отделов</span>
                     </div>
                 </div>
                 <div className="departments-skeleton">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <Card key={i}>
+                        <Card className="card-hover" key={i}>
                             <div className="skeleton-icon"></div>
                             <div className="skeleton-line skeleton-line--name"></div>
                             <div className="skeleton-line skeleton-line--count"></div>
@@ -178,7 +178,7 @@ const Departments = () => {
 
     if (error) {
         return (
-            <div className="departments-page">
+            <div>
                 <div className="departments-error">
                     <p>{error}</p>
                     <button className="apply-button" onClick={fetchData}>Повторить</button>
@@ -188,13 +188,13 @@ const Departments = () => {
     }
 
     return (
-        <div className="departments-page">
+        <div>
             <div className="departments-header">
                 <div>
-                    <h2 className="departments-title">
+                    <h2 className="page-title">
                         {showArchived ? 'Архивные подразделения' : 'Подразделения'}
                     </h2>
-                    <span className="departments-count">
+                    <span className="page-subtitle">
                         {departments.length} {departments.length === 1 ? 'отдел' : departments.length < 5 ? 'отдела' : 'отделов'}
                     </span>
                 </div>
@@ -251,7 +251,7 @@ const Departments = () => {
             {departments.length > 0 ? (
                 <div className="departments-grid">
                     {sortedDepartments.map(dept => (
-                        <Card
+                        <Card className="card-hover"
                             key={dept.id}
                             onClick={() => handleCardClick(dept.id)}
                         >

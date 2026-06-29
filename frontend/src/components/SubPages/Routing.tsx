@@ -156,16 +156,16 @@ const Routing = () => {
 
     if (loading) {
         return (
-            <div className="routing-page">
+            <div>
                 <h2 className="page-title">Контроль маршрутизации</h2>
                 <p className="page-subtitle">Сравнение рекомендаций AI с решениями операторов</p>
-                <div className="routing-stats">
+                <div className="stats-cards-container">
                     {[1, 2, 3].map(i => (
                         <Card key={i}>
-                            <div className="routing-stat-icon-wrap">
+                            <div className="stat-card-icon-wrap">
                                 <div className="skeleton-icon-stat" />
                             </div>
-                            <div className="routing-stat-content">
+                            <div className="routstat-content">
                                 <div className="skeleton-text-stat" />
                             </div>
                         </Card>
@@ -177,7 +177,7 @@ const Routing = () => {
 
     if (error) {
         return (
-            <div className="routing-page">
+            <div>
                 <div className="routing-error">
                     <p>{error}</p>
                     <button className="apply-button" onClick={fetchData}>Повторить</button>
@@ -187,37 +187,37 @@ const Routing = () => {
     }
 
     return (
-        <div className="routing-page">
+        <div>
             <h2 className="page-title">Контроль маршрутизации</h2>
             <p className="page-subtitle">Сравнение рекомендаций AI с решениями операторов</p>
 
             {stats && (
-                <div className="routing-stats">
-                    <Card>
-                        <div className="routing-stat-icon-wrap">
-                            <img src="/icons/routing/total.png" className="routing-stat-icon" alt="Всего" />
+                <div className="stats-cards-container">
+                    <Card className="stat-card">
+                        <div className="stat-card-icon-wrap">
+                            <img src="/icons/routing/total.png" className="stat-card-icon" alt="Всего" />
                         </div>
-                        <div className="routing-stat-content">
-                            <div className="routing-stat-value">{stats.total}</div>
-                            <div className="routing-stat-label">Всего направлено</div>
-                        </div>
-                    </Card>
-                    <Card>
-                        <div className="routing-stat-icon-wrap">
-                            <img src="/icons/routing/matched.png" className="routing-stat-icon" alt="Совпадения" />
-                        </div>
-                        <div className="routing-stat-content">
-                            <div className="routing-stat-value">{stats.matched}</div>
-                            <div className="routing-stat-label">Совпадает с AI</div>
+                        <div>
+                            <div className="stat-card-value">{stats.total}</div>
+                            <div className="stat-card-label">Всего направлено</div>
                         </div>
                     </Card>
-                    <Card>
-                        <div className="routing-stat-icon-wrap">
-                            <img src="/icons/routing/mismatched.png" className="routing-stat-icon" alt="Расхождения" />
+                    <Card className="stat-card">
+                        <div className="stat-card-icon-wrap">
+                            <img src="/icons/routing/matched.png" className="stat-card-icon" alt="Совпадения" />
                         </div>
-                        <div className="routing-stat-content">
-                            <div className="routing-stat-value">{stats.mismatched}</div>
-                            <div className="routing-stat-label">Расходится с AI</div>
+                        <div>
+                            <div className="stat-card-value">{stats.matched}</div>
+                            <div className="stat-card-label">Совпадает с AI</div>
+                        </div>
+                    </Card>
+                    <Card className="stat-card">
+                        <div className="stat-card-icon-wrap">
+                            <img src="/icons/routing/mismatched.png" className="stat-card-icon" alt="Расхождения" />
+                        </div>
+                        <div>
+                            <div className="stat-card-value">{stats.mismatched}</div>
+                            <div className="stat-card-label">Расходится с AI</div>
                         </div>
                     </Card>
                 </div>

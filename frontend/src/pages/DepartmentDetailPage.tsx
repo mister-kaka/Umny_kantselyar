@@ -181,17 +181,17 @@ const DepartmentDetailPage = () => {
 
     if (loading) {
         return (
-            <div className="dept-detail-page">
+            <div>
                 <div className="dept-detail-header">
                     <div className="skeleton-line" style={{ width: "200px", height: "28px", marginBottom: "8px" }}></div>
                 </div>
-                <div className="dept-detail-stats">
+                <div className="stats-card-container">
                     {[1, 2, 3].map(i => (
-                        <Card key={i}>
-                            <div className="dept-stat-icon-wrap">
+                        <Card className="stat-card" key={i}>
+                            <div className="stat-card-icon-wrap">
                                 <div className="skeleton-icon-stat" />
                             </div>
-                            <div className="dept-stat-content">
+                            <div>
                                 <div className="skeleton-text-stat" />
                             </div>
                         </Card>
@@ -203,7 +203,7 @@ const DepartmentDetailPage = () => {
 
     if (error || !data) {
         return (
-            <div className="dept-detail-page">
+            <div>
                 <div className="dept-detail-error">
                     <p>{error || "Отдел не найден"}</p>
                     <button className="apply-button" onClick={fetchData}>Повторить</button>
@@ -213,7 +213,7 @@ const DepartmentDetailPage = () => {
     }
 
     return (
-        <div className="dept-detail-page">
+        <div>
             <div className="dept-detail-top-row">
                 <button className="dept-detail-back" onClick={handleBackClick}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -254,32 +254,32 @@ const DepartmentDetailPage = () => {
                 <h2 className="dept-detail-title">{data.name}</h2>
             </div>
 
-            <div className="dept-detail-stats">
-                <Card>
-                    <div className="dept-stat-icon-wrap">
-                        <img src="/icons/departments/Total_incoming.png" className="dept-stat-icon" alt="Всего" />
+            <div className="stats-cards-container">
+                <Card className="stat-card">
+                    <div className="stat-card-icon-wrap">
+                        <img src="/icons/departments/Total_incoming.png" className="stat-card-icon" alt="Всего" />
                     </div>
-                    <div className="dept-stat-content">
-                        <div className="dept-stat-value">{data.totalRouted}</div>
-                        <div className="dept-stat-label">Всего направлено</div>
-                    </div>
-                </Card>
-                <Card>
-                    <div className="dept-stat-icon-wrap">
-                        <img src="/icons/departments/first.png" className="dept-stat-icon" alt="Первое" />
-                    </div>
-                    <div className="dept-stat-content">
-                        <div className="dept-stat-value">{formatDate(data.firstRoutedAt)}</div>
-                        <div className="dept-stat-label">Первое поступление</div>
+                    <div>
+                        <div className="stat-card-value">{data.totalRouted}</div>
+                        <div className="stat-card-label">Всего направлено</div>
                     </div>
                 </Card>
-                <Card>
-                    <div className="dept-stat-icon-wrap">
-                        <img src="/icons/departments/last.png" className="dept-stat-icon" alt="Последнее" />
+                <Card className="stat-card">
+                    <div className="stat-card-icon-wrap">
+                        <img src="/icons/departments/first.png" className="stat-card-icon" alt="Первое" />
                     </div>
-                    <div className="dept-stat-content">
-                        <div className="dept-stat-value">{formatDate(data.lastRoutedAt)}</div>
-                        <div className="dept-stat-label">Последнее поступление</div>
+                    <div>
+                        <div className="stat-card-value">{formatDate(data.firstRoutedAt)}</div>
+                        <div className="stat-card-label">Первое поступление</div>
+                    </div>
+                </Card>
+                <Card className="stat-card">
+                    <div className="stat-card-icon-wrap">
+                        <img src="/icons/departments/last.png" className="stat-card-icon" alt="Последнее" />
+                    </div>
+                    <div className="stat-card-content">
+                        <div className="stat-card-value">{formatDate(data.lastRoutedAt)}</div>
+                        <div className="stat-card-label">Последнее поступление</div>
                     </div>
                 </Card>
             </div>
