@@ -7,6 +7,7 @@ import { searchDocuments, searchAi } from './../services/api';
 import { DocumentListItem, AiSearchResponse } from './../types';
 import { translateStatus, getStatusColorClass } from '../constants/statuses';
 import { getThemedIcon } from "../utils/getThemedIcon";
+import Tooltip from "./Tooltip";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -317,13 +318,14 @@ const Search: React.FC = () => {
             className="search-help-icon"
             data-tooltip={currentTooltip}
           >ⓘ</span>
-          <button
-            className={`search-mode-btn ${mode === 'ai' ? 'ai-active' : ''}`}
-            onClick={toggleMode}
-            title={mode === 'fast' ? 'Переключить на умный поиск' : 'Переключить на быстрый поиск'}
-          >
-            {modeLabel}
-          </button>
+          <Tooltip text={mode === 'fast' ? 'Переключить на умный поиск' : 'Переключить на быстрый поиск'} position="bottom">
+            <button
+              className={`search-mode-btn ${mode === 'ai' ? 'ai-active' : ''}`}
+              onClick={toggleMode}
+            >
+              {modeLabel}
+            </button>
+          </Tooltip>
         </div>
       </div>
 

@@ -515,7 +515,6 @@
   background-color: rgba(232, 115, 115, 0.08);
 }
 
-/* Планшеты */
 @media (max-width: 1024px) {
   .header-notifications-badge {
     top: -3px;
@@ -541,7 +540,6 @@
   }
 }
 
-/* Мобильные устройства */
 @media (max-width: 768px) {
   .header {
     left: 0 !important;
@@ -552,7 +550,7 @@
 
   .mobile-header-arrow {
     display: flex;
-    margin-right: 4px;
+    margin-right: 8px;
     flex-shrink: 0;
     padding: 8px 6px;
   }
@@ -613,7 +611,6 @@
     display: none;
   }
 
-  /* Группа кнопок действий */
   .header-action-btn,
   .button-secondary-with-border,
   .button-primary.header-action-btn {
@@ -624,6 +621,11 @@
     margin: 0;
     flex-shrink: 0;
     padding: 0;
+  }
+
+  .header-notifications-btn .Casual-icon {
+    width: 22px !important;
+    height: 22px !important;
   }
 
   .header-action-btn .Casual-icon {
@@ -667,7 +669,6 @@
     flex-shrink: 0;
   }
 
-  /* Дропдаун уведомлений */
   .notifications-dropdown {
     right: -50px;
     min-width: 280px;
@@ -683,7 +684,6 @@
     min-height: 44px;
   }
 
-  /* Дропдаун профиля */
   .profile-dropdown-menu {
     right: -8px;
     min-width: 240px;
@@ -780,7 +780,6 @@
   }
 }
 
-/* Маленькие телефоны (480px) */
 @media (max-width: 480px) {
   .header {
     padding: 0 8px;
@@ -902,7 +901,6 @@
     min-height: 44px;
   }
 
-  /* Поиск */
   .Search-dropdown-menu {
     max-height: 300px;
     width: calc(100vw - 16px);
@@ -1001,9 +999,10 @@
     font-size: 12px;
     padding: 12px;
   }
+
+  
 }
 
-/* Очень маленькие (375px) */
 @media (max-width: 375px) {
   .header {
     padding: 0 6px;
@@ -1100,8 +1099,8 @@
 
   .notifications-dropdown {
     right: -30px;
-    min-width: 240px;
-    max-width: 280px;
+    min-width: 200px;
+    max-width: 200px;
   }
 
   .Search-dropdown-menu {
@@ -1192,9 +1191,42 @@
   .search-ai-dots span {
     font-size: 13px;
   }
+
+  .header-action-btn,
+  .button-secondary-with-border,
+  .button-primary.header-action-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .header-action-btn .Casual-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .profile-image,
+  .profile-image-initials {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .Search {
+    height: 30px;
+  }
+
+  .Search-input {
+    font-size: 14px;
+  }
+
+  .header-notifications-wrapper {
+    margin-left: -7px;
+  }
 }
 
-/* Экстремально маленькие (320px) */
 @media (max-width: 320px) {
   .header {
     padding: 0 4px;
@@ -1243,8 +1275,8 @@
   }
 
   .header-action-btn .Casual-icon {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
   }
 
   .button-primary.header-action-btn .Casual-icon {
@@ -1341,6 +1373,48 @@
   .Search-footer {
     font-size: 7px;
     padding: 5px 8px;
+  }
+
+    .header-action-btn,
+  .button-secondary-with-border,
+  .button-primary.header-action-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .header-notifications-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    padding: 0 !important;
+  }
+
+  .header-notifications-btn .Casual-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .profile-image,
+  .profile-image-initials {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .Search {
+    height: 30px;
+  }
+
+  .Search-input {
+    font-size: 14px;
+  }
+
+  .header-notifications-wrapper {
+    margin-left: -7px;
   }
 }
 

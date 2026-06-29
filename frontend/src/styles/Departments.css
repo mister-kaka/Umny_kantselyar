@@ -1,10 +1,6 @@
 @import url("../styles/global.css");
 @import url("../styles/Dashboard.css");
 
-.departments-page {
-  padding: 0;
-}
-
 .departments-header {
   display: flex;
   justify-content: space-between;
@@ -131,12 +127,6 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
-}
-
-.departments-grid .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  border-color: var(--color-accent);
 }
 
 .department-card-icon {
@@ -609,6 +599,7 @@
   100% { background-position: 200% 0; }
 }
 
+/* Адаптив */
 @media (max-width: 1024px) {
   .departments-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -644,7 +635,7 @@
   }
 
   .departments-grid .card {
-    padding: 20px;
+    padding: 16px;
   }
 
   .department-card-name {
@@ -681,12 +672,17 @@
   }
 
   .departments-grid .card {
-    padding: 16px;
+    padding: 12px;
   }
 
   .department-card-icon {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .department-card-icon-img {
+    width: 20px;
+    height: 20px;
   }
 
   .department-card-name {
@@ -695,6 +691,10 @@
 
   .department-card-stats-value {
     font-size: 20px;
+  }
+
+  .department-card-stats-label {
+    font-size: 11px;
   }
 
   .departments-filter-btn,
@@ -712,13 +712,13 @@
     width: 100%;
     max-width: 100%;
     border-radius: 0;
-    min-height: 100vh;
+    min-height: 92vh;
   }
 }
 
 @media (max-width: 375px) {
   .departments-grid .card {
-    padding: 14px;
+    padding: 10px;
   }
 
   .departments-filter-btn,
@@ -726,15 +726,114 @@
     font-size: 11px;
     padding: 4px 10px;
   }
+
+  .department-card-name {
+    font-size: 14px;
+  }
+
+  .department-card-stats-value {
+    font-size: 18px;
+  }
+
+  .department-card-stats-label {
+    font-size: 10px;
+  }
+
+  .department-card-archive-btn {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 @media (max-width: 320px) {
   .departments-title {
-    font-size: 18px;
+    font-size: 16px;
+  }
+
+  .departments-count {
+    font-size: 11px;
   }
 
   .departments-grid .card {
-    padding: 12px;
+    padding: 6px;
+    gap: 4px;
+  }
+
+  .departments-grid {
+    gap: 8px;
+  }
+
+  .department-card-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .department-card-icon-img {
+    width: 16px;
+    height: 16px;
+  }
+
+  .department-card-name {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .department-card-stats-value {
+    font-size: 16px;
+  }
+
+  .department-card-stats-label {
+    font-size: 9px;
+  }
+
+  .department-card-last {
+    padding: 6px 8px;
+  }
+
+  .department-card-last-title {
+    font-size: 11px;
+  }
+
+  .department-card-last-date {
+    font-size: 9px;
+  }
+
+  .departments-filter-btn,
+  .departments-sort-btn {
+    font-size: 10px;
+    padding: 4px 8px;
+    min-height: 28px;
+  }
+
+  .departments-add-btn {
+    font-size: 10px;
+    min-height: 28px;
+    padding: 0 10px;
+  }
+
+  .department-card-archive-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .department-card-archive-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .department-card-restore-btn {
+    font-size: 10px;
+    min-height: 28px;
+    padding: 4px 10px;
+  }
+
+  .department-card-action {
+    font-size: 10px;
+  }
+
+  .department-card-action svg {
+    width: 12px;
+    height: 12px;
   }
 }
 

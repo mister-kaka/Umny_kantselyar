@@ -505,14 +505,12 @@ const Notifications = () => {
 
     if (loading) {
         return (
-            <div className="notifications-page">
-                <div className="notifications-top-row">
-                    <h2 className="page-title">Уведомления</h2>
-                </div>
+            <div>
+                <h2 className="page-title">Уведомления</h2>
                 <p className="page-subtitle">Системные уведомления</p>
                 <div className="notifications-stats-cards-container">
                     {[1, 2, 3, 4].map(i => (
-                        <Card key={i} className="notifications-stat-card skeleton-card">
+                        <Card key={i} className="stat-card skeleton-card">
                             <div className="skeleton-icon-stat" />
                             <div className="skeleton-text-stat" />
                         </Card>
@@ -540,10 +538,8 @@ const Notifications = () => {
 
     if (error) {
         return (
-            <div className="notifications-page">
-                <div className="notifications-top-row">
-                    <h2 className="page-title">Уведомления</h2>
-                </div>
+            <div>
+                <h2 className="page-title">Уведомления</h2>
                 <Card className="error-state-card">
                     <div className="error-state">
                         <p className="error-text">{error}</p>
@@ -557,7 +553,7 @@ const Notifications = () => {
     }
 
     return (
-        <div className="notifications-page">
+        <div>
             <div className="notifications-top-row">
                 <h2 className="page-title">Уведомления</h2>
                 <div className="notifications-header-actions">
@@ -574,35 +570,35 @@ const Notifications = () => {
             <p className="page-subtitle">Системные уведомления</p>
 
             <div className="notifications-stats-cards-container">
-                <Card className="notifications-stat-card">
-                    <img src="/icons/notifications/Unread.png" className="notifications-stat-card-icon" alt="Непрочитанные" />
-                    <div className="notifications-stat-card-content">
-                        <h1 className="notifications-stat-card-value">{stats?.total ?? 0}</h1>
-                        <h5 className="notifications-stat-card-label text-secondary">Непрочитанные</h5>
+                <Card className="stat-card">
+                    <img src="/icons/notifications/Unread.png" className="stat-card-icon" alt="Непрочитанные" />
+                    <div className="stat-card-content">
+                        <h1 className="stat-card-value">{stats?.total ?? 0}</h1>
+                        <h5 className="stat-card-label text-secondary">Непрочитанные</h5>
                     </div>
                 </Card>
 
-                <Card className="notifications-stat-card">
-                    <img src="/icons/notifications/pending.png" className="notifications-stat-card-icon" alt="Требуют проверки" />
-                    <div className="notifications-stat-card-content">
-                        <h1 className="notifications-stat-card-value">{stats?.pendingVerification ?? 0}</h1>
-                        <h5 className="notifications-stat-card-label text-secondary">Требуют проверки</h5>
+                <Card className="stat-card">
+                    <img src="/icons/notifications/pending.png" className="stat-card-icon" alt="Требуют проверки" />
+                    <div className="stat-card-content">
+                        <h1 className="stat-card-value">{stats?.pendingVerification ?? 0}</h1>
+                        <h5 className="stat-card-label text-secondary">Требуют проверки</h5>
                     </div>
                 </Card>
 
-                <Card className="notifications-stat-card">
-                    <img src="/icons/notifications/Low_confidence.png" className="notifications-stat-card-icon" alt="Низкая уверенность" />
-                    <div className="notifications-stat-card-content">
-                        <h1 className="notifications-stat-card-value">{stats?.lowConfidence ?? 0}</h1>
-                        <h5 className="notifications-stat-card-label text-secondary">Низ. уверенность</h5>
+                <Card className="stat-card">
+                    <img src="/icons/notifications/Low_confidence.png" className="stat-card-icon" alt="Низкая уверенность" />
+                    <div className="stat-card-content">
+                        <h1 className="stat-card-value">{stats?.lowConfidence ?? 0}</h1>
+                        <h5 className="stat-card-label text-secondary">Низ. уверенность</h5>
                     </div>
                 </Card>
 
-                <Card className="notifications-stat-card">
-                    <img src="/icons/notifications/eror.png" className="notifications-stat-card-icon" alt="Ошибки" />
-                    <div className="notifications-stat-card-content">
-                        <h1 className="notifications-stat-card-value">{stats?.extractError ?? 0}</h1>
-                        <h5 className="notifications-stat-card-label text-secondary">Ошибки</h5>
+                <Card className="stat-card">
+                    <img src="/icons/notifications/eror.png" className="stat-card-icon" alt="Ошибки" />
+                    <div className="stat-card-content">
+                        <h1 className="stat-card-value">{stats?.extractError ?? 0}</h1>
+                        <h5 className="stat-card-label text-secondary">Ошибки</h5>
                     </div>
                 </Card>
             </div>

@@ -1,10 +1,6 @@
 @import url("../styles/global.css");
 @import url("../styles/Dashboard.css");
 
-.dept-detail-page {
-  padding: 0;
-}
-
 .dept-detail-top-row {
   display: flex;
   justify-content: space-between;
@@ -129,11 +125,6 @@
   min-height: 110px;
   border-top: 3px solid var(--color-accent);
   transition: all 0.2s ease;
-}
-
-.dept-detail-stats .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
 .dept-stat-icon-wrap {
@@ -687,7 +678,7 @@
   }
 
   .dept-detail-actions {
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   .dept-detail-stats {
