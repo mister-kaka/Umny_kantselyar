@@ -1,7 +1,6 @@
 @import url('./global.css');
 
 .profile-page {
-    max-width: 1200px;
     margin: 0;
     padding: 0;
 }
@@ -730,7 +729,6 @@
   }
 }
 
-/* Ландшафтная ориентация на мобильных */
 @media (max-width: 768px) and (orientation: landscape) {
   .profile-layout {
     gap: 16px;
@@ -758,7 +756,6 @@
   }
 }
 
-/* Сенсорные устройства (улучшение тактильного отклика) */
 @media (hover: none) and (pointer: coarse) {
   .profile-save-button:active,
   .profile-password-button:active,
