@@ -397,6 +397,19 @@ input:checked + .slider:before {
   flex: 1;
 }
 
+.page-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  margin: 0 0 20px 0;
+}
+
 @media (max-width: 1024px) {
   .security-section-card {
     padding: 16px 20px;
@@ -404,6 +417,12 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 768px) {
+  .page-title {
+    font-size: 22px !important;
+  }
+  .page-subtitle {
+    font-size: 13px !important;
+  }
 
   .settings-notifications-grid {
     grid-template-columns: 1fr;
@@ -491,6 +510,14 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 480px) {
+  .page-title {
+    font-size: 19px !important;
+  }
+  .page-subtitle {
+    font-size: 12px !important;
+  }
+
+
   .settings-tabs .tab {
     padding: 6px 10px;
     font-size: 11px;
@@ -519,9 +546,41 @@ input:checked + .slider:before {
     margin-bottom: 12px;
     padding-bottom: 8px;
   }
+
+
+    .apply-button {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+    min-height: 34px !important;
+    height: auto !important;
+  }
+
+  .settings-form-label {
+    font-size: 12px !important;
+  }
+
+  .settings-form-input {
+    font-size: 12px !important;
+  }
+
+  .settings-tabs .tab {
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+  }
+
+  .settings-status {
+    font-size: 12px !important;
+  }
 }
 
 @media (max-width: 375px) {
+  .page-title {
+    font-size: 17px !important;
+  }
+  .page-subtitle {
+    font-size: 11px !important;
+  }
+
   .security-section-card {
     padding: 10px;
   }
@@ -533,9 +592,66 @@ input:checked + .slider:before {
   .security-details-cell {
     max-width: 80px;
   }
+
+  .apply-button {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+    min-height: 34px !important;
+    height: auto !important;
+  }
+
+  .settings-form-label {
+    font-size: 12px !important;
+  }
+
+  .settings-form-input {
+    font-size: 12px !important;
+  }
+
+  .settings-tabs .tab {
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+  }
+
+  .settings-status {
+    font-size: 12px !important;
+  }
+  
 }
 
 @media (max-width: 320px) {
+  .apply-button {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+    min-height: 34px !important;
+    height: auto !important;
+  }
+
+  .settings-form-label {
+    font-size: 12px !important;
+  }
+
+  .settings-form-input {
+    font-size: 12px !important;
+  }
+
+  .settings-tabs .tab {
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+  }
+
+  .settings-status {
+    font-size: 12px !important;
+  }
+
+
+  .page-title {
+    font-size: 16px !important;
+  }
+  .page-subtitle {
+    font-size: 10px !important;
+  }
+
   .settings-tabs .tab {
     padding: 6px 8px;
     font-size: 10px;
