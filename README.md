@@ -30,7 +30,8 @@
 Требования: Node.js 18+, Docker Desktop, npm 9+
 
 1. Запуск базы данных:
-  - docker run --name umny_kan_postgres -e POSTGRES_PASSWORD=12345 -e POSTGRES_USER=postgres -e POSTGRES_DB=umny_kan_db -p 5432:5432 -d pgvector/pgvector:pg15
+  - docker должен быть запущен фоново
+  - docker run --name umny_kan_postgres -e POSTGRES_PASSWORD=12345 -e POSTGRES_USER=postgres -e POSTGRES_DB=umny_kan_db -p 5432:5432 -d pgvector/pgvector:pg15 
 
 2. Инициализация базы данных:
   - docker cp backend/src/db/seed.sql umny_kan_postgres:/seed.sql
