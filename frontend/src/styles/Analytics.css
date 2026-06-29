@@ -70,7 +70,6 @@
   flex: 1;
 }
 
-/* УМЕНЬШЕННЫЕ ЦИФРЫ В КАРТОЧКАХ */
 .analytics-stat-card-value {
   font-size: 24px;
   font-weight: 700;
@@ -84,7 +83,7 @@
 }
 
 .analytics-stat-card-suffix {
-  font-size: 16px;  /* было 20px */
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-secondary);
   margin-left: 2px;
@@ -167,6 +166,28 @@
   border: 1px dashed var(--border-color);
 }
 
+.apexcharts-text {
+  font-size: 10px !important;
+}
+
+.apexcharts-legend-text {
+  font-size: 10px !important;
+}
+
+.apexcharts-datalabel {
+  font-size: 10px !important;
+}
+
+.apexcharts-legend-marker {
+  width: 8px !important;
+  height: 8px !important;
+  margin-right: 6px !important;
+}
+
+.apexcharts-legend-series {
+  margin: 0 8px 4px 0 !important;
+}
+
 .apexcharts-tooltip {
   border: none !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
@@ -194,10 +215,6 @@
   font-family: 'Inter', sans-serif !important;
   font-size: 12px !important;
   color: #696969 !important;
-}
-
-.apexcharts-legend-marker {
-  border: none !important;
 }
 
 .analytics-loading {
@@ -234,10 +251,9 @@
   color: var(--color-status-rejected);
 }
 
-/* 1400px+ */
+/*1400px+ */
 @media (min-width: 1400px) {
   .analytics-page {
-    /* padding: 32px; */
     max-width: 1400px;
     margin: 0 auto;
   }
@@ -262,7 +278,7 @@
   }
 }
 
-/* 1024px */
+/*024px*/
 @media (max-width: 1024px) {
   .analytics-page {
     padding: 20px;
@@ -286,7 +302,7 @@
   }
 }
 
-/* 768px */
+/*768px*/
 @media (max-width: 768px) {
   .analytics-page {
     padding: 16px;
@@ -323,14 +339,14 @@
   }
 }
 
-/* 650px */
+/*650px*/
 @media (max-width: 650px) {
   .full-width {
     grid-column: span 1;
   }
 }
 
-/* 480px */
+/*480px*/
 @media (max-width: 480px) {
   .analytics-page {
     padding: 12px;
@@ -366,9 +382,23 @@
   .chart-container {
     min-height: 240px;
   }
+  
+  .apexcharts-text {
+    font-size: 9px !important;
+  }
+  .apexcharts-legend-text {
+    font-size: 9px !important;
+  }
+  .apexcharts-legend-marker {
+    width: 7px !important;
+    height: 7px !important;
+  }
+  .apexcharts-datalabel {
+    font-size: 9px !important;
+  }
 }
 
-/* 375px */
+/*375px*/
 @media (max-width: 375px) {
   .analytics-page {
     padding: 10px;
@@ -396,31 +426,177 @@
   .chart-container {
     min-height: 220px;
   }
+  
+  .chart-card {
+    padding: 10px 8px;
+  }
+  .chart-card-header h3 {
+    font-size: 13px;
+  }
+  .chart-card-count {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+  
+  .apexcharts-text {
+    font-size: 8px !important;
+  }
+  .apexcharts-legend-text {
+    font-size: 8px !important;
+  }
+  .apexcharts-legend-marker {
+    width: 6px !important;
+    height: 6px !important;
+    margin-right: 4px !important;
+  }
+  .apexcharts-legend-series {
+    margin: 0 4px 2px 0 !important;
+  }
+  .apexcharts-datalabel {
+    font-size: 8px !important;
+  }
+  .apexcharts-tooltip-title {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+  .apexcharts-tooltip-text {
+    font-size: 10px !important;
+  }
+  .apexcharts-tooltip {
+    padding: 4px 8px !important;
+  }
+  .apexcharts-svg {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 }
 
-/* 320px */
+/*320px*/
 @media (max-width: 320px) {
   .analytics-page {
-    padding: 8px;
+    padding: 6px;
   }
+  
   .analytics-title {
     font-size: 16px;
+    margin-bottom: 4px;
   }
+  
+  .analytics-subtitle {
+    font-size: 11px;
+  }
+  
+  .analytics-stats-cards-container {
+    gap: 6px;
+    margin-bottom: 12px;
+    margin-top: 8px;
+  }
+  
   .analytics-stat-card {
-    padding: 10px 12px;
+    padding: 6px 8px;
+    gap: 6px;
+    border-radius: 8px;
+    border-top-width: 2px;
+    min-height: 44px;
   }
+  
   .analytics-stat-card-value {
-    font-size: 18px;
+    font-size: 14px;
   }
-  .analytics-stat-icon {
-    width: 24px !important;
-    height: 24px !important;
+  
+  .analytics-stat-card-suffix {
+    font-size: 11px;
   }
+  
+  .analytics-stat-card-label {
+    font-size: 7px;
+    letter-spacing: 0.2px;
+  }
+  
+  .analytics-stat-card-icon-wrap {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .analytics-stat-card-icon-wrap .analytics-stat-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  .charts-grid {
+    gap: 8px;
+  }
+  
+  .chart-card {
+    padding: 8px 6px;
+    border-radius: 8px;
+  }
+  
+  .chart-card-header {
+    margin-bottom: 8px;
+    gap: 4px;
+  }
+  
+  .chart-card-header h3 {
+    font-size: 11px;
+  }
+  
+  .chart-card-count {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+  
   .chart-container {
-    min-height: 200px;
+    min-height: 160px;
+  }
+  
+  .empty-chart {
+    height: 120px;
+    font-size: 11px;
+  }
+  
+  .apexcharts-svg {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .apexcharts-text {
+    font-size: 7px !important;
+  }
+  
+  .apexcharts-legend-text {
+    font-size: 7px !important;
+  }
+  
+  .apexcharts-legend-marker {
+    width: 6px !important;
+    height: 6px !important;
+    margin-right: 4px !important;
+  }
+  
+  .apexcharts-legend-series {
+    margin: 0 4px 2px 0 !important;
+  }
+  
+  .apexcharts-datalabel {
+    font-size: 7px !important;
+  }
+  
+  .apexcharts-tooltip-title {
+    font-size: 9px !important;
+    padding: 4px 8px !important;
+  }
+  
+  .apexcharts-tooltip-text {
+    font-size: 9px !important;
+  }
+  
+  .apexcharts-tooltip {
+    padding: 4px 8px !important;
   }
 }
 
+/*Touch-состояния*/
 @media (hover: none) and (pointer: coarse) {
   .analytics-stat-card:active {
     transform: scale(0.98);
