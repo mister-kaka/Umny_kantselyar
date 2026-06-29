@@ -194,7 +194,8 @@
   }
 }
 
-/* ===== 768px ===== */
+/* Адаптив */
+
 @media (max-width: 768px) {
   .scanner-modal {
     width: 95%;
@@ -230,7 +231,6 @@
   }
 }
 
-/* ===== 480px ===== */
 @media (max-width: 480px) {
   .scanner-capture-btn {
     width: 100%;
@@ -267,7 +267,6 @@
   }
 }
 
-/* ===== 375px ===== */
 @media (max-width: 375px) {
   .scanner-modal {
     width: 98%;
@@ -326,7 +325,6 @@
   }
 }
 
-/* ===== 320px ===== */
 @media (max-width: 320px) {
   .scanner-modal {
     width: 100%;
@@ -401,7 +399,6 @@
   }
 }
 
-/* ===== Touch-состояния ===== */
 @media (hover: none) and (pointer: coarse) {
   .scanner-capture-btn:active {
     transform: scale(0.96);
