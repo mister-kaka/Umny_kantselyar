@@ -166,7 +166,6 @@
   border: 1px dashed var(--border-color);
 }
 
-/* ApexCharts глобальные стили */
 .apexcharts-text {
   font-size: 10px !important;
 }
