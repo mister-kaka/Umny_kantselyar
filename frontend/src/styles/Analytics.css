@@ -166,7 +166,6 @@
   border: 1px dashed var(--border-color);
 }
 
-/* ApexCharts глобальные стили */
 .apexcharts-text {
   font-size: 10px !important;
 }
@@ -252,7 +251,7 @@
   color: var(--color-status-rejected);
 }
 
-/* ===== 1400px+ ===== */
+/*1400px+ */
 @media (min-width: 1400px) {
   .analytics-page {
     max-width: 1400px;
@@ -279,7 +278,7 @@
   }
 }
 
-/* ===== 1024px ===== */
+/*024px*/
 @media (max-width: 1024px) {
   .analytics-page {
     padding: 20px;
@@ -303,7 +302,7 @@
   }
 }
 
-/* ===== 768px ===== */
+/*768px*/
 @media (max-width: 768px) {
   .analytics-page {
     padding: 16px;
@@ -340,14 +339,14 @@
   }
 }
 
-/* ===== 650px ===== */
+/*650px*/
 @media (max-width: 650px) {
   .full-width {
     grid-column: span 1;
   }
 }
 
-/* ===== 480px ===== */
+/*480px*/
 @media (max-width: 480px) {
   .analytics-page {
     padding: 12px;
@@ -384,7 +383,6 @@
     min-height: 240px;
   }
   
-  /* Уменьшаем ApexCharts на 480px */
   .apexcharts-text {
     font-size: 9px !important;
   }
@@ -400,7 +398,7 @@
   }
 }
 
-/* ===== 375px ===== */
+/*375px*/
 @media (max-width: 375px) {
   .analytics-page {
     padding: 10px;
@@ -440,7 +438,6 @@
     padding: 2px 8px;
   }
   
-  /* Уменьшаем ApexCharts на 375px */
   .apexcharts-text {
     font-size: 8px !important;
   }
@@ -474,7 +471,7 @@
   }
 }
 
-/* ===== 320px ===== */
+/*320px*/
 @media (max-width: 320px) {
   .analytics-page {
     padding: 6px;
@@ -500,6 +497,7 @@
     gap: 6px;
     border-radius: 8px;
     border-top-width: 2px;
+    min-height: 44px;
   }
   
   .analytics-stat-card-value {
@@ -598,7 +596,7 @@
   }
 }
 
-/* ===== Touch-состояния ===== */
+/*Touch-состояния*/
 @media (hover: none) and (pointer: coarse) {
   .analytics-stat-card:active {
     transform: scale(0.98);

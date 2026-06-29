@@ -1578,7 +1578,6 @@
   margin-top: 2px;
 }
 
-/* Контакты в источнике документа — каждый с новой строки */
 .source-contacts {
   display: flex;
   flex-direction: column;
@@ -1639,6 +1638,14 @@
 }
 
 
+
+.doc-info-item .status-badge {
+  display: inline-block;
+  width: auto;
+  max-width: fit-content;
+  white-space: nowrap;
+}
+
 @media (max-width: 1024px) {
   .document-page {
     padding: 20px 24px;
@@ -1655,12 +1662,44 @@
   }
 
   .doc-info-panel {
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 16px;
   }
 
   .doc-info-item {
-    min-width: 130px;
-    padding: 4px 12px;
+    padding: 0;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .doc-info-divider {
+    display: none;
+  }
+
+  .doc-info-label {
+    font-size: 11px;
+  }
+
+  .doc-info-value {
+    font-size: 13px;
+  }
+
+  .doc-header-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .history-table {
+    min-width: 600px;
+  }
+
+    .doc-info-item .status-badge {
+    display: inline-block;
+    width: auto;
+    max-width: fit-content;
+    white-space: nowrap;
   }
 }
 
@@ -1668,153 +1707,125 @@
   .document-page {
     padding: 16px;
   }
-
   .doc-topbar {
     margin-bottom: 16px;
     gap: 12px;
   }
-
   .doc-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
     margin-bottom: 20px;
   }
-
+  .doc-header-left {
+    flex: 1 1 100%;
+  }
   .doc-title {
     font-size: 22px;
   }
-
   .doc-header-right {
-    flex-direction: column;
-    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    width: auto;
   }
-
   .edit-doc-btn {
-    width: 100%;
-    justify-content: center;
+    height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
   }
-
+  .confidence-badge {
+    font-size: 13px;
+    padding: 4px 12px;
+  }
   .doc-info-panel {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
     padding: 16px;
+    margin-bottom: 20px;
   }
-
-  .doc-info-divider {
-    display: none;
-  }
-
   .doc-info-item {
     padding: 0;
     min-width: 0;
+    gap: 4px;
   }
-
+  .doc-info-divider {
+    display: none;
+  }
   .overview-grid,
   .ai-results-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
-
   .ai-result-card--wide {
     grid-column: span 1;
   }
-
   .tabs {
     overflow-x: auto;
   }
-
   .tab {
     padding: 12px 20px;
     font-size: 13px;
   }
-
   .tab-content {
     padding: 20px 16px;
   }
-
-  .info-row,
-  .classif-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    padding: 10px 0;
-  }
-
-  .info-row span:first-child,
-  .classif-label {
-    min-width: auto;
-    font-size: 12px;
-  }
-
-  .info-row strong,
-  .classif-right {
+  /* Обзор: контакты по левому краю */
+  .info-row strong {
     text-align: left;
-    width: 100%;
-    justify-content: flex-start;
-    font-size: 13px;
-  }
-
-  .info-row .status-badge {
-    margin-left: 0;
   }
 
   .file-row {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px 12px;
     padding: 12px 0;
   }
-
   .file-name {
-    flex-basis: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-basis: auto;
   }
-
   .file-actions {
     margin-left: auto;
   }
-
   .ocr-header {
     flex-direction: column;
     align-items: flex-start;
   }
-
   .ocr-text {
     font-size: 13px;
     padding: 16px;
     max-height: 400px;
   }
-
   .ocr-copy-btn,
   .ocr-retry-btn {
     height: 36px;
     padding: 0 16px;
     font-size: 12px;
   }
-
   .history-table {
     min-width: 560px;
   }
-
   .verification-group {
     grid-template-columns: 1fr;
   }
-
   .verification-group-title {
     grid-column: span 1;
   }
-
   .verification-actions {
     grid-column: span 1;
     flex-direction: column;
   }
-
   .verification-actions .ai-btn,
   .verification-actions .ai-btn-secondary,
   .verification-actions .ai-btn-danger {
     width: 100%;
     text-align: center;
   }
-
   .modal-content--large {
     width: 95%;
   }
@@ -1830,9 +1841,36 @@
   }
 
   .doc-info-panel {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
     padding: 12px;
+  }
+
+  .doc-info-item {
+    padding: 0;
+    gap: 2px;
+  }
+
+  .doc-info-divider {
+    display: none;
+  }
+
+  .doc-info-label {
+    font-size: 10px;
+  }
+
+  .doc-info-value {
+    font-size: 12px;
+  }
+
+  .doc-info-item .status-badge {
+    display: inline-block;
+    width: auto;
+    max-width: fit-content;
+    white-space: nowrap;
+    font-size: 11px;
+    padding: 3px 8px;
   }
 
   .tab {
@@ -1856,7 +1894,425 @@
     padding: 0 14px;
     font-size: 12px;
   }
+
+  .info-block .info-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    padding: 6px 0 !important;
+  }
+
+  .info-block .info-row span:first-child {
+    min-width: auto !important;
+    font-size: 11px !important;
+  }
+
+  .info-block .info-row strong {
+    text-align: left !important;
+    font-size: 13px !important;
+  }
+
+  .info-block .info-row .status-badge {
+    margin-left: 0 !important;
+  }
+
+  .classif-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    padding: 6px 0 !important;
+  }
+
+  .classif-label {
+    min-width: auto !important;
+    font-size: 11px !important;
+  }
+
+  .classif-right {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    font-size: 13px !important;
+  }
+
+  .ai-summary-text {
+    text-align: left !important;
+  }
+
+  .source-contacts {
+    text-align: left !important;
+    align-items: flex-start !important;
+  }
+
+  .source-contact-line {
+    text-align: left !important;
+  }
 }
+
+@media (max-width: 376px) {
+  .document-page {
+    padding: 1px 1px; 
+    width: 100%;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  .doc-info-panel {
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .tab-content {
+    padding: 16px 12px;
+  }
+
+  .doc-title {
+    font-size: 18px;
+  }
+
+  .doc-number {
+    font-size: 12px;
+    padding: 2px 10px;
+  }
+
+  .doc-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .doc-header-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .back-to-list-btn,
+  .back-to-list-btn--primary {
+    font-size: 12px !important;
+    padding: 2px 4px !important;
+  }
+
+
+  .doc-header {
+    margin-bottom: 8px !important;
+    gap: 4px !important;  
+  }
+
+  .doc-header-left,
+  .doc-header-right {
+    gap: 6px !important; 
+  }
+
+  .doc-title {
+    font-size: 18px !important;
+  }
+
+  .confidence-badge {
+    display: none !important;
+  }
+
+  .edit-doc-btn {
+    height: 30px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .confidence-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .doc-info-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    padding: 10px;
+  }
+
+  .doc-info-item {
+    padding: 0;
+    gap: 2px;
+  }
+
+  .doc-info-divider {
+    display: none;
+  }
+
+  .doc-info-label {
+    font-size: 9px;
+  }
+
+  .doc-info-value {
+    font-size: 11px;
+  }
+
+  .doc-info-item .status-badge {
+    display: inline-block;
+    width: auto;
+    max-width: fit-content;
+    white-space: nowrap;
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .tab {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .tab-content {
+    padding: 12px 10px;
+  }
+
+  .card-section-title {
+    font-size: 11px;
+    margin-bottom: 12px;
+  }
+
+  .card {
+    padding: 8px;
+  }
+
+  .info-block .info-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    padding: 4px 0 !important;
+  }
+
+  .info-block .info-row span:first-child {
+    font-size: 10px !important;
+  }
+
+  .info-block .info-row strong {
+    font-size: 12px !important;
+  }
+
+  .classif-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    padding: 4px 0 !important;
+  }
+
+  .classif-label {
+    font-size: 10px !important;
+  }
+
+  .classif-right {
+    font-size: 12px !important;
+  }
+
+  .classif-value {
+    font-size: 12px !important;
+  }
+
+  .confidence-chip {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .ai-summary-text {
+    text-align: left !important;
+    font-size: 12px !important;
+  }
+
+  /* Контакты */
+  .source-contacts {
+    text-align: left !important;
+    align-items: flex-start !important;
+  }
+
+  .source-contact-line {
+    text-align: left !important;
+    font-size: 12px !important;
+  }
+
+  /* AI-результаты */
+  .ai-results-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .ai-result-card {
+    padding: 8px 10px;
+  }
+
+  .ai-result-card-value {
+    font-size: 12px;
+  }
+
+  .ai-result-card-label {
+    font-size: 9px;
+  }
+
+  .ai-result-card--wide {
+    grid-column: span 1;
+  }
+
+  /* Файлы */
+  .file-row {
+    flex-wrap: nowrap;
+    gap: 6px 10px;
+    padding: 8px 0;
+  }
+
+  .file-name {
+    font-size: 11px;
+  }
+
+  .file-size {
+    font-size: 10px;
+  }
+
+  .file-download {
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+
+  .file-preview-btn {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* OCR */
+  .ocr-text {
+    font-size: 11px;
+    padding: 10px;
+    max-height: 250px;
+  }
+
+  .ocr-copy-btn,
+  .ocr-retry-btn {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 11px;
+  }
+
+  .ocr-header-right .confidence-chip {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  /* Проверка */
+  .verification-group {
+    padding: 10px;
+  }
+
+  .verification-select {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .verification-textarea {
+    font-size: 12px;
+    padding: 6px 10px;
+    min-height: 40px;
+  }
+
+  .verification-label {
+    font-size: 12px;
+  }
+
+  .verification-actions .ai-btn,
+  .verification-actions .ai-btn-secondary,
+  .verification-actions .ai-btn-danger {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .verification-hint {
+    font-size: 12px;
+  }
+
+  /* История */
+  .history-table {
+    font-size: 11px;
+    min-width: 400px;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 6px 4px;
+  }
+
+  .history-dept-btn {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  /* Комментарии */
+  .comment-textarea {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .comment-submit-btn {
+    font-size: 12px;
+    padding: 6px 16px;
+  }
+
+  .comment-author-name {
+    font-size: 12px;
+  }
+
+  .comment-text {
+    font-size: 12px;
+  }
+
+  /* Модалки */
+  .modal-content--large {
+    width: 95%;
+  }
+
+  .modal-content--large .modal-header {
+    padding: 10px 12px;
+  }
+
+  .modal-content--large .modal-header h3 {
+    font-size: 15px;
+  }
+
+  .modal-content--large .modal-body {
+    padding: 12px;
+  }
+
+  .modal-content--large .modal-footer {
+    padding: 10px 12px;
+  }
+
+  .modal-content--large .modal-btn-cancel,
+  .modal-content--large .modal-btn-confirm {
+    font-size: 12px;
+    padding: 6px 14px;
+  }
+
+  .edit-form-group {
+    padding: 10px;
+  }
+
+  .edit-form-row label {
+    font-size: 11px;
+  }
+
+  .edit-form-row input,
+  .edit-form-row select {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+
+
+  .verification-select,
+  .verification-textarea {
+    font-size: 12px;
+    padding: 6px 10px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 
 @media (min-width: 1400px) {
   .document-page {

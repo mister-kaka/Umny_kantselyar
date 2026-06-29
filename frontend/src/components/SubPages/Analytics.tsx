@@ -194,7 +194,7 @@ const Analytics = () => {
       barHeight: '40%',
       distributed: true,
       dataLabels: {
-        position: 'top', // ← жёстко ставим подписи сверху столбца
+        position: 'top',
       }
     }
   },
@@ -208,10 +208,10 @@ const Analytics = () => {
       fontWeight: 500
     },
     formatter: (val) => val.toString(),
-    offsetX: 8,      // ← фиксированный отступ от конца линии
-    offsetY: 0,       // ← не смещаем по вертикали
+    offsetX: 8,
+    offsetY: 0,
     dropShadow: {
-      enabled: false, // ← отключаем тень, чтобы не плыло
+      enabled: false,
     }
   },
   xaxis: {
