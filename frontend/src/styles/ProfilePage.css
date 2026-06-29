@@ -1,7 +1,6 @@
 @import url('./global.css');
 
 .profile-page {
-    max-width: 1200px;
     margin: 0;
     padding: 0;
 }
@@ -66,7 +65,6 @@
     display: grid;
     grid-template-columns: 320px 1fr;
     gap: 20px;
-    align-items: start;
 }
 
 .profile-left-column {
@@ -578,203 +576,159 @@
     }
 }
 
-/* Планшеты и небольшие ноутбуки */
 @media (max-width: 1024px) {
   .profile-layout {
     grid-template-columns: 280px 1fr;
-    gap: 16px;
-  }
-
-  .profile-avatar-wrapper {
-    width: 120px;
-    height: 120px;
-  }
-
-  .profile-avatar-initials {
-    font-size: 38px;
   }
 
   .profile-page-title {
-    font-size: 22px;
+    font-size: 20px;
   }
 }
 
-/* Мобильные и вертикальные планшеты */
 @media (max-width: 768px) {
-  .profile-page {
-    padding: 0 16px;
-  }
-  
   .profile-layout {
     grid-template-columns: 1fr;
-    gap: 24px;
   }
 
   .profile-left-column {
     position: static;
   }
 
-  .profile-left-column .card {
-    padding: 20px;
-  }
-
-  .profile-avatar-wrapper {
-    width: 120px;
-    height: 120px;
-  }
-
-  .profile-avatar-initials {
-    font-size: 38px;
-  }
-
   .profile-page-title {
     font-size: 20px;
-    margin-left: 0;
-    padding: 0 4px;
   }
 
-  /* Увеличенные кнопки для удобства нажатия */
-  .profile-save-button,
-  .profile-password-button,
-  .profile-logout-all-button {
-    min-height: 48px;
-    font-size: 15px;
-  }
-
-  .profile-session-logout-btn {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .profile-message {
-    margin-left: 0;
-    margin-right: 0;
-  }
-}
-
-/* Маленькие мобильные телефоны (480px) */
-@media (max-width: 480px) {
-  .profile-page {
-    padding: 0 12px;
-  }
-  
-  .profile-page-title {
-    font-size: 18px;
-    margin-bottom: 16px;
+  .profile-left-column .card {
+    padding: 16px;
   }
 
   .profile-avatar-wrapper {
-    width: 100px;
-    height: 100px;
-  }
-
-  .profile-avatar-initials {
-    font-size: 32px;
-  }
-
-  .profile-name {
-    font-size: 18px;
+    width: 110px;
+    height: 110px;
   }
 
   .profile-form-title {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .profile-save-button,
   .profile-password-button,
   .profile-logout-all-button {
-    padding: 12px 20px;
-    font-size: 14px;
-    min-height: 48px;
-  }
-
-  /* Адаптив для списка сессий */
-  .profile-session-item {
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 12px;
-  }
-
-  .profile-session-info {
-    flex: 1 1 100%;
-  }
-
-  .profile-session-date {
-    font-size: 12px;
-    order: 2;
-  }
-  
-  .profile-session-current {
-    order: 1;
-  }
-  
-  .profile-session-logout-btn {
-    order: 3;
-    margin-left: auto;
-  }
-
-  .profile-sessions-list {
-    max-height: 260px;
-  }
-  
-  .profile-info-value {
-    font-size: 15px;
+    min-height: 44px;
+    font-size: 13px;
   }
 }
 
-/* Очень маленькие телефоны (375px) */
+@media (max-width: 480px) {
+  .profile-page-title {
+    font-size: 18px;
+  }
+
+  .profile-avatar-wrapper {
+    width: 95px;
+    height: 95px;
+  }
+
+  .profile-name {
+    font-size: 16px;
+  }
+
+  .profile-role {
+    font-size: 12px;
+  }
+
+  .profile-input {
+    font-size: 13px;
+  }
+
+  .profile-save-button,
+  .profile-password-button,
+  .profile-logout-all-button {
+    font-size: 11px;
+    min-height: 36px;
+  }
+
+  .profile-session-item {
+    padding: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
 @media (max-width: 375px) {
   .profile-avatar-wrapper {
-    width: 80px;
-    height: 80px;
+    width: 85px;
+    height: 85px;
   }
 
   .profile-avatar-initials {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .profile-page-title {
-    font-size: 16px;
-  }
-
-  .profile-name {
     font-size: 16px;
   }
 
   .profile-form-title {
     font-size: 15px;
   }
-  
-  .profile-input {
-    font-size: 16px; /* Предотвращает масштабирование на iOS */
+
+  .profile-info-value {
+    font-size: 12px;
+  }
+
+  .profile-session-device {
+    font-size: 11px;
   }
 }
 
-/* Экстремально маленькие (320px) */
 @media (max-width: 320px) {
+  .profile-layout {
+    gap: 12px;
+  }
+
   .profile-avatar-wrapper {
-    width: 70px;
-    height: 70px;
+    width: 72px;
+    height: 72px;
   }
 
   .profile-avatar-initials {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .profile-page-title {
-    font-size: 15px;
+    font-size: 14px;
+  }
+
+  .profile-form-title {
+    font-size: 14px;
+  }
+
+  .profile-input {
+    font-size: 12px;
   }
 
   .profile-save-button,
   .profile-password-button,
   .profile-logout-all-button {
-    font-size: 13px;
-    padding: 10px 16px;
-    min-height: 44px;
+    font-size: 10px;
+    min-height: 28px;
+    padding: 8px 10px;
+  }
+
+  .profile-session-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+
+  .profile-session-date {
+    font-size: 10px;
   }
 }
 
-/* Ландшафтная ориентация на мобильных */
 @media (max-width: 768px) and (orientation: landscape) {
   .profile-layout {
     gap: 16px;
@@ -802,7 +756,6 @@
   }
 }
 
-/* Сенсорные устройства (улучшение тактильного отклика) */
 @media (hover: none) and (pointer: coarse) {
   .profile-save-button:active,
   .profile-password-button:active,
@@ -828,4 +781,11 @@
   .profile-password-toggle {
     -webkit-tap-highlight-color: transparent;
   }
+}
+
+.profile-avatar-wrapper,
+.profile-save-button,
+.profile-password-button,
+.profile-logout-all-button {
+  touch-action: manipulation;
 }

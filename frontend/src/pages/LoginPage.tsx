@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -19,7 +20,6 @@ const LoginPage = () => {
     setLoginError('');
     let hasError = false;
 
-    // проверка почты
     if (!email) {
       setEmailError('Введите email');
       hasError = true;
@@ -28,7 +28,6 @@ const LoginPage = () => {
       hasError = true;
     }
 
-    // проверка пароля
     if (!password) {
       setPasswordError('Введите пароль');
       hasError = true;
@@ -37,7 +36,6 @@ const LoginPage = () => {
       hasError = true;
     }
 
-    // если нет ошибок формата - вызываем API
     if (!hasError) {
       try {
         const data = await login(email, password);
@@ -93,12 +91,24 @@ const LoginPage = () => {
               <label>Пароль</label>
               <div className="input-wrapper">
                 <input
-                  type="password" 
+                  type={showPassword ? 'text' : 'password'} 
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className={passwordError ? 'error-input' : ''}
                 />
+                <button
+                  type="button"
+                  className="login-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8s3-5 6-5 6 5 6 5-3 5-6 5-6-5-6-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3"/></svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8s3-5 6-5 6 5 6 5-3 5-6 5-6-5-6-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M4 4l8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                  )}
+                </button>
                 {passwordError && (
                   <div className="error-message-top-right">
                     {passwordError}
@@ -135,11 +145,11 @@ const LoginPage = () => {
           <p>Автоматическое распознавание, классификация и маршрутизация входящих документов с использованием искусственного интеллекта</p>
         </div>
         
-        <div className="list">
+        <ul className="list">
           <li>Автоклассификация документов</li>
           <li>Интеллектуальная маршрутизация</li>
           <li>Аналитика в реальном времени</li>
-        </div>
+        </ul>
       </div>
     </div>
   );
