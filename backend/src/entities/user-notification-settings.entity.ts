@@ -57,6 +57,9 @@ export class UserNotificationSettings {
     @Column({ name: 'reference_deleted', default: true })
     referenceDeleted!: boolean;
 
+    @Column({ name: 'admin_message', default: true })
+    adminMessage!: boolean;
+
     @Column({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     updatedAt!: Date;
 

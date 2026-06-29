@@ -205,6 +205,7 @@ CREATE TABLE user_notification_settings (
     document_deleted BOOLEAN DEFAULT FALSE,
     reference_created BOOLEAN DEFAULT TRUE,
     reference_deleted BOOLEAN DEFAULT TRUE,
+    admin_message BOOLEAN DEFAULT TRUE,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -280,7 +281,8 @@ CREATE TABLE notifications (
         'new_login',
         'document_deleted',
         'reference_created',
-        'reference_deleted'
+        'reference_deleted',
+        'admin_message'
     ))
 );
 
@@ -384,7 +386,7 @@ CREATE TRIGGER trg_ocr_search_vector
 
 INSERT INTO roles (name, code) VALUES 
 ('Администратор', 'admin'),
-('Пользователь', 'user');
+('Оператор', 'operator');
 
 INSERT INTO departments (name, code, is_active) VALUES 
 ('Управление', 'management', TRUE),
@@ -414,13 +416,13 @@ INSERT INTO document_categories (name, code, description) VALUES
 ('Финансовые документы', 'financial_docs', 'Документы, связанные с финансами и оплатами');
 
 INSERT INTO users (full_name, email, password_hash, role_id, department_id, status, is_blocked) VALUES 
-('Москалева Александра', 'alexandra@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', 1, 1, 'active', FALSE),
-('Нехланова Алина', 'alina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 5, 'active', FALSE),
-('Мельникова Виолетта', 'violetta@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 2, 'active', FALSE),
-('Ефанов Егор', 'egor@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 2, 'active', FALSE),
-('Мейсарош Карина', 'karina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 4, 'active', FALSE),
-('Мотовилова Мария', 'maria.m@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', 2, 6, 'active', FALSE),
-('Начинова Мария', 'maria.n@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', 1, 1, 'active', FALSE);
+('Москалева Александра', 'alexandra@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', (SELECT id FROM roles WHERE code = 'admin'), (SELECT id FROM departments WHERE code = 'management'), 'active', FALSE),
+('Начинова Мария', 'maria.n@umny-kan.ru', '$2b$10$G70RruFQNq18oV58y7MLoeCtiIxA2YmYRNWGrXwhML3h80cia18V6', (SELECT id FROM roles WHERE code = 'admin'), (SELECT id FROM departments WHERE code = 'management'), 'active', FALSE),
+('Нехланова Алина', 'alina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', (SELECT id FROM roles WHERE code = 'operator'), (SELECT id FROM departments WHERE code = 'legal'), 'active', FALSE),
+('Мельникова Виолетта', 'violetta@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', (SELECT id FROM roles WHERE code = 'operator'), (SELECT id FROM departments WHERE code = 'tech'), 'active', FALSE),
+('Ефанов Егор', 'egor@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', (SELECT id FROM roles WHERE code = 'operator'), (SELECT id FROM departments WHERE code = 'tech'), 'active', FALSE),
+('Мейсарош Карина', 'karina@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', (SELECT id FROM roles WHERE code = 'operator'), (SELECT id FROM departments WHERE code = 'procurement'), 'active', FALSE),
+('Мотовилова Мария', 'maria.m@umny-kan.ru', '$2b$10$Ipreo3ft1R7xgknwKeAl.uhN/wUQXDqqgfe4YGLB4MCYaBSyy9j7G', (SELECT id FROM roles WHERE code = 'operator'), (SELECT id FROM departments WHERE code = 'hr'), 'active', FALSE);
 
 INSERT INTO documents (registration_number, title, received_date, document_type_id, category_id, sender_name, current_status, confidence_score, created_by, verified_at, routed_at, rejected_at, current_department_id) VALUES 
 ('ВХ-2026-001', 'Договор на поставку оборудования', '2026-04-01', 1, 3, 'ООО "ТехноПоставка"', 'in_review', 0.95, 1, NULL, NULL, NULL, 4),
@@ -518,21 +520,21 @@ INSERT INTO document_classifications (document_id, type_id, category_id, type_co
 INSERT INTO ai_settings (provider_code, model_name, api_key, base_url, is_active) VALUES
 ('deepseek', 'deepseek/deepseek-chat', '4558000b00d96913b37183c820b702dc:9b3d3789052db89c280d580d7b3d4c4adfaa6a90ed8356b407e67883d9a60f595b0cf04b586cfea26a76a62a199180d888d54d4bb5bd21b7117223e4df593feaba108edbff83660b1078b8ed02253af8', 'https://openrouter.ai/api/v1', TRUE);
 
-INSERT INTO user_notification_settings (user_id, new_document, document_ready, extract_error, pending_verification, routed_to_department, rejected, verified, low_confidence, password_changed, profile_updated, settings_changed, new_login, comment_added, document_deleted) VALUES
-(1, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE),
-(2, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE),
-(3, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE),
-(4, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE),
-(5, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
-(6, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE),
-(7, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
+INSERT INTO user_notification_settings (user_id, new_document, document_ready, extract_error, pending_verification, routed_to_department, rejected, verified, low_confidence, password_changed, profile_updated, settings_changed, new_login, comment_added, document_deleted, admin_message) VALUES
+(1, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE),
+(2, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+(3, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE),
+(4, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, TRUE),
+(5, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE),
+(6, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+(7, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, TRUE);
 
 INSERT INTO user_interface_settings (user_id, compact_view, show_confidence, default_page_limit, theme) VALUES
 (1, FALSE, TRUE, 20, 'light'),
-(2, FALSE, TRUE, 10, 'light'),
-(3, TRUE, FALSE, 10, 'light'),
-(4, FALSE, TRUE, 50, 'dark'),
-(5, FALSE, TRUE, 20, 'light'),
+(2, FALSE, TRUE, 20, 'light'),
+(3, FALSE, TRUE, 10, 'light'),
+(4, TRUE, FALSE, 10, 'light'),
+(5, FALSE, TRUE, 50, 'dark'),
 (6, FALSE, TRUE, 10, 'light'),
 (7, FALSE, TRUE, 20, 'light');
 
@@ -546,9 +548,10 @@ INSERT INTO login_history (user_id, ip_address, user_agent, login_time) VALUES
 (7, '192.168.1.100', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0', '2026-04-17 08:00:00');
 
 INSERT INTO route_templates (name, description, department_ids, is_active) VALUES
+('Финансовые документы → Бухгалтерия', 'Автоматическая маршрутизация финансовых документов', ARRAY[3], TRUE),
+('Договоры → Юридический отдел', 'Маршрутизация договоров на юридическую проверку', ARRAY[5], TRUE),
+('Техническая документация → Технический отдел', 'Маршрутизация технических документов', ARRAY[2], TRUE),
 ('Стандартная проверка договора', 'Юридический отдел → Отдел закупок', '{5, 4}', TRUE),
-('Финансовый документ', 'Бухгалтерия', '{3}', TRUE),
-('Техническое обращение', 'Технический отдел', '{2}', TRUE),
 ('Кадровый вопрос', 'Отдел кадров', '{6}', TRUE),
 ('Административная переписка', 'Управление → Юридический отдел', '{1, 5}', TRUE),
 ('Предписание контролирующего органа', 'Юридический отдел → Технический отдел → Управление', '{5, 2, 1}', TRUE);
@@ -587,9 +590,14 @@ INSERT INTO notifications (user_id, type, title, message, document_id, is_read, 
 (7, 'routed', 'Документ направлен в отдел', 'ВХ-2026-015 направлен в Бухгалтерию', 15, TRUE, '2026-04-11 14:00:00');
 
 INSERT INTO system_settings (key, value, description) VALUES
-('upload_limits', '{"maxFileSizeMB": 50, "maxFilesPerBatch": 15}', 'Ограничения загрузки файлов'),
-('allowed_formats', '{"formats": ["pdf", "docx", "txt", "xlsx", "jpg", "png", "tiff"]}', 'Разрешённые форматы файлов'),
-('auto_backup', '{"enabled": false, "time": "03:00", "keepCopies": 7}', 'Настройки автоматического бэкапа'),
+('upload.max_file_size_mb', '"50"', 'Максимальный размер файла в МБ'),
+('upload.max_files_per_batch', '"15"', 'Максимум файлов за одну загрузку'),
+('upload.allowed_formats', '["pdf","docx","txt","xlsx","jpg","jpeg","png","tiff"]', 'Разрешённые форматы файлов'),
+('backup.enabled', '"false"', 'Автоматический ежедневный бэкап'),
+('backup.time', '"03:00"', 'Время запуска авто-бэкапа'),
+('backup.keep_copies', '"7"', 'Количество хранимых копий бэкапа'),
+('backup.last_backup', '"null"', 'Дата и время последнего бэкапа'),
+('backup.last_backup_size_kb', '"0"', 'Размер последнего бэкапа в КБ'),
 ('cleanup_rules', '{"documentsOlderMonths": 12, "notificationsOlderMonths": 3}', 'Правила очистки данных'),
 ('logging_level', '{"level": "info"}', 'Уровень логирования');
 
