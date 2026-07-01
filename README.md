@@ -42,13 +42,13 @@
   - npm install
   - cp .env.example .env
   - npm run start:dev
-Бэкенд доступен на http://localhost:3000.
+  - Бэкенд доступен на http://localhost:3000
 
 4. Запуск фронтенда:
   - cd frontend
   - npm install
   - npm run dev
-Фронтенд доступен на http://localhost:3001.
+  - Фронтенд доступен на http://localhost:3001
 
 ## Тестовые данные для входа
 
