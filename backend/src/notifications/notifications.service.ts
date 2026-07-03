@@ -1,3 +1,4 @@
+// notifications.service.ts
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
@@ -66,7 +67,7 @@ export class NotificationsService {
                 'admin_message': settings.adminMessage,
             };
 
-            if (settingsMap[type] === false) {
+            if (type !== 'admin_message' && settingsMap[type] === false) {
                 return;
             }
         }
