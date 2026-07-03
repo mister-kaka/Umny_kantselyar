@@ -50,6 +50,12 @@ export class SettingsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Get('upload-info')
+  async getUploadInfo() {
+    return this.settingsService.getUploadInfo();
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Get('notifications')
   async getNotificationSettings(@Req() req: RequestWithUser) {
     return this.settingsService.getNotificationSettings(req.user.userId);

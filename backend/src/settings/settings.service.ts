@@ -17,6 +17,8 @@ import { DocumentClassification } from '../entities/document-classification.enti
 import { DocumentAiResult } from '../entities/document-ai-result.entity';
 import { DocumentComment } from '../entities/document-comment.entity';
 import { Notification } from '../entities/notification.entity';
+import { RouteTemplate } from '../entities/route-template.entity';
+import { SystemSettings } from '../entities/system-settings.entity';
 import { LoginHistory } from '../entities/login-history.entity';
 import { AuditLog } from '../entities/audit-log.entity';
 import { UserSession } from '../entities/user-session.entity';
@@ -67,6 +69,10 @@ export class SettingsService {
     private readonly commentRepository: Repository<DocumentComment>,
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
+    @InjectRepository(RouteTemplate)
+    private readonly routeTemplateRepository: Repository<RouteTemplate>,
+    @InjectRepository(SystemSettings)
+    private readonly systemSettingsRepository: Repository<SystemSettings>,
     @InjectRepository(LoginHistory)
     private readonly loginHistoryRepository: Repository<LoginHistory>,
     @InjectRepository(AuditLog)
@@ -77,6 +83,41 @@ export class SettingsService {
     private readonly auditLogService: AuditLogService,
     private readonly notificationsService: NotificationsService,
   ) {}
+
+  private async insertWithIds(repository: Repository<any>, data: any[]): Promise<void> {
+    const tableName = repository.metadata.tableName;
+    const columns = repository.metadata.columns;
+    
+    const columnNames = columns.map(c => `"${c.databaseName}"`).join(', ');
+    
+    for (const row of data) {
+      const values: any[] = [];
+      for (const col of columns) {
+        let val = row[col.propertyName];
+        if (val === undefined) val = null;
+        
+        if (col.type === 'vector' && Array.isArray(val)) {
+          val = `[${val.join(',')}]`;
+        }
+        if (col.type === 'text' && col.isArray && Array.isArray(val)) {
+          val = `{${val.map(v => `"${v}"`).join(',')}}`;
+        }
+        if (col.type === 'jsonb' && val !== null) {
+          val = JSON.stringify(val);
+        }
+        
+        values.push(val);
+      }
+      const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
+      const query = `INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders})`;
+      await repository.query(query, values);
+    }
+    
+    const maxId = Math.max(...data.map(r => r.id || 0));
+    if (maxId > 0) {
+      await repository.query(`SELECT setval('${tableName}_id_seq', ${maxId})`);
+    }
+  }
 
   async getAiSettings(): Promise<AiSettingsResponseDto> {
     try {
@@ -347,6 +388,28 @@ export class SettingsService {
         message: errorMessage,
       });
       return { status: 'error', message: 'Сервер недоступен' };
+    }
+  }
+
+  async getUploadInfo() {
+    try {
+      const settings = await this.systemSettingsRepository.find();
+      const result: Record<string, any> = {};
+      settings.forEach(s => { result[s.key] = s.value; });
+
+      return {
+        maxFileSizeMb: parseInt(result['upload.max_file_size_mb'] || '50', 10),
+        maxFilesPerBatch: parseInt(result['upload.max_files_per_batch'] || '15', 10),
+        allowedFormats: Array.isArray(result['upload.allowed_formats'])
+          ? result['upload.allowed_formats']
+          : ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff'],
+      };
+    } catch {
+      return {
+        maxFileSizeMb: 50,
+        maxFilesPerBatch: 15,
+        allowedFormats: ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff'],
+      };
     }
   }
 
@@ -668,6 +731,8 @@ export class SettingsService {
         comments: await this.commentRepository.find(),
         notifications: await this.notificationRepository.find(),
         aiSettings: await this.aiSettingRepository.find(),
+        routeTemplates: await this.routeTemplateRepository.find(),
+        systemSettings: await this.systemSettingsRepository.find(),
       };
 
       await this.auditLogService.log(userId, 'export_data', null, {});
@@ -704,81 +769,84 @@ export class SettingsService {
     try {
       const counts: Record<string, number> = {};
 
+      if (data.routeTemplates) await this.routeTemplateRepository.query(`DELETE FROM route_templates`);
+      if (data.notifications) await this.notificationRepository.query(`DELETE FROM notifications`);
+      if (data.comments) await this.commentRepository.query(`DELETE FROM document_comments`);
+      if (data.aiResults) await this.aiResultRepository.query(`DELETE FROM document_ai_results`);
+      if (data.classifications) await this.classificationRepository.query(`DELETE FROM document_classifications`);
+      if (data.ocrResults) await this.ocrResultRepository.query(`DELETE FROM ocr_results`);
+      if (data.documentFiles) await this.documentFileRepository.query(`DELETE FROM document_files`);
+      if (data.documentSources) await this.documentSourceRepository.query(`DELETE FROM document_sources`);
+      if (data.documentRoutes) await this.documentRouteRepository.query(`DELETE FROM document_routes`);
+      if (data.documents) await this.documentRepository.query(`DELETE FROM documents`);
+      
+      if (data.departments) {
+        await this.userRepository.query(`UPDATE users SET department_id = NULL`);
+        await this.departmentRepository.query(`DELETE FROM departments`);
+      }
+      if (data.documentTypes) await this.documentTypeRepository.query(`DELETE FROM document_types`);
+      if (data.documentCategories) await this.documentCategoryRepository.query(`DELETE FROM document_categories`);
+      if (data.systemSettings) await this.systemSettingsRepository.query(`DELETE FROM system_settings`);
+      if (data.aiSettings) await this.aiSettingRepository.query(`DELETE FROM ai_settings`);
+
       if (data.documentTypes) {
-        await this.documentTypeRepository.clear();
-        await this.documentTypeRepository.save(data.documentTypes);
+        await this.insertWithIds(this.documentTypeRepository, data.documentTypes);
         counts.documentTypes = data.documentTypes.length;
       }
-
       if (data.documentCategories) {
-        await this.documentCategoryRepository.clear();
-        await this.documentCategoryRepository.save(data.documentCategories);
+        await this.insertWithIds(this.documentCategoryRepository, data.documentCategories);
         counts.documentCategories = data.documentCategories.length;
       }
-
       if (data.departments) {
-        await this.departmentRepository.clear();
-        await this.departmentRepository.save(data.departments);
+        await this.insertWithIds(this.departmentRepository, data.departments);
         counts.departments = data.departments.length;
       }
-
       if (data.documents) {
-        await this.documentRepository.clear();
-        await this.documentRepository.save(data.documents);
+        await this.insertWithIds(this.documentRepository, data.documents);
         counts.documents = data.documents.length;
       }
-
       if (data.documentRoutes) {
-        await this.documentRouteRepository.clear();
-        await this.documentRouteRepository.save(data.documentRoutes);
+        await this.insertWithIds(this.documentRouteRepository, data.documentRoutes);
         counts.documentRoutes = data.documentRoutes.length;
       }
-
       if (data.documentSources) {
-        await this.documentSourceRepository.clear();
-        await this.documentSourceRepository.save(data.documentSources);
+        await this.insertWithIds(this.documentSourceRepository, data.documentSources);
         counts.documentSources = data.documentSources.length;
       }
-
       if (data.documentFiles) {
-        await this.documentFileRepository.clear();
-        await this.documentFileRepository.save(data.documentFiles);
+        await this.insertWithIds(this.documentFileRepository, data.documentFiles);
         counts.documentFiles = data.documentFiles.length;
       }
-
       if (data.ocrResults) {
-        await this.ocrResultRepository.clear();
-        await this.ocrResultRepository.save(data.ocrResults);
+        await this.insertWithIds(this.ocrResultRepository, data.ocrResults);
         counts.ocrResults = data.ocrResults.length;
       }
-
       if (data.classifications) {
-        await this.classificationRepository.clear();
-        await this.classificationRepository.save(data.classifications);
+        await this.insertWithIds(this.classificationRepository, data.classifications);
         counts.classifications = data.classifications.length;
       }
-
       if (data.aiResults) {
-        await this.aiResultRepository.clear();
-        await this.aiResultRepository.save(data.aiResults);
+        await this.insertWithIds(this.aiResultRepository, data.aiResults);
         counts.aiResults = data.aiResults.length;
       }
-
       if (data.comments) {
-        await this.commentRepository.clear();
-        await this.commentRepository.save(data.comments);
+        await this.insertWithIds(this.commentRepository, data.comments);
         counts.comments = data.comments.length;
       }
-
       if (data.notifications) {
-        await this.notificationRepository.clear();
-        await this.notificationRepository.save(data.notifications);
+        await this.insertWithIds(this.notificationRepository, data.notifications);
         counts.notifications = data.notifications.length;
       }
-
+      if (data.routeTemplates) {
+        await this.insertWithIds(this.routeTemplateRepository, data.routeTemplates);
+        counts.routeTemplates = data.routeTemplates.length;
+      }
+      if (data.systemSettings) {
+        await this.insertWithIds(this.systemSettingsRepository, data.systemSettings);
+        counts.systemSettings = data.systemSettings.length;
+      }
       if (data.aiSettings) {
-        await this.aiSettingRepository.clear();
-        await this.aiSettingRepository.save(data.aiSettings);
+        await this.insertWithIds(this.aiSettingRepository, data.aiSettings);
         counts.aiSettings = data.aiSettings.length;
       }
 
@@ -815,9 +883,9 @@ export class SettingsService {
   async getAbout(): Promise<{ version: string }> {
     try {
       const packageJson = require('../../package.json');
-      return { version: packageJson.version || '1.5.0' };
+      return { version: packageJson.version || '1.6.0' };
     } catch {
-      return { version: '1.5.0' };
+      return { version: '1.6.0' };
     }
   }
 }
