@@ -4,13 +4,14 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useSidebar } from "../contexts/SidebarContexts";
 import "../styles/Sidebar.css";
 import { getThemedIcon } from "../utils/getThemedIcon";
-import { getAbout } from "../services/api";
+import { getAbout, getProfile } from "../services/api";
 
 const Sidebar = () => {
   const { collapsed, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const [themeKey, setThemeKey] = useState(0);
   const [version, setVersion] = useState("1.5.0");
+  const [role, setRole] = useState<string>("");
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -29,6 +30,14 @@ const Sidebar = () => {
       .catch(() => setVersion("1.5.0"));
   }, []);
 
+  useEffect(() => {
+    getProfile()
+      .then(profile => {
+        setRole(profile.role);
+      })
+      .catch(() => {});
+  }, []);
+
   const menuItems = [
     {path: "/dashboard/main", label: "Главная", icon: "/icons/sidebar/MainMenu.png", iconActive: "/icons/sidebar/MainMenu_active.png", alt: "🏠"},
     {path: "/dashboard/incoming", label: "Входящие документы", icon: "/icons/sidebar/Add_document.png", iconActive: "/icons/sidebar/Add_document_active.png", alt: "📥"},
@@ -40,6 +49,16 @@ const Sidebar = () => {
     {path: "/dashboard/settings", label: "Настройки", icon: "/icons/sidebar/Settings.png", iconActive: "/icons/sidebar/Settings_active.png", alt: "⚙️"},
     {path: "/dashboard/notifications", label: "Уведомления", icon: "/icons/sidebar/Notifications.png", iconActive: "/icons/sidebar/Notifications_active.png", alt: "🔔"},
   ];
+
+  if (role === 'Администратор') {
+    menuItems.push({
+      path: "/dashboard/admin",
+      label: "Администрирование",
+      icon: "/icons/sidebar/Admin.png",
+      iconActive: "/icons/sidebar/Admin_active.png",
+      alt: "🛡️"
+    });
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');

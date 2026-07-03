@@ -29,6 +29,9 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
     new_login: "Новый вход",
     comment_added: "Комментарий",
     document_deleted: "Документ удалён",
+    reference_created: "Справочник изменён",
+    reference_deleted: "Справочник изменён",
+    admin_message: "Сообщение администратора",
 };
 
 const formatTimeAgo = (timeString: string): string => {
@@ -385,6 +388,19 @@ const Header = () => {
                             <img key={themeKey} src={getThemedIcon("/icons/sidebar/Settings.png")} className="Casual-icon" alt="Настройки" />
                             <span>Настройки</span>
                         </button>
+
+                        {profile?.role === 'Администратор' && (
+                            <button
+                                className="profile-dropdown-item"
+                                onClick={() => {
+                                    navigate('/dashboard/admin');
+                                    setShowProfileMenu(false);
+                                }}
+                            >
+                                <img key={themeKey} src={getThemedIcon("/icons/sidebar/Admin.png")} className="Casual-icon" alt="Администрирование" />
+                                <span>Администрирование</span>
+                            </button>
+                        )}
 
                         <div className="profile-dropdown-divider"></div>
 
