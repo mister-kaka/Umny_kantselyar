@@ -32,6 +32,7 @@ export class AdminController {
         @Query('action') action?: string,
         @Query('dateFrom') dateFrom?: string,
         @Query('dateTo') dateTo?: string,
+        @Query('userName') userName?: string,
     ) {
         return this.adminService.getAuditLog(
             page ? parseInt(page, 10) : 1,
@@ -40,6 +41,7 @@ export class AdminController {
             action,
             dateFrom,
             dateTo,
+            userName,
         );
     }
 
@@ -155,14 +157,24 @@ export class AdminController {
         @Body('sections') sections: string,
         @Req() req: RequestWithUser,
     ) {
+        console.log('=== IMPORT DEBUG ===');
+        console.log('file exists:', !!file);
+        console.log('file?.buffer exists:', !!(file?.buffer));
+        console.log('file?.originalname:', file?.originalname);
+        console.log('file?.size:', file?.size);
+        console.log('sections:', sections);
+
         if (!file) {
             return { message: 'Файл обязателен', statusCode: 400 };
         }
+
         try {
             const data = JSON.parse(file.buffer.toString());
             const sectionsList = sections ? JSON.parse(sections) : [];
             return this.adminService.importSelected(data, sectionsList, req.user.userId);
         } catch (error) {
+            console.log('=== IMPORT ERROR ===');
+            console.log(error);
             return { message: 'Неверный формат файла. Ожидается JSON.', statusCode: 400 };
         }
     }

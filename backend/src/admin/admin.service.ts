@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, LessThan } from 'typeorm';
+import { Repository, LessThan } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -67,6 +67,7 @@ export class AdminService {
     async getAuditLog(
         page: number, limit: number, userId?: number,
         action?: string, dateFrom?: string, dateTo?: string,
+        userName?: string,
     ) {
         try {
             const query = this.auditLogRepository.createQueryBuilder('log');
@@ -76,6 +77,13 @@ export class AdminService {
             if (dateFrom) query.andWhere('log.created_at >= :dateFrom', { dateFrom });
             if (dateTo) query.andWhere('log.created_at <= :dateTo', { dateTo: dateTo + 'T23:59:59.999Z' });
 
+            if (userName) {
+                query.andWhere(
+                    'log.user_id IN (SELECT u.id FROM users u WHERE u.full_name ILIKE :search OR u.email ILIKE :search)',
+                    { search: `%${userName}%` }
+                );
+            }
+
             const [items, total] = await query
                 .orderBy('log.created_at', 'DESC')
                 .skip((page - 1) * limit)
@@ -83,12 +91,15 @@ export class AdminService {
                 .getManyAndCount();
 
             const userIds = [...new Set(items.map(item => item.userId))];
-            const users = await this.userRepository
-                .createQueryBuilder('user')
-                .where('user.id IN (:...ids)', { ids: userIds })
-                .select(['user.id', 'user.fullName', 'user.avatarUrl'])
-                .getMany();
-            const userMap = new Map(users.map(u => [u.id, u]));
+            let userMap = new Map<number, any>();
+            if (userIds.length > 0) {
+                const users = await this.userRepository
+                    .createQueryBuilder('user')
+                    .where('user.id IN (:...ids)', { ids: userIds })
+                    .select(['user.id', 'user.fullName', 'user.avatarUrl'])
+                    .getMany();
+                userMap = new Map(users.map(u => [u.id, u]));
+            }
 
             return {
                 items: items.map(item => ({
@@ -156,7 +167,6 @@ export class AdminService {
             const user = await this.userRepository.findOne({ where: { id } });
             if (!user) throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
 
-            const oldRole = user.roleId;
             user.roleId = roleEntity.id;
             await this.userRepository.save(user);
 
@@ -289,7 +299,7 @@ export class AdminService {
                 id,
                 'password_changed',
                 'Пароль сброшен администратором',
-                `Администратор сбросил пароль для вашей учётной записи.\n\nАдминистратор: ${adminName}\nВремя: ${now}\n\nИспользуйте новый пароль для входа в систему. Если это были не вы — немедленно обратитесь к администратору.`,
+                `Администратор сбросил пароль для вашей учётной записи.\n\nАдминистратор: ${adminName}\nВремя: ${now}\n\nИспользуйте новый пароль для входа в систему. Если это были не вы - немедленно обратитесь к администратору.`,
             );
 
             return { message: 'Пароль сброшен' };
@@ -407,6 +417,11 @@ export class AdminService {
                     createdAt: LessThan(cutoffDate),
                 });
                 count = result.affected || 0;
+            } else if (dto.type === 'audit') {
+                const result = await this.auditLogRepository.delete({
+                    createdAt: LessThan(cutoffDate),
+                });
+                count = result.affected || 0;
             }
 
             await this.auditLogService.log(adminId, 'cleanup', null, { type: dto.type, olderThanMonths: dto.olderThanMonths, deletedCount: count });
@@ -414,20 +429,23 @@ export class AdminService {
             const admin = await this.userRepository.findOne({ where: { id: adminId }, select: ['fullName'] });
             const adminName = admin?.fullName || 'Администратор';
             const now = this.getMoscowTime();
-            const typeName = dto.type === 'documents' ? 'документов' : 'уведомлений';
+            const typeName = dto.type === 'documents' ? 'документов' : dto.type === 'notifications' ? 'уведомлений' : 'записей журнала';
 
-            const admins = await this.userRepository.find({
-                where: { roleId: (await this.roleRepository.findOne({ where: { code: 'admin' } }))?.id },
-                select: ['id'],
-            });
+            const adminRole = await this.roleRepository.findOne({ where: { code: 'admin' } });
+            if (adminRole) {
+                const admins = await this.userRepository.find({
+                    where: { roleId: adminRole.id },
+                    select: ['id'],
+                });
 
-            for (const adminUser of admins) {
-                await this.notificationsService.createNotification(
-                    adminUser.id,
-                    'admin_message',
-                    'Выполнена очистка данных',
-                    `Администратор выполнил очистку данных.\n\nТип: ${typeName}\nСтарше: ${dto.olderThanMonths} месяцев\nУдалено записей: ${count}\nАдминистратор: ${adminName}\nВремя: ${now}`,
-                );
+                for (const adminUser of admins) {
+                    await this.notificationsService.createNotification(
+                        adminUser.id,
+                        'admin_message',
+                        'Выполнена очистка данных',
+                        `Администратор выполнил очистку данных.\n\nТип: ${typeName}\nСтарше: ${dto.olderThanMonths} месяцев\nУдалено записей: ${count}\nАдминистратор: ${adminName}\nВремя: ${now}`,
+                    );
+                }
             }
 
             return { message: `Удалено ${count} записей` };
@@ -521,17 +539,45 @@ export class AdminService {
             for (const section of sections) {
                 switch (section) {
                     case 'documents':
-                        if (data.documents) { await this.documentRepository.clear(); await this.documentRepository.save(data.documents); counts.documents = data.documents.length; }
+                        if (data.documents) {
+                            await this.documentRouteRepository.createQueryBuilder().delete().execute();
+                            await this.documentSourceRepository.createQueryBuilder().delete().execute();
+                            await this.documentFileRepository.createQueryBuilder().delete().execute();
+                            await this.ocrResultRepository.createQueryBuilder().delete().execute();
+                            await this.classificationRepository.createQueryBuilder().delete().execute();
+                            await this.aiResultRepository.createQueryBuilder().delete().execute();
+                            await this.commentRepository.createQueryBuilder().delete().execute();
+                            await this.documentRepository.createQueryBuilder().delete().execute();
+                            await this.documentRepository.save(data.documents);
+                            counts.documents = data.documents.length;
+                        }
                         break;
                     case 'references':
-                        if (data.documentTypes) { await this.documentTypeRepository.clear(); await this.documentTypeRepository.save(data.documentTypes); counts.documentTypes = data.documentTypes.length; }
-                        if (data.documentCategories) { await this.documentCategoryRepository.clear(); await this.documentCategoryRepository.save(data.documentCategories); counts.documentCategories = data.documentCategories.length; }
-                        if (data.departments) { await this.departmentRepository.clear(); await this.departmentRepository.save(data.departments); counts.departments = data.departments.length; }
+                        if (data.documentTypes) {
+                            await this.documentTypeRepository.createQueryBuilder().delete().execute();
+                            await this.documentTypeRepository.save(data.documentTypes);
+                            counts.documentTypes = data.documentTypes.length;
+                        }
+                        if (data.documentCategories) {
+                            await this.documentCategoryRepository.createQueryBuilder().delete().execute();
+                            await this.documentCategoryRepository.save(data.documentCategories);
+                            counts.documentCategories = data.documentCategories.length;
+                        }
+                        if (data.departments) {
+                            await this.departmentRepository.createQueryBuilder().delete().execute();
+                            await this.departmentRepository.save(data.departments);
+                            counts.departments = data.departments.length;
+                        }
                         break;
                     case 'users':
                         if (data.users) {
                             const currentUser = await this.userRepository.findOne({ where: { id: adminId } });
-                            await this.userRepository.clear();
+                            await this.userSessionRepository.createQueryBuilder().delete().execute();
+                            await this.loginHistoryRepository.createQueryBuilder().delete().execute();
+                            await this.notificationRepository.createQueryBuilder().delete().execute();
+                            await this.userNotificationSettingsRepository.createQueryBuilder().delete().execute();
+                            await this.userInterfaceSettingsRepository.createQueryBuilder().delete().execute();
+                            await this.userRepository.createQueryBuilder().delete().execute();
                             if (currentUser) {
                                 await this.userRepository.save(currentUser);
                             }
@@ -543,14 +589,30 @@ export class AdminService {
                         }
                         break;
                     case 'settings':
-                        if (data.aiSettings) { await this.aiSettingRepository.clear(); await this.aiSettingRepository.save(data.aiSettings); counts.aiSettings = data.aiSettings.length; }
-                        if (data.systemSettings) { await this.systemSettingsRepository.clear(); await this.systemSettingsRepository.save(data.systemSettings); counts.systemSettings = data.systemSettings.length; }
+                        if (data.aiSettings) {
+                            await this.aiSettingRepository.createQueryBuilder().delete().execute();
+                            await this.aiSettingRepository.save(data.aiSettings);
+                            counts.aiSettings = data.aiSettings.length;
+                        }
+                        if (data.systemSettings) {
+                            await this.systemSettingsRepository.createQueryBuilder().delete().execute();
+                            await this.systemSettingsRepository.save(data.systemSettings);
+                            counts.systemSettings = data.systemSettings.length;
+                        }
                         break;
                     case 'routes':
-                        if (data.documentRoutes) { await this.documentRouteRepository.clear(); await this.documentRouteRepository.save(data.documentRoutes); counts.documentRoutes = data.documentRoutes.length; }
+                        if (data.documentRoutes) {
+                            await this.documentRouteRepository.createQueryBuilder().delete().execute();
+                            await this.documentRouteRepository.save(data.documentRoutes);
+                            counts.documentRoutes = data.documentRoutes.length;
+                        }
                         break;
                     case 'audit':
-                        if (data.auditLog) { await this.auditLogRepository.clear(); await this.auditLogRepository.save(data.auditLog); counts.auditLog = data.auditLog.length; }
+                        if (data.auditLog) {
+                            await this.auditLogRepository.createQueryBuilder().delete().execute();
+                            await this.auditLogRepository.save(data.auditLog);
+                            counts.auditLog = data.auditLog.length;
+                        }
                         break;
                 }
             }
@@ -574,6 +636,8 @@ export class AdminService {
 
             return { message: 'Данные импортированы', counts };
         } catch (error) {
+            console.log('=== IMPORT ERROR ===');
+            console.log(error);
             throw new HttpException('Ошибка импорта', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -598,24 +662,30 @@ export class AdminService {
 
     async updateBackupConfig(dto: { enabled: boolean; time: string; keepCount: number }, adminId: number) {
         try {
-            await this.updateSystemSettings({ auto_backup_enabled: dto.enabled, auto_backup_time: dto.time, auto_backup_keep_count: dto.keepCount }, adminId);
+            await this.updateSystemSettings(
+                { auto_backup_enabled: dto.enabled, auto_backup_time: dto.time, auto_backup_keep_count: dto.keepCount },
+                adminId
+            );
 
             const admin = await this.userRepository.findOne({ where: { id: adminId }, select: ['fullName'] });
             const adminName = admin?.fullName || 'Администратор';
             const now = this.getMoscowTime();
 
-            const admins = await this.userRepository.find({
-                where: { roleId: (await this.roleRepository.findOne({ where: { code: 'admin' } }))?.id },
-                select: ['id'],
-            });
+            const adminRole = await this.roleRepository.findOne({ where: { code: 'admin' } });
+            if (adminRole) {
+                const admins = await this.userRepository.find({
+                    where: { roleId: adminRole.id },
+                    select: ['id'],
+                });
 
-            for (const adminUser of admins) {
-                await this.notificationsService.createNotification(
-                    adminUser.id,
-                    'admin_message',
-                    'Настройки бэкапа изменены',
-                    `Администратор изменил настройки автоматического резервного копирования.\n\nАвто-бэкап: ${dto.enabled ? 'включён' : 'выключен'}\nВремя запуска: ${dto.time}\nХранить копий: ${dto.keepCount}\nАдминистратор: ${adminName}\nВремя: ${now}`,
-                );
+                for (const adminUser of admins) {
+                    await this.notificationsService.createNotification(
+                        adminUser.id,
+                        'admin_message',
+                        'Настройки бэкапа изменены',
+                        `Администратор изменил настройки автоматического резервного копирования.\n\nАвто-бэкап: ${dto.enabled ? 'включён' : 'выключен'}\nВремя запуска: ${dto.time}\nХранить копий: ${dto.keepCount}\nАдминистратор: ${adminName}\nВремя: ${now}`,
+                    );
+                }
             }
 
             return { message: 'Настройки бэкапа сохранены' };
