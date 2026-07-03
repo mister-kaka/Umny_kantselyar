@@ -38,6 +38,12 @@ import {
   DepartmentDetail,
   RoutingResponse,
   DepartmentDto,
+  AdminAuditLogResponse,
+  AdminUser,
+  AdminUserStats,
+  AdminStats,
+  AdminBackupStatus,
+  AdminNotificationHistoryResponse,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -405,6 +411,16 @@ export const extractText = async (id: number): Promise<ExtractTextResponse> => {
   }
 };
 
+//информация о загрузке
+export const getUploadInfo = async (): Promise<{
+  maxFileSizeMb: number;
+  maxFilesPerBatch: number;
+  allowedFormats: string[];
+}> => {
+  const response = await api.get('/settings/upload-info');
+  return response.data;
+};
+
 //экспорт
 export const exportDocuments = async (filters?: ExportFilters): Promise<Blob> => {
   try {
@@ -636,4 +652,140 @@ export const importData = async (file: File): Promise<{ message: string; counts:
 export const getAbout = async (): Promise<{ version: string }> => {
   const res = await api.get<{ version: string }>('/settings/about');
   return res.data;
+};
+
+//админ-панель
+export const getAdminAuditLog = async (params?: {
+  page?: number;
+  limit?: number;
+  userId?: number;
+  action?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  userName?: string;
+}): Promise<AdminAuditLogResponse> => {
+  const response = await api.get<AdminAuditLogResponse>('/admin/audit-log', { params: params || {} });
+  return response.data;
+};
+
+export const getAdminUsers = async (): Promise<AdminUser[]> => {
+  const response = await api.get<AdminUser[]>('/admin/users');
+  return response.data;
+};
+
+export const getAdminUserStats = async (id: number): Promise<AdminUserStats> => {
+  const response = await api.get<AdminUserStats>(`/admin/users/${id}/stats`);
+  return response.data;
+};
+
+export const updateAdminUserRole = async (id: number, role: string): Promise<{ message: string }> => {
+  const response = await api.put<{ message: string }>(`/admin/users/${id}/role`, { role });
+  return response.data;
+};
+
+export const toggleAdminUserBlock = async (id: number, isBlocked: boolean): Promise<{ message: string }> => {
+  const response = await api.put<{ message: string }>(`/admin/users/${id}/block`, { isBlocked });
+  return response.data;
+};
+
+export const createAdminUser = async (data: {
+  fullName: string;
+  email: string;
+  password: string;
+  role: string;
+  departmentId?: number;
+}): Promise<AdminUser> => {
+  const response = await api.post<AdminUser>('/admin/users', data);
+  return response.data;
+};
+
+export const resetAdminUserPassword = async (id: number, newPassword: string): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>(`/admin/users/${id}/reset-password`, { newPassword });
+  return response.data;
+};
+
+export const deleteAdminUser = async (id: number): Promise<{ message: string }> => {
+  const response = await api.delete<{ message: string }>(`/admin/users/${id}`);
+  return response.data;
+};
+
+export const getAdminSystemSettings = async (): Promise<Record<string, any>> => {
+  const response = await api.get<Record<string, any>>('/admin/system-settings');
+  return response.data;
+};
+
+export const updateAdminSystemSettings = async (data: Record<string, any>): Promise<{ message: string }> => {
+  const response = await api.put<{ message: string }>('/admin/system-settings', data);
+  return response.data;
+};
+
+export const adminCleanup = async (type: string, olderThanMonths: number): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>('/admin/cleanup', { type, olderThanMonths });
+  return response.data;
+};
+
+export const getAdminLogs = async (date?: string, from?: string, to?: string): Promise<Blob> => {
+  const params: any = {};
+  if (date) params.date = date;
+  if (from) params.from = from;
+  if (to) params.to = to;
+  const response = await api.get('/admin/logs', { params, responseType: 'blob' });
+  return response.data;
+};
+
+export const adminExport = async (sections: string[]): Promise<any> => {
+  const response = await api.post('/admin/export', { sections });
+  return response.data;
+};
+
+export const adminImport = async (file: File, sections: string[]): Promise<any> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('sections', JSON.stringify(sections));
+  const response = await api.post('/admin/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+export const getAdminBackupStatus = async (): Promise<AdminBackupStatus> => {
+  const response = await api.get<AdminBackupStatus>('/admin/backup-status');
+  return response.data;
+};
+
+export const updateAdminBackupConfig = async (data: {
+  enabled: boolean;
+  time: string;
+  keepCount: number;
+}): Promise<{ message: string }> => {
+  const response = await api.put<{ message: string }>('/admin/backup-config', data);
+  return response.data;
+};
+
+export const restoreAdminBackup = async (): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>('/admin/backup/restore');
+  return response.data;
+};
+
+export const getAdminStats = async (): Promise<AdminStats> => {
+  const response = await api.get<AdminStats>('/admin/stats');
+  return response.data;
+};
+
+export const sendAdminNotification = async (data: {
+  target: string;
+  userIds?: number[];
+  title: string;
+  message: string;
+}): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>('/admin/notifications/send', data);
+  return response.data;
+};
+
+export const getAdminNotificationHistory = async (page?: number, limit?: number): Promise<AdminNotificationHistoryResponse> => {
+  const params: any = {};
+  if (page) params.page = page;
+  if (limit) params.limit = limit;
+  const response = await api.get<AdminNotificationHistoryResponse>('/admin/notifications/history', { params });
+  return response.data;
 };
