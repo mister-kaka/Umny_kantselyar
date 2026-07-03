@@ -9,6 +9,18 @@ import { RouteTemplateDto } from '../dto/route-template.dto';
 import { AppLoggerService } from '../../logger/app-logger.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 
+function parseDepartmentIds(raw: any): number[] {
+    if (Array.isArray(raw)) {
+        return raw;
+    }
+    if (typeof raw === 'string' && raw.startsWith('{') && raw.endsWith('}')) {
+        const inner = raw.slice(1, -1);
+        if (inner.length === 0) return [];
+        return inner.split(',').map(Number).filter(n => !isNaN(n));
+    }
+    return [];
+}
+
 @Injectable()
 export class DocumentsRoutingService {
     constructor(
@@ -73,8 +85,8 @@ export class DocumentsRoutingService {
                     id: doc.id,
                     registrationNumber: doc.registrationNumber,
                     title: doc.title,
-                    currentDepartment: doc.currentDepartment?.name || '—',
-                    suggestedDepartment: lastAi?.departmentSuggested || '—',
+                    currentDepartment: doc.currentDepartment?.name || '-',
+                    suggestedDepartment: lastAi?.departmentSuggested || '-',
                     routeStatus: doc.currentStatus,
                     operatorName: doc.creator?.fullName || 'Неизвестно',
                     operatorAvatarUrl: doc.creator?.avatarUrl || null,
@@ -209,7 +221,7 @@ export class DocumentsRoutingService {
                 id: t.id,
                 name: t.name,
                 description: t.description,
-                departmentIds: t.department_ids || [],
+                departmentIds: parseDepartmentIds(t.department_ids),
                 isActive: t.is_active,
             }));
         } catch (error) {
@@ -232,20 +244,17 @@ export class DocumentsRoutingService {
 
     async createRouteTemplate(dto: { name: string; description?: string; departmentIds: number[] }, userId: number): Promise<RouteTemplateDto> {
         try {
-            const result = await this.documentRepository.manager
-                .createQueryBuilder()
-                .insert()
-                .into('route_templates')
-                .values({
-                    name: dto.name,
-                    description: dto.description || null,
-                    department_ids: dto.departmentIds,
-                    is_active: true,
-                })
-                .returning('*')
-                .execute();
+            const departmentIdsArray = dto.departmentIds;
+            const departmentIdsPg = `{${departmentIdsArray.join(',')}}`;
 
-            const template = result.raw[0];
+            const result = await this.documentRepository.manager.query(
+                `INSERT INTO route_templates (name, description, department_ids, is_active) 
+                 VALUES ($1, $2, $3, $4) 
+                 RETURNING *`,
+                [dto.name, dto.description || null, departmentIdsPg, true]
+            );
+
+            const template = result[0];
 
             await this.logger.log({
                 module: 'DocumentsRouting',
@@ -260,15 +269,15 @@ export class DocumentsRoutingService {
             await this.notificationsService.createNotification(
                 userId,
                 'reference_created',
-                'Справочник изменён',
-                `Создан новый шаблон маршрутизации: «${dto.name}»`,
+                'Создан шаблон маршрутизации',
+                `Создан новый шаблон маршрутизации «${dto.name}»`,
             );
 
             return {
                 id: template.id,
                 name: template.name,
                 description: template.description,
-                departmentIds: template.department_ids || [],
+                departmentIds: parseDepartmentIds(template.department_ids),
                 isActive: template.is_active,
             };
         } catch (error) {
@@ -291,6 +300,15 @@ export class DocumentsRoutingService {
 
     async deleteRouteTemplate(id: number, userId: number): Promise<void> {
         try {
+            const template = await this.documentRepository.manager
+                .createQueryBuilder()
+                .select('*')
+                .from('route_templates', 'rt')
+                .where('id = :id', { id })
+                .getRawOne();
+
+            const templateName = template?.name || `№${id}`;
+
             const result = await this.documentRepository.manager
                 .createQueryBuilder()
                 .delete()
@@ -309,14 +327,14 @@ export class DocumentsRoutingService {
                 action: 'удаление шаблона маршрутизации',
                 status: 'success',
                 statusCode: 200,
-                message: `Шаблон ${id} удалён`,
+                message: `Шаблон "${templateName}" удалён`,
             });
 
             await this.notificationsService.createNotification(
                 userId,
                 'reference_deleted',
-                'Справочник изменён',
-                `Удалён шаблон маршрутизации (id: ${id})`,
+                'Шаблон маршрутизации удалён',
+                `Удалён шаблон маршрутизации «${templateName}»`,
             );
 
         } catch (error) {
