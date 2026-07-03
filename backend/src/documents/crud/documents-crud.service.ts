@@ -228,8 +228,6 @@ export class DocumentsCrudService {
             const userName = user?.fullName || 'Пользователь';
             const now = new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
 
-            await this.documentRepository.remove(document);
-
             await this.auditLogService.log(
                 userId,
                 'document_delete',
@@ -243,6 +241,8 @@ export class DocumentsCrudService {
                 `Документ «${title}» удалён`,
                 `Документ был удалён из системы.\n\nНазвание: ${title}\nРег. номер: ${registrationNumber}\nУдалил: ${userName}\nВремя: ${now}`,
             );
+
+            await this.documentRepository.remove(document);
 
             await this.logger.log({
                 module: 'Documents', type: 'DELETE', url: `/documents/${id}`,
