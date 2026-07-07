@@ -276,6 +276,7 @@
 - document_deleted - BOOLEAN DEFAULT FALSE
 - reference_created - BOOLEAN DEFAULT TRUE
 - reference_deleted - BOOLEAN DEFAULT TRUE
+- admin_message - BOOLEAN DEFAULT TRUE
 - updated_at - TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
 Связи:
@@ -363,7 +364,7 @@
 - created_at - TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 
 Ограничения:
-- type IN ('new_document', 'document_ready', 'ai_complete', 'extract_error', 'pending_verification', 'routed', 'rejected', 'comment_added', 'verified', 'low_confidence', 'route_error', 'overdue_verification', 'password_changed', 'profile_updated', 'settings_changed', 'new_login', 'document_deleted', 'reference_created', 'reference_deleted')
+- type IN ('new_document', 'document_ready', 'ai_complete', 'extract_error', 'pending_verification', 'routed', 'rejected', 'comment_added', 'verified', 'low_confidence', 'route_error', 'overdue_verification', 'password_changed', 'profile_updated', 'settings_changed', 'new_login', 'document_deleted', 'reference_created', 'reference_deleted', 'admin_message')
 
 Связи:
 - notifications.user_id - users.id
@@ -413,13 +414,25 @@
 
 ### 24. system_settings
 
-Системные настройки приложения.
+Системные настройки приложения. Хранят параметры загрузки файлов (максимальный размер, количество, разрешённые форматы), настройки очистки данных и резервного копирования.
 
 - id - SERIAL PRIMARY KEY
 - key - VARCHAR(100) UNIQUE NOT NULL
 - value - JSONB NOT NULL
 - description - TEXT
 - updated_at - TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+Используемые ключи:
+- upload.max_file_size_mb - максимальный размер файла в МБ (по умолчанию 50)
+- upload.max_files_per_batch - максимум файлов за одну загрузку (по умолчанию 15)
+- upload.allowed_formats - разрешённые форматы файлов (JSON-массив)
+- backup.enabled - флаг автоматического резервного копирования
+- backup.time - время запуска авто-бэкапа
+- backup.keep_copies - количество хранимых копий бэкапа
+- backup.last_backup - информация о последнем бэкапе
+- backup.last_backup_size_kb - размер последнего бэкапа в КБ
+- cleanup_rules - правила очистки данных (JSON-объект)
+- logging_level - уровень логирования (JSON-объект, по умолчанию {"level": "info"})
 
 ### 25. vector_embeddings
 

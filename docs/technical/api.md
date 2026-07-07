@@ -22,6 +22,11 @@ http://localhost:3000
 - Ответ содержит поля total, page, limit, totalPages.
 - По умолчанию page=1, limit=10 (или 20 для некоторых эндпоинтов).
 
+## Роли
+
+- Административные эндпоинты требуют роль admin. Оператор получит 403 Forbidden.
+- Все эндпоинты /admin/* доступны только администратору.
+
 
 ## 1. Авторизация
 
@@ -42,6 +47,7 @@ http://localhost:3000
 
 Ошибки:
 - 401: неверный email или пароль
+- 403: пользователь заблокирован
 - 400: ошибка валидации (email не указан или неверный формат, пароль менее 6 символов)
 
 ### GET /auth/profile
@@ -53,7 +59,7 @@ http://localhost:3000
   "id": 1,
   "fullName": "Москалева Александра",
   "email": "alexandra@umny-kan.ru",
-  "role": "admin",
+  "role": "Администратор",
   "department": "Бухгалтерия",
   "avatarUrl": "/uploads/avatars/1-1234567890.jpg",
   "createdAt": "2026-04-01T10:00:00.000Z"
@@ -278,7 +284,7 @@ http://localhost:3000
 Ошибки:
 - 400: файл не прикреплён
 - 400: неподдерживаемый формат
-- 400: размер файла превышает 50 МБ
+- 400: размер файла превышает максимально допустимый
 
 ### POST /documents/:id/extract-text
 
@@ -450,6 +456,143 @@ Content-Disposition: attachment; filename=documents.xlsx
   "count": 33
 }
 
+### GET /documents/route-templates
+
+Получить список шаблонов маршрутизации.
+
+Ответ (200):
+[
+  {
+    "id": 1,
+    "name": "Финансовые договоры",
+    "description": "Автоматическая маршрутизация в бухгалтерию",
+    "departmentIds": [1],
+    "isActive": true
+  }
+]
+
+### POST /documents/route-templates
+
+Создать шаблон маршрутизации.
+
+Запрос:
+{
+  "name": "Новый шаблон",
+  "description": "Описание",
+  "departmentIds": [1, 2]
+}
+
+Ответ (201): созданный шаблон
+
+### DELETE /documents/route-templates/:id
+
+Удалить шаблон маршрутизации.
+
+Ответ (200):
+{
+  "message": "Шаблон удалён"
+}
+
+Ошибки:
+- 404: шаблон не найден
+
+### GET /documents/routing
+
+Получить список документов в маршрутизации.
+
+Параметры запроса:
+- departmentId (number, опционально)
+- operatorId (number, опционально)
+- filter (string, опционально) - all, matched, mismatched
+- page (number, опционально, по умолчанию 1)
+- limit (number, опционально, по умолчанию 10)
+
+Ответ (200):
+{
+  "stats": {
+    "total": 13,
+    "matched": 3,
+    "mismatched": 7
+  },
+  "items": [
+    {
+      "id": 20,
+      "registrationNumber": "ВХ-2026-020",
+      "title": "prikaz_o_naznachenii.pdf",
+      "currentDepartment": "Транспортный отдел",
+      "suggestedDepartment": "Отдел кадров",
+      "routeStatus": "routed",
+      "operatorName": "Начинова Мария Дмитриевна",
+      "operatorAvatarUrl": "/uploads/avatars/7.jpg",
+      "routedAt": "2026-06-12T22:42:51.428Z",
+      "routeReason": "Направлен оператором"
+    }
+  ],
+  "operators": [
+    { "id": 1, "fullName": "Москалева Александра" }
+  ],
+  "page": 1,
+  "totalPages": 3,
+  "totalItems": 13
+}
+
+### PUT /document-routes/:id/status
+
+Обновить статус маршрута.
+
+Запрос:
+{
+  "status": "delivered"
+}
+
+Ответ (200):
+{
+  "message": "Статус маршрута обновлён"
+}
+
+Ошибки:
+- 404: маршрут не найден
+
+### GET /documents/:id/comments
+
+Получить комментарии к документу.
+
+Ответ (200):
+[
+  {
+    "id": 1,
+    "documentId": 1,
+    "userId": 1,
+    "userName": "Москалева Александра",
+    "text": "Тестовый комментарий",
+    "createdAt": "2026-06-15T10:00:00.000Z"
+  }
+]
+
+### POST /documents/:id/comments
+
+Добавить комментарий к документу.
+
+Запрос:
+{
+  "text": "Текст комментария"
+}
+
+Ответ (201): созданный комментарий
+
+### DELETE /documents/:id/comments/:commentId
+
+Удалить комментарий.
+
+Ответ (200):
+{
+  "message": "Комментарий удалён"
+}
+
+Ошибки:
+- 404: комментарий не найден
+
+
 ## 4. Типы документов
 
 ### GET /document-types
@@ -468,7 +611,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 
 ### POST /document-types
 
-Создать новый тип документа.
+Создать новый тип документа. Доступно оператору и администратору.
 
 Запрос:
 {
@@ -488,7 +631,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 
 ### DELETE /document-types/:id
 
-Удалить тип документа.
+Удалить тип документа. Только администратор.
 
 Ответ (200):
 {
@@ -510,7 +653,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 
 ### POST /document-categories
 
-Создать новую категорию.
+Создать новую категорию. Доступно оператору и администратору.
 
 Запрос:
 {
@@ -524,7 +667,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 
 ### DELETE /document-categories/:id
 
-Удалить категорию.
+Удалить категорию. Только администратор.
 
 Ответ (200):
 {
@@ -614,7 +757,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 
 ### POST /departments
 
-Создать новый отдел.
+Создать новый отдел. Только администратор.
 
 Запрос:
 {
@@ -634,7 +777,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 
 ### DELETE /departments/:id
 
-Архивировать отдел (мягкое удаление).
+Архивировать отдел (мягкое удаление). Только администратор.
 
 Ответ (200):
 {
@@ -650,7 +793,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 
 ### PATCH /departments/:id/restore
 
-Восстановить архивированный отдел.
+Восстановить архивированный отдел. Только администратор.
 
 Ответ (200):
 {
@@ -665,107 +808,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 - 400: отдел уже активен
 
 
-## 7. Маршрутизация
-
-### GET /documents/routing
-
-Получить список документов в маршрутизации.
-
-Параметры запроса:
-- departmentId (number, опционально)
-- operatorId (number, опционально)
-- filter (string, опционально) - all, matched, mismatched
-- page (number, опционально, по умолчанию 1)
-- limit (number, опционально, по умолчанию 10)
-
-Ответ (200):
-{
-  "stats": {
-    "total": 13,
-    "matched": 3,
-    "mismatched": 7
-  },
-  "items": [
-    {
-      "id": 20,
-      "registrationNumber": "ВХ-2026-020",
-      "title": "prikaz_o_naznachenii.pdf",
-      "currentDepartment": "Транспортный отдел",
-      "suggestedDepartment": "Отдел кадров",
-      "routeStatus": "routed",
-      "operatorName": "Начинова Мария Дмитриевна",
-      "operatorAvatarUrl": "/uploads/avatars/7.jpg",
-      "routedAt": "2026-06-12T22:42:51.428Z",
-      "routeReason": "Направлен оператором"
-    }
-  ],
-  "operators": [
-    { "id": 1, "fullName": "Москалева Александра" }
-  ],
-  "page": 1,
-  "totalPages": 3,
-  "totalItems": 13
-}
-
-### PUT /document-routes/:id/status
-
-Обновить статус маршрута.
-
-Запрос:
-{
-  "status": "delivered"
-}
-
-Ответ (200):
-{
-  "message": "Статус маршрута обновлён"
-}
-
-Ошибки:
-- 404: маршрут не найден
-
-### GET /documents/route-templates
-
-Получить список шаблонов маршрутизации.
-
-Ответ (200):
-[
-  {
-    "id": 1,
-    "name": "Финансовые договоры",
-    "description": "Автоматическая маршрутизация в бухгалтерию",
-    "departmentIds": [1],
-    "isActive": true
-  }
-]
-
-### POST /documents/route-templates
-
-Создать шаблон маршрутизации.
-
-Запрос:
-{
-  "name": "Новый шаблон",
-  "description": "Описание",
-  "departmentIds": [1, 2]
-}
-
-Ответ (201): созданный шаблон
-
-### DELETE /documents/route-templates/:id
-
-Удалить шаблон маршрутизации.
-
-Ответ (200):
-{
-  "message": "Шаблон удалён"
-}
-
-Ошибки:
-- 404: шаблон не найден
-
-
-## 8. Уведомления
+## 7. Уведомления
 
 ### GET /notifications
 
@@ -853,7 +896,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 }
 
 
-## 9. Настройки AI
+## 8. Настройки
 
 ### GET /settings/ai
 
@@ -864,7 +907,7 @@ Content-Disposition: attachment; filename=documents.xlsx
   "id": 1,
   "providerCode": "deepseek",
   "modelName": "deepseek-chat",
-  "apiKey": "sk-...abc",          // маскированный ключ
+  "apiKey": "sk-...abc",
   "baseUrl": "https://api.deepseek.com",
   "isActive": true,
   "updatedAt": "2026-06-10T12:00:00.000Z"
@@ -872,7 +915,7 @@ Content-Disposition: attachment; filename=documents.xlsx
 
 ### PUT /settings/ai
 
-Обновить настройки AI-провайдера.
+Обновить настройки AI-провайдера. Только администратор.
 
 Запрос:
 {
@@ -918,8 +961,16 @@ Content-Disposition: attachment; filename=documents.xlsx
   "message": "Подключение успешно"
 }
 
+### GET /settings/upload-info
 
-## 10. Настройки уведомлений
+Получить настройки загрузки файлов (доступно оператору и администратору).
+
+Ответ (200):
+{
+  "maxFileSizeMb": 50,
+  "maxFilesPerBatch": 15,
+  "allowedFormats": ["pdf", "docx", "txt", "xlsx", "jpg", "jpeg", "png", "tiff"]
+}
 
 ### GET /settings/notifications
 
@@ -945,6 +996,7 @@ Content-Disposition: attachment; filename=documents.xlsx
   "documentDeleted": false,
   "referenceCreated": true,
   "referenceDeleted": true,
+  "adminMessage": true,
   "updatedAt": "2026-06-15T12:00:00.000Z"
 }
 
@@ -959,9 +1011,6 @@ Content-Disposition: attachment; filename=documents.xlsx
 }
 
 Ответ (200): обновлённые настройки
-
-
-## 11. Настройки интерфейса
 
 ### GET /settings/interface
 
@@ -992,12 +1041,9 @@ Content-Disposition: attachment; filename=documents.xlsx
 
 Ответ (200): обновлённые настройки
 
-
-## 12. Экспорт и импорт
-
 ### GET /settings/export
 
-Экспортировать все данные системы в JSON.
+Экспортировать все данные системы в JSON. Только администратор.
 
 Ответ (200): JSON-файл со всеми данными
 Content-Type: application/json
@@ -1005,7 +1051,7 @@ Content-Disposition: attachment; filename=umny-kan-backup.json
 
 ### POST /settings/import
 
-Импортировать данные из JSON-файла. Content-Type: multipart/form-data.
+Импортировать данные из JSON-файла. Content-Type: multipart/form-data. Только администратор.
 Поле формы: file.
 
 Ответ (200):
@@ -1022,20 +1068,17 @@ Content-Disposition: attachment; filename=umny-kan-backup.json
 Ошибки:
 - 400: неверный формат файла
 
-
-## 13. О системе
-
 ### GET /settings/about
 
 Получить версию системы.
 
 Ответ (200):
 {
-  "version": "1.5.0"
+  "version": "1.6.0"
 }
 
 
-## 14. Безопасность
+## 9. Безопасность
 
 ### GET /security/sessions
 
@@ -1126,7 +1169,7 @@ Content-Disposition: attachment; filename=umny-kan-backup.json
 }
 
 
-## 15. Аналитика
+## 10. Аналитика
 
 ### GET /analytics/data
 
@@ -1143,51 +1186,284 @@ Content-Disposition: attachment; filename=umny-kan-backup.json
 }
 
 
-## 16. Комментарии
+## 11. Администрирование
 
-### GET /documents/:id/comments
+Все эндпоинты требуют роль admin.
 
-Получить комментарии к документу.
+### GET /admin/audit-log
+
+Получить журнал действий всех пользователей.
+
+Параметры запроса:
+- page (number, опционально, по умолчанию 1)
+- limit (number, опционально, по умолчанию 20)
+- userId (number, опционально) - фильтр по ID пользователя
+- action (string, опционально) - фильтр по действию
+- dateFrom (string, опционально) - дата начала (YYYY-MM-DD)
+- dateTo (string, опционально) - дата конца (YYYY-MM-DD)
+- userName (string, опционально) - поиск по ФИО или email
+
+Ответ (200):
+{
+  "items": [
+    {
+      "id": 1,
+      "userId": 1,
+      "userName": "Москалева Александра",
+      "userAvatarUrl": "/uploads/avatars/1.jpg",
+      "action": "document_upload",
+      "documentId": 34,
+      "details": {},
+      "createdAt": "2026-06-15T09:00:00.000Z"
+    }
+  ],
+  "total": 50,
+  "page": 1,
+  "totalPages": 3
+}
+
+### GET /admin/users
+
+Получить список всех пользователей.
 
 Ответ (200):
 [
   {
     "id": 1,
-    "documentId": 1,
-    "userId": 1,
-    "userName": "Москалева Александра",
-    "text": "Тестовый комментарий",
-    "createdAt": "2026-06-15T10:00:00.000Z"
+    "fullName": "Москалева Александра",
+    "email": "alexandra@umny-kan.ru",
+    "role": "admin",
+    "isBlocked": false,
+    "avatarUrl": "/uploads/avatars/1.jpg",
+    "departmentId": 1,
+    "createdAt": "2026-04-01T10:00:00.000Z"
   }
 ]
 
-### POST /documents/:id/comments
+### GET /admin/users/:id/stats
 
-Добавить комментарий к документу.
-
-Запрос:
-{
-  "text": "Текст комментария"
-}
-
-Ответ (201): созданный комментарий
-
-### DELETE /documents/:id/comments/:commentId
-
-Удалить комментарий.
+Получить статистику пользователя.
 
 Ответ (200):
 {
-  "message": "Комментарий удалён"
+  "documentCount": 15,
+  "commentCount": 23,
+  "sessionCount": 2
 }
 
-Ошибки:
-- 404: комментарий не найден
+### PUT /admin/users/:id/role
+
+Изменить роль пользователя.
+
+Запрос:
+{
+  "role": "admin"
+}
+
+Ответ (200):
+{
+  "message": "Роль обновлена"
+}
+
+### PUT /admin/users/:id/block
+
+Заблокировать или разблокировать пользователя.
+
+Запрос:
+{
+  "isBlocked": true
+}
+
+Ответ (200):
+{
+  "message": "Пользователь заблокирован"
+}
+
+### POST /admin/users
+
+Создать нового пользователя.
+
+Запрос:
+{
+  "fullName": "Иванов Иван",
+  "email": "ivanov@umny-kan.ru",
+  "password": "password123",
+  "role": "operator",
+  "departmentId": 1
+}
+
+Ответ (201):
+{
+  "id": 8,
+  "fullName": "Иванов Иван",
+  "email": "ivanov@umny-kan.ru",
+  "role": "operator"
+}
+
+### POST /admin/users/:id/reset-password
+
+Сбросить пароль пользователя.
+
+Запрос:
+{
+  "newPassword": "newpassword123"
+}
+
+Ответ (200):
+{
+  "message": "Пароль сброшен"
+}
+
+### DELETE /admin/users/:id
+
+Удалить пользователя.
+
+Ответ (200):
+{
+  "message": "Пользователь удалён"
+}
+
+### GET /admin/system-settings
+
+Получить системные настройки.
+
+Ответ (200):
+{
+  "upload.max_file_size_mb": "50",
+  "upload.max_files_per_batch": "15",
+  "upload.allowed_formats": ["pdf", "docx", "txt", "xlsx", "jpg", "jpeg", "png", "tiff"]
+}
+
+### PUT /admin/system-settings
+
+Обновить системные настройки.
+
+Запрос:
+{
+  "upload.max_file_size_mb": "25",
+  "upload.allowed_formats": ["pdf", "docx", "jpg", "png"]
+}
+
+Ответ (200):
+{
+  "message": "Настройки сохранены"
+}
+
+### POST /admin/cleanup
+
+Очистка данных.
+
+Запрос:
+{
+  "type": "documents",
+  "olderThanMonths": 12
+}
+
+Ответ (200):
+{
+  "message": "Удалено 5 записей"
+}
+
+Типы очистки:
+- documents - удалить документы старше N месяцев
+- notifications - удалить прочитанные уведомления старше N месяцев
+- audit - удалить записи журнала старше N месяцев
+
+### GET /admin/logs
+
+Скачать логи сервера.
+
+Параметры запроса:
+- date (string, опционально) - дата в формате YYYY-MM-DD
+- from (string, опционально) - дата начала периода
+- to (string, опционально) - дата конца периода
+
+Ответ (200): файл логов
+
+### POST /admin/export
+
+Экспортировать выбранные разделы данных.
+
+Запрос:
+{
+  "sections": ["documents", "references", "users", "settings"]
+}
+
+Ответ (200): JSON-файл с выбранными данными
+
+### POST /admin/import
+
+Импортировать данные из файла. Content-Type: multipart/form-data.
+Поля формы: file (файл JSON), sections (JSON-массив разделов).
+
+Запрос:
+FormData:
+  file: backup.json
+  sections: ["documents", "references"]
+
+Ответ (200):
+{
+  "message": "Данные импортированы",
+  "counts": { "documents": 33, "documentTypes": 9 }
+}
+
+### GET /admin/stats
+
+Получить статистику системы.
+
+Ответ (200):
+{
+  "totalDocuments": 33,
+  "totalUsers": 7,
+  "averageConfidence": 85,
+  "totalRoutes": 15,
+  "statusStats": [
+    { "status": "routed", "count": 14 },
+    { "status": "pending_verification", "count": 8 }
+  ],
+  "userActivity": [
+    { "userId": 1, "userName": "Москалева Александра", "count": 42 }
+  ]
+}
+
+### POST /admin/notifications/send
+
+Отправить уведомление пользователям.
+
+Запрос:
+{
+  "target": "all",
+  "title": "Заголовок",
+  "message": "Текст сообщения"
+}
+
+Значения target: all, admins, operators, selected
+При target=selected указать userIds: [1, 2, 3]
+
+Ответ (200):
+{
+  "message": "Отправлено 7 получателям"
+}
+
+### GET /admin/notifications/history
+
+Получить историю рассылок.
+
+Параметры запроса:
+- page (number, опционально, по умолчанию 1)
+- limit (number, опционально, по умолчанию 10)
+
+Ответ (200):
+{
+  "items": [...],
+  "total": 5,
+  "page": 1,
+  "totalPages": 1
+}
 
 
-## 17. Статусы документов
+## 12. Статусы документов
 
-Возможные статусы документов:
 - in_review - На рассмотрении
 - pending_verification - Ожидает проверки
 - verified - Проверено
@@ -1195,7 +1471,7 @@ Content-Disposition: attachment; filename=umny-kan-backup.json
 - rejected - Отклонено
 
 
-## 18. Типы уведомлений
+## 13. Типы уведомлений
 
 - new_document - Новый документ загружен
 - document_ready - Документ обработан
@@ -1213,3 +1489,4 @@ Content-Disposition: attachment; filename=umny-kan-backup.json
 - document_deleted - Документ удалён
 - reference_created - Справочник создан
 - reference_deleted - Справочник удалён
+- admin_message - Сообщение администратора
