@@ -59,6 +59,10 @@ export class UpdateNotificationSettingsDto {
 
     @IsOptional()
     @IsBoolean()
+    adminMessage?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
     referenceCreated?: boolean;
 
     @IsOptional()

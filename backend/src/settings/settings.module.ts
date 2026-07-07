@@ -18,6 +18,8 @@ import { DocumentClassification } from '../entities/document-classification.enti
 import { DocumentAiResult } from '../entities/document-ai-result.entity';
 import { DocumentComment } from '../entities/document-comment.entity';
 import { Notification } from '../entities/notification.entity';
+import { RouteTemplate } from '../entities/route-template.entity';
+import { SystemSettings } from '../entities/system-settings.entity';
 import { LoginHistory } from '../entities/login-history.entity';
 import { AuditLog } from '../entities/audit-log.entity';
 import { UserSession } from '../entities/user-session.entity';
@@ -44,6 +46,8 @@ import { NotificationsModule } from '../notifications/notifications.module';
       DocumentAiResult,
       DocumentComment,
       Notification,
+      RouteTemplate,
+      SystemSettings,
       LoginHistory,
       AuditLog,
       UserSession,

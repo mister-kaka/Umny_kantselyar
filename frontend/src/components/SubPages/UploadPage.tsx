@@ -3,7 +3,7 @@ import "../../styles/UploadPage.css";
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Card from "../Card";
-import { uploadDocument, extractText, analyzeDocument, deleteDocument } from "../../services/api";
+import { uploadDocument, extractText, analyzeDocument, deleteDocument, getUploadInfo } from "../../services/api";
 import * as mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import type { FileItem, UploadStep } from "../../types";
@@ -18,18 +18,36 @@ type PreviewData = {
   isTable?: boolean;
 };
 
-const ALLOWED_MIME = [
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "text/plain",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "image/jpeg",
-  "image/png",
-  "image/tiff",
-];
+const DEFAULT_ALLOWED_MIME: Record<string, string> = {
+  "pdf": "application/pdf",
+  "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "txt": "text/plain",
+  "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "jpg": "image/jpeg",
+  "jpeg": "image/jpeg",
+  "png": "image/png",
+  "tiff": "image/tiff",
+  "tif": "image/tiff",
+};
 
-const MAX_SIZE_MB = 50;
-const MAX_FILES = 15;
+const FORMAT_LABELS: Record<string, string> = {
+  "pdf": "Текст и сканы",
+  "docx": "Документы Word",
+  "txt": "Текстовый файл",
+  "xlsx": "Таблицы Excel",
+  "jpg": "Фотографии, сканы",
+  "jpeg": "Фотографии, сканы",
+  "png": "Фотографии, сканы",
+  "tiff": "Сканы высокого качества",
+  "tif": "Сканы высокого качества",
+};
+
+const DOCUMENT_FORMATS = ["pdf", "docx", "txt", "xlsx"];
+const IMAGE_FORMATS = ["jpg", "jpeg", "png", "tiff", "tif"];
+
+const DEFAULT_MAX_SIZE_MB = 50;
+const DEFAULT_MAX_FILES = 15;
+const DEFAULT_ALLOWED_FORMATS = ["pdf", "docx", "txt", "xlsx", "jpg", "jpeg", "png", "tiff"];
 
 const STEPS = [
   { label: "Загрузка", desc: "Файл сохраняется на сервер" },
@@ -91,12 +109,35 @@ const UploadPage: React.FC<UploadPageProps> = ({
   const location = useLocation();
 
   const [themeKey, setThemeKey] = useState(0);
-  
-      useEffect(() => {
-          const observer = new MutationObserver(() => setThemeKey(prev => prev + 1));
-          observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-          return () => observer.disconnect();
-      }, []);
+
+  const [maxSizeMb, setMaxSizeMb] = useState(DEFAULT_MAX_SIZE_MB);
+  const [maxFiles, setMaxFiles] = useState(DEFAULT_MAX_FILES);
+  const [allowedFormats, setAllowedFormats] = useState<string[]>(DEFAULT_ALLOWED_FORMATS);
+  const [uploadInfoLoaded, setUploadInfoLoaded] = useState(false);
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => setThemeKey(prev => prev + 1));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const loadUploadInfo = async () => {
+      try {
+        const info = await getUploadInfo();
+        setMaxSizeMb(info.maxFileSizeMb);
+        setMaxFiles(info.maxFilesPerBatch);
+        setAllowedFormats(info.allowedFormats);
+      } catch {
+        setMaxSizeMb(DEFAULT_MAX_SIZE_MB);
+        setMaxFiles(DEFAULT_MAX_FILES);
+        setAllowedFormats(DEFAULT_ALLOWED_FORMATS);
+      } finally {
+        setUploadInfoLoaded(true);
+      }
+    };
+    loadUploadInfo();
+  }, []);
 
   useEffect(() => {
     const savedScan = localStorage.getItem("pending_scan");
@@ -129,18 +170,36 @@ const UploadPage: React.FC<UploadPageProps> = ({
     }
   }, [location.pathname, setFiles]);
 
+  const getAllowedMimeTypes = (): string[] => {
+    return allowedFormats
+      .map(f => DEFAULT_ALLOWED_MIME[f.toLowerCase()])
+      .filter(Boolean);
+  };
+
   const validateFile = (f: File): string | null => {
-    if (!f.type || !ALLOWED_MIME.includes(f.type)) return "Неподдерживаемый формат";
-    if (f.size > MAX_SIZE_MB * 1024 * 1024) return `Превышен размер (макс. ${MAX_SIZE_MB} МБ)`;
+    const allowedMime = getAllowedMimeTypes();
+    if (!f.type || !allowedMime.includes(f.type)) {
+      const ext = f.name.split('.').pop()?.toLowerCase() || '';
+      if (!allowedFormats.includes(ext)) {
+        return "Неподдерживаемый формат";
+      }
+    }
+    if (f.size > maxSizeMb * 1024 * 1024) {
+      return `Превышен размер (макс. ${maxSizeMb} МБ)`;
+    }
     return null;
+  };
+
+  const getAcceptString = (): string => {
+    return allowedFormats.map(f => `.${f}`).join(',');
   };
 
   const waitingCount = () => files.filter(f => f.status === "waiting" || f.status === "cancelled").length;
 
   const addFiles = (newFiles: FileList | File[]) => {
-    const remaining = MAX_FILES - waitingCount();
+    const remaining = maxFiles - waitingCount();
     if (remaining <= 0) {
-      setErrorMessage(`Максимум ${MAX_FILES} файлов одновременно`);
+      setErrorMessage(`Максимум ${maxFiles} файлов одновременно`);
       return;
     }
     const toAdd = Array.from(newFiles).slice(0, remaining);
@@ -158,7 +217,7 @@ const UploadPage: React.FC<UploadPageProps> = ({
     setFiles(prev => [...prev, ...validated]);
     setErrorMessage("");
     if (toAdd.length < Array.from(newFiles).length) {
-      setErrorMessage(`Добавлено ${toAdd.length} из ${Array.from(newFiles).length}. Максимум ${MAX_FILES} файлов`);
+      setErrorMessage(`Добавлено ${toAdd.length} из ${Array.from(newFiles).length}. Максимум ${maxFiles} файлов`);
     }
   };
 
@@ -426,7 +485,7 @@ const UploadPage: React.FC<UploadPageProps> = ({
   const selectableFiles = files.filter(f => f.status === "waiting" || f.status === "cancelled");
   const allWaitingSelected = selectableFiles.length > 0 && selectableFiles.every(f => f.selected);
   const hasProcessedFiles = files.some(f => f.status === "done" || f.status === "error" || f.status === "cancelled");
-  const isFull = waitingCount() >= MAX_FILES;
+  const isFull = waitingCount() >= maxFiles;
   const canAddMore = !isFull;
   const hasProcessingFiles = files.some(f => ["uploading", "extracting", "analyzing"].includes(f.status));
 
@@ -435,6 +494,9 @@ const UploadPage: React.FC<UploadPageProps> = ({
     if (!a.selected && b.selected) return 1;
     return 0;
   });
+
+  const documentFormatsList = allowedFormats.filter(f => DOCUMENT_FORMATS.includes(f.toLowerCase()));
+  const imageFormatsList = allowedFormats.filter(f => IMAGE_FORMATS.includes(f.toLowerCase()));
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -477,21 +539,21 @@ const UploadPage: React.FC<UploadPageProps> = ({
               </button>
             )}
           </div>
-          <p className="upload-subtitle">Можно загрузить до {MAX_FILES} файлов одновременно</p>
+          <p className="upload-subtitle">Можно загрузить до {maxFiles} файлов одновременно</p>
 
           {canAddMore && !isProcessing && (
             <div className={["upload-area", dragOver ? "drag-over" : ""].filter(Boolean).join(" ")}
               onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()} role="button" tabIndex={0}
               onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}>
-              <input ref={fileInputRef} type="file" multiple accept=".pdf,.docx,.txt,.xlsx,.jpg,.jpeg,.png,.tiff" className="file-input-hidden" onChange={handleFileSelect} />
+              <input ref={fileInputRef} type="file" multiple accept={getAcceptString()} className="file-input-hidden" onChange={handleFileSelect} />
               <div className="upload-icon-wrap"><img src={getThemedIcon("/icons/upload/UploadIcon.png")} className="upload-icon-img" alt="" /></div>
               <p className="upload-text">Перетащите файлы в эту область</p>
-              <p className="upload-hint">PDF, DOCX, TXT, XLSX, JPG, PNG, TIFF - до {MAX_SIZE_MB} МБ каждый</p>
+              <p className="upload-hint">{allowedFormats.map(f => f.toUpperCase()).join(', ')} - до {maxSizeMb} МБ каждый</p>
             </div>
           )}
 
-          {isFull && !isProcessing && <div className="upload-limit-reached">Достигнут лимит в {MAX_FILES} файлов. Удалите ненужные или дождитесь обработки.</div>}
+          {isFull && !isProcessing && <div className="upload-limit-reached">Достигнут лимит в {maxFiles} файлов. Удалите ненужные или дождитесь обработки.</div>}
 
           {files.length > 0 && (
             <div className="files-queue">
@@ -636,20 +698,30 @@ const UploadPage: React.FC<UploadPageProps> = ({
       <aside className="upload-sidebar">
         <Card className="sidebar-card">
           <h3 className="sidebar-section-title">Форматы файлов</h3>
-          <div className="sidebar-group">
-            <div className="sidebar-group-label">Документы</div>
-            <div className="sidebar-row"><span className="sidebar-format">PDF</span><span className="sidebar-format-desc">Текст и сканы</span></div>
-            <div className="sidebar-row"><span className="sidebar-format">DOCX</span><span className="sidebar-format-desc">Документы Word</span></div>
-            <div className="sidebar-row"><span className="sidebar-format">TXT</span><span className="sidebar-format-desc">Текстовый файл</span></div>
-            <div className="sidebar-row"><span className="sidebar-format">XLSX</span><span className="sidebar-format-desc">Таблицы Excel</span></div>
-          </div>
-          <div className="sidebar-group">
-            <div className="sidebar-group-label">Изображения</div>
-            <div className="sidebar-row"><span className="sidebar-format">JPG / PNG</span><span className="sidebar-format-desc">Фотографии, сканы</span></div>
-            <div className="sidebar-row"><span className="sidebar-format">TIFF</span><span className="sidebar-format-desc">Сканы высокого качества</span></div>
-          </div>
-          <p className="sidebar-note">Максимальный размер: <strong>{MAX_SIZE_MB} МБ</strong></p>
-          <p className="sidebar-note">Максимум файлов: <strong>{MAX_FILES}</strong></p>
+          {documentFormatsList.length > 0 && (
+            <div className="sidebar-group">
+              <div className="sidebar-group-label">Документы</div>
+              {documentFormatsList.map(f => (
+                <div key={f} className="sidebar-row">
+                  <span className="sidebar-format">{f.toUpperCase()}</span>
+                  <span className="sidebar-format-desc">{FORMAT_LABELS[f.toLowerCase()] || f.toUpperCase()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {imageFormatsList.length > 0 && (
+            <div className="sidebar-group">
+              <div className="sidebar-group-label">Изображения</div>
+              {imageFormatsList.map(f => (
+                <div key={f} className="sidebar-row">
+                  <span className="sidebar-format">{f.toUpperCase()}</span>
+                  <span className="sidebar-format-desc">{FORMAT_LABELS[f.toLowerCase()] || f.toUpperCase()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="sidebar-note">Максимальный размер: <strong>{maxSizeMb} МБ</strong></p>
+          <p className="sidebar-note">Максимум файлов: <strong>{maxFiles}</strong></p>
         </Card>
         <Card className="sidebar-card">
           <h3 className="sidebar-section-title">Что даёт AI-анализ</h3>

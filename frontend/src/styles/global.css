@@ -6,9 +6,9 @@
     --color-bg-surface: #ffffff;             /* фон рабочей области (ячеек, карточек) */
     --border-color: #E5E5E5;                 /* цвет обводки sidebar и header */
 
-    --color-accent: #81D8D0;                 /* контрастный цвет — фон кнопок, акценты */
-    --color-accent-hover: #6BCCC3;           /* темнее — при наведении на кнопку */
-    --color-accent-light: #CDEFEC;           /* полупрозрачный — активная вкладка в боковой панели */
+    --color-accent: #81D8D0;                 /* контрастный цвет - фон кнопок, акценты */
+    --color-accent-hover: #6BCCC3;           /* темнее - при наведении на кнопку */
+    --color-accent-light: #CDEFEC;           /* полупрозрачный - активная вкладка в боковой панели */
     --Filter-Hover: rgba(129, 216, 208, 0.08);
     --certain-buttons_hover: rgba(129, 216, 208, 0.1); /* ховер неактивных вкладок сайдбара и второчтепенных кнопок */
     --cards-shadow: rgba(0, 0, 0, 0.1);
@@ -486,7 +486,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/*    ЗАГОЛОВКИ    */
 h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   font-weight: 600;
@@ -509,7 +508,6 @@ h1, h2, h3, h4, h5, h6 {
   transition: 0.2s ease;
 }
 
-/*    ТЕКСТ    */
 p {
   color: var(--text-primary);
 }
@@ -522,14 +520,10 @@ p {
   color: var(--text-tertiary);
 }
 
-
-
-/*    КНОПКИ    */
-/* Кнопка с фоном (акцентная) ++*/
 .button-primary {
   display: flex;
   background-color: var(--color-accent);
-  color: #FFFFFF;           /* белый текст */
+  color: #FFFFFF;
   border: none;
   align-items: center;
   justify-content: center;
@@ -549,7 +543,6 @@ p {
   background-color: var(--color-accent-hover);  /* темнее при наведении */
 }
 
-/* Кнопка без фона (прозрачная) ++*/
 .button-secondary {
   display: flex;
   background-color: transparent;
@@ -574,8 +567,6 @@ p {
   background-color: var(--certain-buttons_hover); /* лёгкий фон при ховере (опционально) */
 }
 
-
-/*    КАРТОЧКИ    */
 .card {
   display: flexbox;
   background-color: var(--color-bg-surface);
@@ -654,7 +645,6 @@ p {
   text-transform: uppercase;
 }
 
-/*    ТАБЛИЦЫ   */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -694,9 +684,6 @@ tbody tr:hover {
   transition: 0.2s;
 }
 
-
-
-/*    SIDEBAR    ++*/
 .sidebar {
   display: grid;
   width: var(--sidebar-width);
@@ -711,7 +698,6 @@ tbody tr:hover {
   transition: width 0.2s ease;
 }
 
-/* вкладка sidebar ++*/
 .sidebar-item {
   display: flex;
   padding-left: 7px;
@@ -741,8 +727,6 @@ tbody tr:hover {
   background-color: var(--certain-buttons_hover);
 }
 
-
-/*    HEADER    ++*/
 .header {
   height: var(--header-height);
   background-color: var(--color-bg-surface);
@@ -759,8 +743,6 @@ tbody tr:hover {
   z-index: 100;
 }
 
-
-/*    ОСНОВНОЙ КОНТЕНТ++    */
 .main-content {
   margin-left: var(--sidebar-width);
   margin-top: var(--header-height);
@@ -768,7 +750,6 @@ tbody tr:hover {
   transition: margin-left 0.2s ease;
 }
 
-/*    СТАТУСЫ    */
 /* бейджи */
 .status-badge {
   display: inline-flex;
@@ -828,8 +809,6 @@ tbody tr:hover {
   color: #979797;
 }
 
-
-/*    УВЕРЕННОСТЬ    */
 /* Линия */
 .confidence-bar {
   width: 60px;
@@ -858,18 +837,18 @@ tbody tr:hover {
 
 
 
-/*      Ссылки      */
+/*  Ссылки */
 a {
   text-decoration: none;
   color: inherit;
 }
 
-/*      Списки    */
+/* Списки */
 ul, ol {
   list-style: none;
 }
 
-/*      Поля ввода      */
+/* Поля ввода  */
 input, textarea, select {
   font-family: 'Inter', sans-serif;
 }

@@ -16,6 +16,7 @@ export type NotificationType =
     | 'settings_changed'
     | 'new_login'
     | 'comment_added'
+    | 'admin_message'
     | 'document_deleted'
     | 'reference_created'
     | 'reference_deleted';

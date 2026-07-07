@@ -11,6 +11,7 @@ import { SecurityModule } from '../security/security.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuditLogModule } from '../audit/audit-log.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { NotificationsModule } from '../notifications/notifications.module';
     AuditLogModule,
     NotificationsModule,
   ],
-  providers: [AuthService, JwtStrategy],
-  controllers: [AuthController]
+  providers: [AuthService, JwtStrategy, RolesGuard],
+  controllers: [AuthController],
+  exports: [RolesGuard],
 })
 export class AuthModule {}

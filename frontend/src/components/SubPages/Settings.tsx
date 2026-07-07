@@ -3,6 +3,7 @@ import "./../../styles/Dashboard.css";
 import "./../../styles/Settings.css";
 import Card from "../Card";
 import DropdownButton from "../DropdownButton";
+import { DateFilterDropdown } from "../DropdownButton";
 import Table from "../Table";
 import Pagination from "../Pagination";
 import Tooltip from "../Tooltip";
@@ -17,7 +18,7 @@ import {
   getDocumentCategories, createDocumentCategory, deleteDocumentCategory,
   getDepartments, createDepartment, deleteDepartment, restoreDepartment,
   getRouteTemplates, createRouteTemplate, deleteRouteTemplate,
-  exportData, importData, getAbout,
+  getAbout, getProfile, adminCleanup,
 } from "../../services/api";
 import {
   AiProvider, AiSettings,
@@ -33,14 +34,18 @@ import {
 } from "../../types";
 import { formatMoscowDateTime } from "../../utils/moscowTime";
 import { useSettings } from "../../contexts/SettingsContext";
+import { getThemedIcon } from "../../utils/getThemedIcon";
 
-type Tab = "provider" | "interface" | "notifications" | "security" | "references" | "routing-rules" | "backup" | "about";
+type Tab = "interface" | "notifications" | "security" | "references" | "routing-rules" | "provider" | "about";
 
 const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("provider");
+  const [activeTab, setActiveTab] = useState<Tab>("interface");
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get("tab");
   const { setCompactView, setShowConfidence, setDefaultPageLimit, setTheme, defaultPageLimit } = useSettings();
+
+  const [userRole, setUserRole] = useState<string>("");
+  const isAdmin = userRole === "Администратор";
 
   const [providers, setProviders] = useState<AiProvider[]>([]);
   const [aiSettings, setAiSettings] = useState<AiSettings | null>(null);
@@ -86,8 +91,31 @@ const Settings: React.FC = () => {
   const [auditLog, setAuditLog] = useState<AuditLogItem[]>([]);
   const [secLoading, setSecLoading] = useState(false);
   const [secError, setSecError] = useState<string | null>(null);
-  const [secPage, setSecPage] = useState({ sessions: 1, login: 1, audit: 1 });
-  const [secTotalPages, setSecTotalPages] = useState({ sessions: 1, login: 1, audit: 1 });
+
+  const [themeKey, setThemeKey] = useState(0);
+  const [loginDateFilter, setLoginDateFilter] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
+  const [auditDateFilter, setAuditDateFilter] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
+  const [loginLimit, setLoginLimit] = useState(defaultPageLimit);
+  const [auditLimit, setAuditLimit] = useState(defaultPageLimit);
+  const [loginPage, setLoginPage] = useState(1);
+  const [auditPage, setAuditPage] = useState(1);
+  const [loginTotalPages, setLoginTotalPages] = useState(1);
+  const [auditTotalPages, setAuditTotalPages] = useState(1);
+
+  const [journalCleanupMonths, setJournalCleanupMonths] = useState("12");
+  const [auditCleanupStatus, setAuditCleanupStatus] = useState("");
+  const [auditCleanupStatusType, setAuditCleanupStatusType] = useState<"" | "success" | "error">("");
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => setThemeKey(prev => prev + 1));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setLoginLimit(defaultPageLimit);
+    setAuditLimit(defaultPageLimit);
+  }, [defaultPageLimit]);
 
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const toggleFilter = (key: string) => setActiveFilter((prev) => (prev === key ? null : key));
@@ -102,6 +130,7 @@ const Settings: React.FC = () => {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newDeptName, setNewDeptName] = useState("");
 
+  const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
   const [newTemplateTypeId, setNewTemplateTypeId] = useState<number | undefined>(undefined);
   const [newTemplateCategoryId, setNewTemplateCategoryId] = useState<number | undefined>(undefined);
   const [newTemplateDeptId, setNewTemplateDeptId] = useState<number | undefined>(undefined);
@@ -110,6 +139,16 @@ const Settings: React.FC = () => {
 
   const [refsStatus, setRefsStatus] = useState<{ type: string; category: string; dept: string }>({ type: '', category: '', dept: '' });
   const [refsStatusType, setRefsStatusType] = useState<{ type: '' | 'success' | 'error'; category: '' | 'success' | 'error'; dept: '' | 'success' | 'error' }>({ type: '', category: '', dept: '' });
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await getProfile();
+        setUserRole(profile.role);
+      } catch {}
+    };
+    loadProfile();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -169,14 +208,14 @@ const Settings: React.FC = () => {
     try {
       const [sessionsRes, loginRes, auditRes] = await Promise.all([
         getSessions(),
-        getLoginHistory(1, defaultPageLimit),
-        getAuditLog(1, defaultPageLimit),
+        getLoginHistory(loginPage, loginLimit),
+        getAuditLog(auditPage, auditLimit),
       ]);
       setSessions(sessionsRes);
       setLoginHistory(loginRes.items);
-      setSecTotalPages(prev => ({ ...prev, login: loginRes.totalPages }));
+      setLoginTotalPages(loginRes.totalPages);
       setAuditLog(auditRes.items);
-      setSecTotalPages(prev => ({ ...prev, audit: auditRes.totalPages }));
+      setAuditTotalPages(auditRes.totalPages);
     } catch (e) {
       setSecError("Ошибка загрузки данных безопасности");
     } finally {
@@ -190,23 +229,43 @@ const Settings: React.FC = () => {
     }
   }, [activeTab]);
 
+  useEffect(() => {
+    if (activeTab === "security") {
+      fetchSecurityData();
+    }
+  }, [loginPage, loginLimit, auditPage, auditLimit]);
+
   const fetchLoginHistoryPage = async (page: number) => {
-    try {
-      const res = await getLoginHistory(page, defaultPageLimit);
-      setLoginHistory(res.items);
-      setSecPage(prev => ({ ...prev, login: page }));
-      setSecTotalPages(prev => ({ ...prev, login: res.totalPages }));
-    } catch {}
+    setLoginPage(page);
   };
 
   const fetchAuditLogPage = async (page: number) => {
-    try {
-      const res = await getAuditLog(page, defaultPageLimit);
-      setAuditLog(res.items);
-      setSecPage(prev => ({ ...prev, audit: page }));
-      setSecTotalPages(prev => ({ ...prev, audit: res.totalPages }));
-    } catch {}
+    setAuditPage(page);
   };
+
+  const filteredLoginHistory = loginHistory.filter(l => {
+    if (loginDateFilter.from) {
+      const d = new Date(l.loginTime).toISOString().split('T')[0];
+      if (d < loginDateFilter.from) return false;
+    }
+    if (loginDateFilter.to) {
+      const d = new Date(l.loginTime).toISOString().split('T')[0];
+      if (d > loginDateFilter.to) return false;
+    }
+    return true;
+  });
+
+  const filteredAuditLog = auditLog.filter(a => {
+    if (auditDateFilter.from) {
+      const d = new Date(a.createdAt).toISOString().split('T')[0];
+      if (d < auditDateFilter.from) return false;
+    }
+    if (auditDateFilter.to) {
+      const d = new Date(a.createdAt).toISOString().split('T')[0];
+      if (d > auditDateFilter.to) return false;
+    }
+    return true;
+  });
 
   useEffect(() => {
     if (!interfaceSettings) return;
@@ -363,6 +422,20 @@ const Settings: React.FC = () => {
     } catch {}
   };
 
+  const handleAuditCleanup = async () => {
+    try {
+      const res = await adminCleanup("audit", parseInt(journalCleanupMonths));
+      setAuditCleanupStatus(res.message);
+      setAuditCleanupStatusType("success");
+      setTimeout(() => { setAuditCleanupStatus(""); setAuditCleanupStatusType(""); }, 4000);
+      fetchSecurityData();
+    } catch {
+      setAuditCleanupStatus("Ошибка очистки");
+      setAuditCleanupStatusType("error");
+      setTimeout(() => { setAuditCleanupStatus(""); setAuditCleanupStatusType(""); }, 4000);
+    }
+  };
+
   const loadRefs = async () => {
     setRefsLoading(true);
     try {
@@ -404,7 +477,7 @@ const Settings: React.FC = () => {
       setRefsStatus(prev => ({ ...prev, type: 'Такой тип уже существует' }));
       setRefsStatusType(prev => ({ ...prev, type: 'error' }));
     }
-  };  
+  };
 
   const handleDeleteType = async (id: number) => {
     if (!window.confirm('Удалить тип документа? Это действие нельзя отменить.')) return;
@@ -472,7 +545,8 @@ const Settings: React.FC = () => {
           setRefsStatus(prev => ({ ...prev, dept: 'Такой отдел уже существует' }));
         }
         setRefsStatusType(prev => ({ ...prev, dept: 'error' }));
-    }};
+    }
+  };
 
   const handleArchiveDept = async (id: number) => {
     try {
@@ -504,14 +578,17 @@ const Settings: React.FC = () => {
       return;
     }
     try {
+      const typeName = docTypes.find(t => t.id === newTemplateTypeId)?.name || '';
+      const categoryName = docCategories.find(c => c.id === newTemplateCategoryId)?.name || '';
       const created = await createRouteTemplate({
-        name: `${docTypes.find(t => t.id === newTemplateTypeId)?.name || ''} → ${departments.find(d => d.id === newTemplateDeptId)?.name || ''}`,
+        name: `${typeName} - ${categoryName}`,
         departmentIds: [newTemplateDeptId],
       });
       setTemplates(prev => [...prev, created]);
       setNewTemplateTypeId(undefined);
       setNewTemplateCategoryId(undefined);
       setNewTemplateDeptId(undefined);
+      setShowCreateTemplateModal(false);
       setSettingsStatus('Правило создано');
       setStatusType('success');
     } catch {
@@ -531,52 +608,23 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleExport = async () => {
-    try {
-      const blob = await exportData();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `backup_${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      setSettingsStatus("Данные экспортированы"); setStatusType("success");
-    } catch {
-      setErrorMsg("Ошибка экспорта");
-    }
-  };
-
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const result = await importData(file);
-      setSettingsStatus(`Данные импортированы`); setStatusType("success");
-    } catch {
-      setErrorMsg("Ошибка импорта. Проверьте формат файла.");
-    }
-  };
-
   const truncateUA = (ua: string | null): string => {
     if (!ua) return 'Неизвестное устройство';
     return ua.length > 60 ? ua.substring(0, 60) + '...' : ua;
   };
 
   const getTemplateLabel = (t: RouteTemplate): string => {
-    const parts: string[] = [];
-    if (t.departmentIds?.length) {
-      parts.push(` ${departments.find(d => d.id === t.departmentIds[0])?.name || 'Отдел'}`);
-    }
-    return parts.length ? parts.join(' ') : t.name;
+    const dept = departments.find(d => d.id === t.departmentIds?.[0]);
+    return dept ? `${dept.name}` : '';
   };
 
   const ACTION_LABELS: Record<string, string> = {
     'login': 'Вход в систему',
     'logout_all': 'Выход со всех устройств',
+    'logout_session': 'Сессия завершена',
     'profile_update': 'Обновление профиля',
     'password_change': 'Смена пароля',
+    'avatar_upload': 'Загрузка аватара',
     'document_upload': 'Загрузка документа',
     'document_delete': 'Удаление документа',
     'document_verify': 'Проверка документа',
@@ -585,20 +633,33 @@ const Settings: React.FC = () => {
     'document_update': 'Редактирование',
     'ocr_extract': 'Извлечение текста',
     'ai_analysis': 'AI-анализ',
+    'ai_analysis_start': 'AI-анализ',
+    'ai_analysis_complete': 'AI-анализ',
     'ai_analysis_error': 'Ошибка AI',
     'export_excel': 'Экспорт в Excel',
     'export_data': 'Экспорт данных',
     'import_data': 'Импорт данных',
+    'settings_update': 'Изменение настроек',
     'settings_update_ai': 'Настройки AI',
+    'settings_update_interface': 'Настройки интерфейса',
+    'settings_update_notifications': 'Настройки уведомлений',
+    'system_settings_update': 'Системные настройки',
+    'cleanup': 'Очистка данных',
     'notification_mark_read': 'Прочитано',
     'notification_mark_all_read': 'Прочитаны все',
     'notification_delete': 'Удалено',
     'notification_delete_all_read': 'Удалены прочитанные',
     'comment_added': 'Комментарий',
     'comment_deleted': 'Удалён комментарий',
-    'logout_session': 'Сессия завершена',
     'reference_created': 'Справочник создан',
     'reference_deleted': 'Справочник удалён',
+    'user_created': 'Пользователь создан',
+    'user_deleted': 'Пользователь удалён',
+    'user_role_change': 'Смена роли',
+    'user_blocked': 'Пользователь заблокирован',
+    'user_unblocked': 'Пользователь разблокирован',
+    'user_password_reset': 'Сброс пароля',
+    'mass_notification': 'Массовая рассылка',
   };
 
   const getActionLabel = (action: string) => ACTION_LABELS[action] || action;
@@ -614,17 +675,14 @@ const Settings: React.FC = () => {
   };
 
   const TABS: { key: Tab; label: string }[] = [
-    { key: "provider", label: "Провайдер" },
     { key: "interface", label: "Интерфейс" },
     { key: "notifications", label: "Уведомления" },
     { key: "security", label: "Безопасность" },
     { key: "references", label: "Справочники" },
     { key: "routing-rules", label: "Правила маршрутизации" },
-    { key: "backup", label: "Резервное копирование" },
+    { key: "provider", label: "Провайдер" },
     { key: "about", label: "О системе" },
   ];
-
-  const isWideTab = activeTab === "security" || activeTab === "references" || activeTab === "routing-rules" || activeTab === "backup" || activeTab === "about";
 
   return (
     <div>
@@ -649,176 +707,136 @@ const Settings: React.FC = () => {
         <p>{error} - <button className="apply-button" onClick={fetchData}>Повторить</button></p>
       ) : (
         <>
-          {activeTab === "provider" && (
-            <Card className="cuttinPaddin">
-              <div className="settings-form">
-                <div className="settings-form-row">
-                  <span className="settings-form-label">Провайдер:</span>
-                  <div className="settings-form-control">
-                    <DropdownButton
-                      options={providers.map(p => p.providerName)}
-                      selectedLabel={currentProvider?.providerName || "Выберите провайдера"}
-                      onSelect={handleProviderSelect}
-                      isOpen={isProviderOpen}
-                      onToggle={() => { setIsProviderOpen(prev => !prev); setIsModelOpen(false); }}/>
-                  </div>
-                </div>
-                <div className="settings-form-row">
-                  <span className="settings-form-label">Модель:</span>
-                  <div className="settings-form-control">
-                    <DropdownButton
-                      options={currentProvider?.models.map(m => m.modelName) || []}
-                      selectedLabel={currentModel?.modelName || "Выберите модель"}
-                      onSelect={handleModelSelect}
-                      isOpen={isModelOpen}
-                      onToggle={() => { setIsModelOpen(prev => !prev); setIsProviderOpen(false); }}/>
-                  </div>
-                </div>
-                <div className="settings-form-row">
-                  <span className="settings-form-label">API Key:</span>
-                  <div className="settings-form-control">
-                    <input
-                      type="password"
-                      name="ai_provider_key"
-                      autoComplete="new-password"
-                      value={apiKey}
-                      onChange={e => setApiKey(e.target.value)}
-                      placeholder="Введите API ключ"
-                      className="settings-form-input"/>
-                  </div>
-                </div>
-                <div className="settings-form-row">
-                  <span className="settings-form-label">Base URL:</span>
-                  <div className="settings-form-control">
-                    <input
-                      type="text"
-                      value={baseUrl}
-                      onChange={e => setBaseUrl(e.target.value)}
-                      placeholder="https://api.example.com"
-                      className="settings-form-input"/>
-                  </div>
-                </div>
-                <div className="settings-actions">
-                  <button className="apply-button" onClick={handleTestConnection}>Проверить подключение</button>
-                  <button className="apply-button" onClick={handleSaveAi}>Сохранить</button>
-                  {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
-                </div>
-              </div>
-            </Card>
-          )}
-
           {activeTab === "interface" && interfaceSettings && (
-            <Card className="cuttinPaddin">
-              <div className="settings-form">
-                <div className="settings-form-row">
-                  <span className="settings-form-label">Компактный вид</span>
-                  <label className="switch">
-                    <input type="checkbox" checked={interfaceSettings.compactView}
-                      onChange={e => setInterfaceSettings(prev => prev ? { ...prev, compactView: e.target.checked } : prev)} />
-                    <span className="slider round"></span>
-                  </label>
-                </div>
-                <div className="settings-form-row">
-                  <span className="settings-form-label">Показывать уверенность</span>
-                  <label className="switch">
-                    <input type="checkbox" checked={interfaceSettings.showConfidence}
-                      onChange={e => setInterfaceSettings(prev => prev ? { ...prev, showConfidence: e.target.checked } : prev)} />
-                    <span className="slider round"></span>
-                  </label>
-                </div>
-                <div className="settings-form-row">
-                  <span className="settings-form-label">Лимит страниц</span>
-                  <DropdownButton
-                    options={["5", "10", "20", "50"]}
-                    selectedLabel={String(interfaceSettings.defaultPageLimit)}
-                    onSelect={val => setInterfaceSettings(prev => prev ? { ...prev, defaultPageLimit: parseInt(val) } : prev)}
-                    defaultLabel="10"
-                    isOpen={activeFilter === "limit"}
-                    onToggle={() => toggleFilter("limit")}/>
-                </div>
-                <div className="settings-form-row">
-                  <span className="settings-form-label">Тема</span>
+            <div className="settings-tab-content">
+              <Card className="settings-section-card">
+                <div className="settings-form">
+                  <div className="settings-switch-row">
+                    <span className="settings-switch-label">Компактный вид</span>
+                    <span className="settings-switch-desc">Уменьшенные отступы и размеры элементов</span>
+                    <label className="switch">
+                      <input type="checkbox" checked={interfaceSettings.compactView}
+                        onChange={e => setInterfaceSettings(prev => prev ? { ...prev, compactView: e.target.checked } : prev)} />
+                      <span className="slider round"></span>
+                    </label>
+                  </div>
+                  <div className="settings-switch-row">
+                    <span className="settings-switch-label">Уверенность</span>
+                    <span className="settings-switch-desc">Показывать процент уверенности OCR</span>
+                    <label className="switch">
+                      <input type="checkbox" checked={interfaceSettings.showConfidence}
+                        onChange={e => setInterfaceSettings(prev => prev ? { ...prev, showConfidence: e.target.checked } : prev)} />
+                      <span className="slider round"></span>
+                    </label>
+                  </div>
+                  <div className="settings-switch-row">
+                    <span className="settings-switch-label">Лимит страниц</span>
+                    <span className="settings-switch-desc">Количество записей на странице по умолчанию</span>
+                    <DropdownButton
+                      options={["5", "10", "20", "50"]}
+                      selectedLabel={String(interfaceSettings.defaultPageLimit)}
+                      onSelect={val => setInterfaceSettings(prev => prev ? { ...prev, defaultPageLimit: parseInt(val) } : prev)}
+                      defaultLabel="10"
+                      isOpen={activeFilter === "limit"}
+                      onToggle={() => toggleFilter("limit")}/>
+                  </div>
+                  <div className="settings-theme-row">
+                    <span className="settings-switch-label">Тема</span>
+                    <span className="settings-switch-desc">Светлое или тёмное оформление интерфейса</span>
+                    <div className="settings-theme-buttons">
+                      <button
+                        className={`settings-theme-btn ${interfaceSettings.theme === "light" ? "active" : ""}`}
+                        onClick={() => setInterfaceSettings(prev => prev ? { ...prev, theme: "light" } : prev)}
+                      >
+                        Светлая
+                      </button>
+                      <button
+                        className={`settings-theme-btn ${interfaceSettings.theme === "dark" ? "active" : ""}`}
+                        onClick={() => setInterfaceSettings(prev => prev ? { ...prev, theme: "dark" } : prev)}
+                      >
+                        Тёмная
+                      </button>
+                    </div>
+                  </div>
                   <div className="settings-actions">
-                    <button className="apply-button" onClick={() => setInterfaceSettings(prev => prev ? { ...prev, theme: "light" } : prev)}
-                      disabled={interfaceSettings.theme === "light"}>Светлая</button>
-                    <button className="apply-button" onClick={() => setInterfaceSettings(prev => prev ? { ...prev, theme: "dark" } : prev)}
-                      disabled={interfaceSettings.theme === "dark"}>Тёмная</button>
+                    <Tooltip text="Сохранить настройки интерфейса">
+                      <button className="apply-button" onClick={saveInterface}>Сохранить</button>
+                    </Tooltip>
+                    {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
                   </div>
                 </div>
-                <div className="settings-actions">
-                  <button className="apply-button" onClick={saveInterface}>Сохранить</button>
-                  {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           )}
 
           {activeTab === "notifications" && (
-            <Card className="cuttinPaddin">
-              <div className="settings-form">
-                <div className="settings-notifications-grid">
-                  <div className="settings-notifications-col">
-                    <h4 className="settings-section-title">Документы</h4>
-                    {([
-                      ["newDocument", "Новый документ"],
-                      ["documentReady", "Документ готов"],
-                      ["extractError", "Ошибка извлечения текста"],
-                      ["pendingVerification", "Ожидание проверки"],
-                      ["routedToDepartment", "Направлен в отдел"],
-                      ["rejected", "Отклонён"],
-                      ["verified", "Проверен"],
-                      ["lowConfidence", "Низкая уверенность"],
-                      ["documentDeleted", "Документ удалён"],
-                    ] as [keyof NotificationSettings, string][]).map(([key, label]) => (
-                      <div className="settings-form-row" key={key}>
-                        <span className="settings-form-label">{label}</span>
-                        <label className="switch">
-                          <input type="checkbox" checked={notifications[key]} onChange={() => toggleNotif(key)} />
-                          <span className="slider round"></span>
-                        </label>
-                      </div>
-                    ))}
+            <div className="settings-tab-content">
+              <Card className="cuttinPaddin">
+                <div className="settings-form">
+                  <div className="settings-notifications-grid">
+                    <div className="settings-notifications-col">
+                      <h4 className="settings-section-title">Документы</h4>
+                      {([
+                        ["newDocument", "Новый документ"],
+                        ["documentReady", "Документ готов"],
+                        ["extractError", "Ошибка извлечения текста"],
+                        ["pendingVerification", "Ожидание проверки"],
+                        ["routedToDepartment", "Направлен в отдел"],
+                        ["rejected", "Отклонён"],
+                        ["verified", "Проверен"],
+                        ["lowConfidence", "Низкая уверенность"],
+                        ["documentDeleted", "Документ удалён"],
+                      ] as [keyof NotificationSettings, string][]).map(([key, label]) => (
+                        <div className="settings-form-row" key={key}>
+                          <span className="settings-form-label">{label}</span>
+                          <label className="switch">
+                            <input type="checkbox" checked={notifications[key]} onChange={() => toggleNotif(key)} />
+                            <span className="slider round"></span>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="settings-notifications-col">
+                      <h4 className="settings-section-title">Система</h4>
+                      {([
+                        ["passwordChanged", "Смена пароля"],
+                        ["profileUpdated", "Обновление профиля"],
+                        ["settingsChanged", "Изменение настроек"],
+                        ["newLogin", "Новый вход в систему"],
+                        ["commentAdded", "Новый комментарий"],
+                        ["referenceCreated", "Создание справочника"],
+                        ["referenceDeleted", "Удаление справочника"],
+                      ] as [keyof NotificationSettings, string][]).map(([key, label]) => (
+                        <div className="settings-form-row" key={key}>
+                          <span className="settings-form-label">{label}</span>
+                          <label className="switch">
+                            <input type="checkbox" checked={notifications[key]} onChange={() => toggleNotif(key)} />
+                            <span className="slider round"></span>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="settings-notifications-col">
-                    <h4 className="settings-section-title">Система</h4>
-                    {([
-                      ["passwordChanged", "Смена пароля"],
-                      ["profileUpdated", "Обновление профиля"],
-                      ["settingsChanged", "Изменение настроек"],
-                      ["newLogin", "Новый вход в систему"],
-                      ["commentAdded", "Новый комментарий"],
-                      ["referenceCreated", "Создание справочника"],
-                      ["referenceDeleted", "Удаление справочника"],
-                    ] as [keyof NotificationSettings, string][]).map(([key, label]) => (
-                      <div className="settings-form-row" key={key}>
-                        <span className="settings-form-label">{label}</span>
-                        <label className="switch">
-                          <input type="checkbox" checked={notifications[key]} onChange={() => toggleNotif(key)} />
-                          <span className="slider round"></span>
-                        </label>
-                      </div>
-                    ))}
+                  <div className="settings-actions">
+                    <button className="apply-button" onClick={saveNotifications}>Сохранить</button>
+                    {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
                   </div>
                 </div>
-                <div className="settings-actions">
-                  <button className="apply-button" onClick={saveNotifications}>Сохранить</button>
-                  {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           )}
 
           {activeTab === "security" && (
-            <Card className="cuttinPaddin">
-              <div className={isWideTab ? "settings-form-wide" : "settings-form"}>
-                <Card className="security-section-card">
-                  <div className="security-section-header">Активные сессии ({sessions.length})</div>
-                  {secLoading ? <p>Загрузка...</p> : secError ? <p>{secError}</p> : (
+            <div className="settings-tab-content">
+              <Card className="settings-section-card">
+                <h4 className="settings-section-header">Активные сессии ({sessions.length})</h4>
+                {secLoading ? <p>Загрузка...</p> : secError ? <p>{secError}</p> : (
+                  <div className="table-wrapper">
                     <Table>
                       <thead><tr><th>Устройство</th><th>IP</th><th>Начало сессии</th><th></th></tr></thead>
                       <tbody>
                         {sessions.length === 0 ? (
-                          <tr><td colSpan={4}>Нет активных сессий</td></tr>
+                          <tr><td colSpan={4} className="empty-cell">Нет активных сессий</td></tr>
                         ) : sessions.map(s => (
                           <tr key={s.id}>
                             <td>{truncateUA(s.userAgent)}</td>
@@ -831,152 +849,258 @@ const Settings: React.FC = () => {
                         ))}
                       </tbody>
                     </Table>
-                  )}
-                </Card>
+                  </div>
+                )}
+              </Card>
 
-                <Card className="security-section-card">
-                  <div className="security-section-header">История входов</div>
-                  {secLoading ? <p>Загрузка...</p> : secError ? <p>{secError}</p> : (
-                    <Table
-                      rightTitle={secTotalPages.login > 1 && (
-                        <span className="UltimatePaginationWrapper">
-                          <Pagination page={secPage.login} totalPages={secTotalPages.login} onPageChange={fetchLoginHistoryPage} />
-                        </span>
+              <Card className="settings-section-card">
+                <h4 className="settings-section-header">История входов</h4>
+                {secLoading ? <p>Загрузка...</p> : secError ? <p>{secError}</p> : (
+                  <>
+                    <Card className="filtersButtsWrapper admin-table-controls">
+                      <Tooltip text="Фильтр по дате">
+                        <DateFilterDropdown
+                          onFilterChange={(range) => {
+                            setLoginDateFilter(range);
+                          }}
+                          icon={<img src={getThemedIcon("/icons/filters/data.png")} key={themeKey} alt="Дата" />}
+                          isOpen={activeFilter === 'loginDate'}
+                          onToggle={() => toggleFilter('loginDate')}
+                        />
+                      </Tooltip>
+                      <Tooltip text="Количество записей на странице">
+                        <DropdownButton
+                          options={['5', '10', '20', '50']}
+                          selectedLabel={String(loginLimit)}
+                          onSelect={(value) => {
+                            const newLimit = parseInt(value, 10);
+                            if (!isNaN(newLimit)) setLoginLimit(newLimit);
+                          }}
+                          defaultLabel={String(defaultPageLimit)}
+                          isOpen={activeFilter === 'loginLimit'}
+                          onToggle={() => toggleFilter('loginLimit')}
+                        />
+                      </Tooltip>
+                      {(loginDateFilter.from || loginDateFilter.to) && (
+                        <Tooltip text="Сбросить фильтр даты">
+                          <button className="removeFiltersButt" onClick={() => setLoginDateFilter({ from: null, to: null })}>
+                            Сбросить фильтры
+                          </button>
+                        </Tooltip>
                       )}
-                    >
-                      <thead><tr><th>Время</th><th>IP</th><th>Устройство</th></tr></thead>
-                      <tbody>
-                        {loginHistory.length === 0 ? (
-                          <tr><td colSpan={3}>Нет записей</td></tr>
-                        ) : loginHistory.map(l => (
-                          <tr key={l.id}>
-                            <td>{formatMoscowDateTime(l.loginTime)}</td>
-                            <td>{l.ipAddress || '-'}</td>
-                            <td>{truncateUA(l.userAgent)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  )}
-                </Card>
+                    </Card>
+                    <div className="table-wrapper">
+                      <Table
+                        rightTitle={loginTotalPages > 1 && (
+                          <span className="UltimatePaginationWrapper">
+                            <Pagination page={loginPage} totalPages={loginTotalPages} onPageChange={fetchLoginHistoryPage} />
+                          </span>
+                        )}
+                      >
+                        <thead><tr><th>Время</th><th>IP</th><th>Устройство</th></tr></thead>
+                        <tbody>
+                          {filteredLoginHistory.length === 0 ? (
+                            <tr><td colSpan={3} className="empty-cell">Нет записей</td></tr>
+                          ) : filteredLoginHistory.map(l => (
+                            <tr key={l.id}>
+                              <td>{formatMoscowDateTime(l.loginTime)}</td>
+                              <td>{l.ipAddress || '-'}</td>
+                              <td>{truncateUA(l.userAgent)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </>
+                )}
+              </Card>
 
-                <Card className="security-section-card">
-                  <div className="security-section-header">Журнал действий</div>
-                  {secLoading ? <p>Загрузка...</p> : secError ? <p>{secError}</p> : (
-                    <Table
-                      rightTitle={secTotalPages.audit > 1 && (
-                        <span className="UltimatePaginationWrapper">
-                          <Pagination page={secPage.audit} totalPages={secTotalPages.audit} onPageChange={fetchAuditLogPage} />
-                        </span>
+              <Card className="settings-section-card">
+                <h4 className="settings-section-header">Журнал действий</h4>
+                {secLoading ? <p>Загрузка...</p> : secError ? <p>{secError}</p> : (
+                  <>
+                    <Card className="filtersButtsWrapper admin-table-controls">
+                      <Tooltip text="Фильтр по дате">
+                        <DateFilterDropdown
+                          onFilterChange={(range) => {
+                            setAuditDateFilter(range);
+                          }}
+                          icon={<img src={getThemedIcon("/icons/filters/data.png")} key={themeKey} alt="Дата" />}
+                          isOpen={activeFilter === 'auditDate'}
+                          onToggle={() => toggleFilter('auditDate')}
+                        />
+                      </Tooltip>
+                      <Tooltip text="Количество записей на странице">
+                        <DropdownButton
+                          options={['5', '10', '20', '50']}
+                          selectedLabel={String(auditLimit)}
+                          onSelect={(value) => {
+                            const newLimit = parseInt(value, 10);
+                            if (!isNaN(newLimit)) setAuditLimit(newLimit);
+                          }}
+                          defaultLabel={String(defaultPageLimit)}
+                          isOpen={activeFilter === 'auditLimit'}
+                          onToggle={() => toggleFilter('auditLimit')}
+                        />
+                      </Tooltip>
+                      {(auditDateFilter.from || auditDateFilter.to) && (
+                        <Tooltip text="Сбросить фильтр даты">
+                          <button className="removeFiltersButt" onClick={() => setAuditDateFilter({ from: null, to: null })}>
+                            Сбросить фильтры
+                          </button>
+                        </Tooltip>
                       )}
-                    >
-                      <thead><tr><th>Дата</th><th>Пользователь</th><th>Действие</th><th>Описание</th></tr></thead>
-                      <tbody>
-                        {auditLog.length === 0 ? (
-                          <tr><td colSpan={4}>Нет записей</td></tr>
-                        ) : auditLog.map(a => (
-                          <tr key={a.id}>
-                            <td>{formatMoscowDateTime(a.createdAt)}</td>
-                            <td>
-                              <span className="security-user-cell">
-                                {a.userAvatarUrl ? (
-                                  <img
-                                    src={a.userAvatarUrl.startsWith('http') ? a.userAvatarUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${a.userAvatarUrl}`}
-                                    className="security-avatar"
-                                    alt={a.userName}
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                  />
-                                ) : (
-                                  <span className="security-avatar security-avatar--initials">
-                                    {a.userName?.charAt(0) || '?'}
-                                  </span>
-                                )}
-                                {a.userName}
-                              </span>
-                            </td>
-                            <td>{getActionLabel(a.action)}</td>
-                            <td className="security-details-cell">{getDetailsText(a.details)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  )}
-                </Card>
+                    </Card>
 
-                <div className="settings-actions">
-                  <button className="apply-button" onClick={handleLogoutAll}>Выйти со всех устройств</button>
-                  {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
-                </div>
+                    {isAdmin && (
+                      <Card className="filtersButtsWrapper admin-table-controls">
+                        <div className="admin-journal-cleanup-row">
+                          <span className="admin-journal-cleanup-label">Удалить записи старше</span>
+                          <input
+                            className="admin-journal-cleanup-input"
+                            type="number"
+                            min="1"
+                            placeholder="12"
+                            value={journalCleanupMonths}
+                            onChange={e => setJournalCleanupMonths(e.target.value)}
+                          />
+                          <span className="admin-journal-cleanup-unit">месяцев</span>
+                          <Tooltip text="Удалить все записи журнала старше указанного срока. Действие необратимо.">
+                            <button className="apply-button" onClick={handleAuditCleanup}>
+                              Очистить журнал
+                            </button>
+                          </Tooltip>
+                          {auditCleanupStatus && (
+                            <span className={`settings-status ${auditCleanupStatusType}`}>
+                              {auditCleanupStatus}
+                            </span>
+                          )}
+                        </div>
+                      </Card>
+                    )}
+
+                    <div className="table-wrapper">
+                      <Table
+                        rightTitle={auditTotalPages > 1 && (
+                          <span className="UltimatePaginationWrapper">
+                            <Pagination page={auditPage} totalPages={auditTotalPages} onPageChange={fetchAuditLogPage} />
+                          </span>
+                        )}
+                      >
+                        <thead><tr><th>Дата</th><th>Пользователь</th><th>Действие</th><th>Описание</th></tr></thead>
+                        <tbody>
+                          {filteredAuditLog.length === 0 ? (
+                            <tr><td colSpan={4} className="empty-cell">Нет записей</td></tr>
+                          ) : filteredAuditLog.map(a => (
+                            <tr key={a.id}>
+                              <td>{formatMoscowDateTime(a.createdAt)}</td>
+                              <td>
+                                <span className="security-user-cell">
+                                  {a.userAvatarUrl ? (
+                                    <img
+                                      src={a.userAvatarUrl.startsWith('http') ? a.userAvatarUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${a.userAvatarUrl}`}
+                                      className="security-avatar"
+                                      alt={a.userName}
+                                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
+                                  ) : (
+                                    <span className="security-avatar security-avatar--initials">
+                                      {a.userName?.charAt(0) || '?'}
+                                    </span>
+                                  )}
+                                  {a.userName}
+                                </span>
+                              </td>
+                              <td>{getActionLabel(a.action)}</td>
+                              <td className="security-details-cell">{getDetailsText(a.details)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </>
+                )}
+              </Card>
+
+              <div className="settings-actions">
+                <button className="apply-button" onClick={handleLogoutAll}>Выйти со всех устройств</button>
+                {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
               </div>
-            </Card>
+            </div>
           )}
 
           {activeTab === "references" && (
-            <Card className="cuttinPaddin">
-              <div className={isWideTab ? "settings-form-wide" : "settings-form"}>
-                <h4 className="settings-section-title">Типы документов</h4>
+            <div className="settings-tab-content">
+              <Card className="settings-section-card">
+                <h4 className="settings-section-header">Типы документов</h4>
                 <div className="settings-chips">
                   {docTypes.map(t => (
                     <span key={t.id} className="settings-chip">
                       {t.name}
-                      <button className="settings-chip-remove" onClick={() => handleDeleteType(t.id)}>×</button>
+                      {isAdmin && (
+                        <button className="settings-chip-remove" onClick={() => handleDeleteType(t.id)}>×</button>
+                      )}
                     </span>
                   ))}
                 </div>
-                <div className="settings-form-row">
+                <div className="settings-ref-row">
                   <input className="settings-form-input" value={newTypeName} onChange={e => setNewTypeName(e.target.value)} placeholder="Новый тип" onKeyDown={e => e.key === 'Enter' && handleCreateType()} />
                   <button className="apply-button" onClick={handleCreateType}>Добавить</button>
                   {refsStatus.type && <span className={`refs-inline-status ${refsStatusType.type}`}>{refsStatus.type}</span>}
                 </div>
+              </Card>
 
-                <h4 className="settings-section-title">Категории</h4>
+              <Card className="settings-section-card">
+                <h4 className="settings-section-header">Категории</h4>
                 <div className="settings-chips">
                   {docCategories.map(c => (
                     <span key={c.id} className="settings-chip">
                       {c.name}
-                      <button className="settings-chip-remove" onClick={() => handleDeleteCategory(c.id)}>×</button>
+                      {isAdmin && (
+                        <button className="settings-chip-remove" onClick={() => handleDeleteCategory(c.id)}>×</button>
+                      )}
                     </span>
                   ))}
                 </div>
-                <div className="settings-form-row">
+                <div className="settings-ref-row">
                   <input className="settings-form-input" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Новая категория" onKeyDown={e => e.key === 'Enter' && handleCreateCategory()} />
                   <button className="apply-button" onClick={handleCreateCategory}>Добавить</button>
                   {refsStatus.category && <span className={`refs-inline-status ${refsStatusType.category}`}>{refsStatus.category}</span>}
                 </div>
+              </Card>
 
-                <h4 className="settings-section-title">Отделы</h4>
+              <Card className="settings-section-card">
+                <h4 className="settings-section-header">Отделы</h4>
                 <div className="settings-list">
                   {departments.map(d => (
                     <div key={d.id} className="settings-list-row">
                       <span className={d.isActive ? '' : 'settings-archived'}>{d.name}</span>
-                      {d.isActive ? (
+                      {isAdmin && d.isActive && (
                         <button className="apply-button" onClick={() => handleArchiveDept(d.id)}>Архивировать</button>
-                      ) : (
+                      )}
+                      {isAdmin && !d.isActive && (
                         <button className="apply-button" onClick={() => handleRestoreDept(d.id)}>Восстановить</button>
                       )}
                     </div>
                   ))}
                 </div>
-                 <div className="settings-form-row">
-                  <input className="settings-form-input" value={newDeptName} onChange={e => setNewDeptName(e.target.value)} placeholder="Новый отдел" onKeyDown={e => e.key === 'Enter' && handleCreateDept()} />
-                  <button className="apply-button" onClick={handleCreateDept}>Добавить</button>
-                  {refsStatus.dept && <span className={`refs-inline-status ${refsStatusType.dept}`}>{refsStatus.dept}</span>}
-                </div>
-
-                <div className="settings-actions">
-                  {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
-                </div>
-              </div>
-            </Card>
+                {isAdmin && (
+                  <div className="settings-ref-row">
+                    <input className="settings-form-input" value={newDeptName} onChange={e => setNewDeptName(e.target.value)} placeholder="Новый отдел" onKeyDown={e => e.key === 'Enter' && handleCreateDept()} />
+                    <button className="apply-button" onClick={handleCreateDept}>Добавить</button>
+                    {refsStatus.dept && <span className={`refs-inline-status ${refsStatusType.dept}`}>{refsStatus.dept}</span>}
+                  </div>
+                )}
+              </Card>
+            </div>
           )}
 
           {activeTab === "routing-rules" && (
-            <Card className="cuttinPaddin">
-              <div className={isWideTab ? "settings-form-wide" : "settings-form"}>
-                <div className="routing-rules-info">
-                  <p>Правила маршрутизации позволяют автоматически предлагать отдел для документа на основе его типа и категории.</p>
-                  <p>При проверке документа оператор может выбрать правило - и отдел заполнится автоматически.</p>
-                </div>
+            <div className="settings-tab-content">
+              <Card className="settings-section-card">
+                <p className="settings-hint-text">
+                  Правила маршрутизации позволяют автоматически предлагать отдел для документа на основе его типа и категории. При проверке документа оператор может выбрать правило - и отдел заполнится автоматически.
+                </p>
 
                 <h4 className="settings-section-title">Существующие правила</h4>
                 {templates.length === 0 ? (
@@ -987,127 +1111,209 @@ const Settings: React.FC = () => {
                       <div key={t.id} className="settings-list-row">
                         <div>
                           <strong>{t.name}</strong>
-                          {t.description && <span className="text-tertiary"> - {t.description}</span>}
-                          <div className="text-tertiary template-dept-list">
-                            {getTemplateLabel(t)}
-                          </div>
+                          {getTemplateLabel(t) && (
+                            <div className="text-tertiary template-dept-list">
+                              {getTemplateLabel(t)}
+                            </div>
+                          )}
                         </div>
-                        <button className="apply-button" onClick={() => handleDeleteTemplate(t.id)}>Удалить</button>
+                        {isAdmin && (
+                          <button className="apply-button" onClick={() => handleDeleteTemplate(t.id)}>Удалить</button>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
 
-                <h4 className="settings-section-title template-new-title">Новое правило</h4>
-                <div className="routing-rules-form">
-                  <div className="settings-form-row">
-                    <span className="settings-form-label">Если тип документа:</span>
-                    <div className="settings-form-control">
-                      <DropdownButton
-                        options={docTypes.map(t => t.name)}
-                        selectedLabel={docTypes.find(t => t.id === newTemplateTypeId)?.name || "Выберите тип"}
-                        onSelect={(name) => {
-                          const found = docTypes.find(t => t.name === name);
-                          setNewTemplateTypeId(found?.id);
-                        }}
-                        defaultLabel="Выберите тип"
-                        isOpen={activeFilter === "ruleType"}
-                        onToggle={() => toggleFilter("ruleType")}/>
-                    </div>
-                  </div>
-                  <div className="settings-form-row">
-                    <span className="settings-form-label">Категория:</span>
-                    <div className="settings-form-control">
-                      <DropdownButton
-                        options={docCategories.map(c => c.name)}
-                        selectedLabel={docCategories.find(c => c.id === newTemplateCategoryId)?.name || "Выберите категорию"}
-                        onSelect={(name) => {
-                          const found = docCategories.find(c => c.name === name);
-                          setNewTemplateCategoryId(found?.id);
-                        }}
-                        defaultLabel="Выберите категорию"
-                        isOpen={activeFilter === "ruleCategory"}
-                        onToggle={() => toggleFilter("ruleCategory")}/>
-                    </div>
-                  </div>
-                  <div className="settings-form-row">
-                    <span className="settings-form-label">Направить в отдел:</span>
-                    <div className="settings-form-control">
-                      <DropdownButton
-                        options={departments.filter(d => d.isActive).map(d => d.name)}
-                        selectedLabel={departments.find(d => d.id === newTemplateDeptId)?.name || "Выберите отдел"}
-                        onSelect={(name) => {
-                          const found = departments.find(d => d.name === name);
-                          setNewTemplateDeptId(found?.id);
-                        }}
-                        defaultLabel="Выберите отдел"
-                        isOpen={activeFilter === "ruleDept"}
-                        onToggle={() => toggleFilter("ruleDept")}/>
-                    </div>
-                  </div>
-                </div>
                 <div className="settings-actions">
-                  <button className="apply-button" onClick={handleCreateTemplate}
-                    disabled={!newTemplateTypeId || !newTemplateCategoryId || !newTemplateDeptId}>
-                    Создать правило
+                  <button className="apply-button" onClick={() => {
+                    setNewTemplateTypeId(undefined);
+                    setNewTemplateCategoryId(undefined);
+                    setNewTemplateDeptId(undefined);
+                    setShowCreateTemplateModal(true);
+                  }}>
+                    + Создать правило
                   </button>
                   {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           )}
 
-          {activeTab === "backup" && (
-            <Card className="cuttinPaddin">
-              <div className={isWideTab ? "settings-form-wide" : "settings-form"}>
-                <h4 className="settings-section-title">Экспорт данных</h4>
-                <p className="text-secondary">Выгрузить все документы, справочники и настройки в файл JSON для резервного копирования.</p>
-                <div className="settings-actions">
-                  <button className="apply-button" onClick={handleExport}>Экспортировать</button>
+          {activeTab === "provider" && (
+            <div className="settings-tab-content">
+              <Card className="settings-section-card">
+                {!isAdmin && (
+                  <p className="settings-hint-text">Настройки AI-провайдера доступны только администратору. Вы можете просмотреть текущие параметры.</p>
+                )}
+                <div className="settings-form">
+                  <div className="settings-form-row">
+                    <span className="settings-form-label">Провайдер</span>
+                    <div className="settings-form-control">
+                      <DropdownButton
+                        options={providers.map(p => p.providerName)}
+                        selectedLabel={currentProvider?.providerName || "Выберите провайдера"}
+                        onSelect={isAdmin ? handleProviderSelect : () => {}}
+                        isOpen={isAdmin ? isProviderOpen : false}
+                        onToggle={isAdmin ? () => { setIsProviderOpen(prev => !prev); setIsModelOpen(false); } : () => {}}/>
+                    </div>
+                  </div>
+                  <div className="settings-form-row">
+                    <span className="settings-form-label">Модель</span>
+                    <div className="settings-form-control">
+                      <DropdownButton
+                        options={currentProvider?.models.map(m => m.modelName) || []}
+                        selectedLabel={currentModel?.modelName || "Выберите модель"}
+                        onSelect={isAdmin ? handleModelSelect : () => {}}
+                        isOpen={isAdmin ? isModelOpen : false}
+                        onToggle={isAdmin ? () => { setIsModelOpen(prev => !prev); setIsProviderOpen(false); } : () => {}}/>
+                    </div>
+                  </div>
+                  <div className="settings-form-row">
+                    <span className="settings-form-label">API Key</span>
+                    <div className="settings-form-control">
+                      <input
+                        type="password"
+                        name="ai_provider_key"
+                        autoComplete="new-password"
+                        value={apiKey}
+                        onChange={e => setApiKey(e.target.value)}
+                        placeholder="Введите API ключ"
+                        className="settings-form-input"
+                        disabled={!isAdmin}/>
+                    </div>
+                  </div>
+                  <div className="settings-form-row">
+                    <span className="settings-form-label">Base URL</span>
+                    <div className="settings-form-control">
+                      <input
+                        type="text"
+                        value={baseUrl}
+                        onChange={e => setBaseUrl(e.target.value)}
+                        placeholder="https://api.example.com"
+                        className="settings-form-input"
+                        disabled={!isAdmin}/>
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <div className="settings-actions">
+                      <Tooltip text="Проверить подключение к API провайдера">
+                        <button className="apply-button" onClick={handleTestConnection}>Проверить подключение</button>
+                      </Tooltip>
+                      <Tooltip text="Сохранить настройки провайдера">
+                        <button className="apply-button" onClick={handleSaveAi}>Сохранить</button>
+                      </Tooltip>
+                      {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
+                    </div>
+                  )}
                 </div>
-
-                <h4 className="settings-section-title backup-import-title">Импорт данных</h4>
-                <p className="text-secondary">Загрузить данные из ранее сохранённого файла. Существующие данные будут заменены.</p>
-                <div className="settings-actions">
-                  <input type="file" accept=".json" onChange={handleImport} id="import-file" className="settings-file-input" />
-                  <label htmlFor="import-file" className="apply-button settings-file-label">Выбрать файл и импортировать</label>
-                </div>
-                {settingsStatus && <span className={`settings-status ${statusType}`}>{settingsStatus}</span>}
-              </div>
-            </Card>
+              </Card>
+            </div>
           )}
 
           {activeTab === "about" && (
-            <Card className="cuttinPaddin">
-              <div className={isWideTab ? "settings-form-wide" : "settings-form"}>
-                <h4 className="settings-section-title">О системе</h4>
-                <p className="about-system-name">Умный Канцеляр v{aboutVersion}</p>
-                <p className="about-system-desc">Система автоматизации документооборота транспортной компании.</p>
+            <div className="settings-tab-content">
+              <Card className="settings-section-card">
+                <div className="settings-form-wide">
+                  <h4 className="settings-section-title">О системе</h4>
+                  <p className="about-system-name">Умный Канцеляр v{aboutVersion}</p>
+                  <p className="about-system-desc">Система автоматизации документооборота транспортной компании.</p>
 
-                <h4 className="settings-section-title about-section-title">Технологии</h4>
-                <ul className="about-list">
-                  <li>NestJS (бэкенд)</li>
-                  <li>React + TypeScript + Vite (фронтенд)</li>
-                  <li>PostgreSQL (база данных)</li>
-                  <li>DeepSeek (AI-анализ)</li>
-                </ul>
+                  <h4 className="settings-section-title about-section-title">Технологии</h4>
+                  <ul className="about-list">
+                    <li>NestJS (бэкенд)</li>
+                    <li>React + TypeScript + Vite (фронтенд)</li>
+                    <li>PostgreSQL (база данных)</li>
+                    <li>DeepSeek (AI-анализ)</li>
+                  </ul>
 
-                <h4 className="settings-section-title about-section-title">Команда</h4>
-                <ul className="about-list">
-                  <li>Начинова Мария - тимлид, бэкенд, AI, OCR, безопасность, профиль, общие доработки</li>
-                  <li>Москалева Александра - уведомления, сканирование, проверка, загрузка, справочники, роутинг</li>
-                  <li>Мейсарош Карина - API, типы, подразделения, маршрутизация</li>
-                  <li>Нехланова Алина - логин, загрузка, аналитика, графики, адаптив</li>
-                  <li>Ефанов Егор - дашборд, архив, настройки, пагинация, тёмная тема</li>
-                  <li>Мотовилова Мария - адаптив поиска, дашборда, списка документов</li>
-                  <li>Мельникова Виолетта - адаптив логина, карточки документа, настроек</li>
-                </ul>
+                  <h4 className="settings-section-title about-section-title">Команда</h4>
+                  <ul className="about-list">
+                    <li>Начинова Мария - тимлид, бэкенд, AI, OCR, безопасность, профиль, общие доработки</li>
+                    <li>Москалева Александра - уведомления, сканирование, проверка, загрузка, справочники, роутинг</li>
+                    <li>Мейсарош Карина - API, типы, подразделения, маршрутизация</li>
+                    <li>Нехланова Алина - логин, карточка документа, загрузка, аналитика, графики, адаптив</li>
+                    <li>Ефанов Егор - дашборд, архив, настройки, пагинация, тёмная тема</li>
+                    <li>Мотовилова Мария - адаптив поиска, дашборда, списка документов</li>
+                    <li>Мельникова Виолетта - адаптив логина, карточки документа, настроек</li>
+                  </ul>
 
-                <p className="about-copyright">© 2026, Умный Канцеляр</p>
-              </div>
-            </Card>
+                  <p className="about-copyright">2026, Умный Канцеляр</p>
+                </div>
+              </Card>
+            </div>
           )}
         </>
+      )}
+
+      {showCreateTemplateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateTemplateModal(false)}>
+          <div className="modal-content modal-content--settings" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Новое правило маршрутизации</h3>
+              <button className="modal-close" onClick={() => setShowCreateTemplateModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-form">
+                <div className="settings-form-row">
+                  <span className="settings-form-label">Тип документа</span>
+                  <div className="settings-form-control">
+                    <DropdownButton
+                      options={docTypes.map(t => t.name)}
+                      selectedLabel={docTypes.find(t => t.id === newTemplateTypeId)?.name || "Выберите тип"}
+                      onSelect={(name) => {
+                        const found = docTypes.find(t => t.name === name);
+                        setNewTemplateTypeId(found?.id);
+                      }}
+                      defaultLabel="Выберите тип"
+                      isOpen={activeFilter === "modalRuleType"}
+                      onToggle={() => toggleFilter("modalRuleType")}/>
+                  </div>
+                </div>
+                <div className="settings-form-row">
+                  <span className="settings-form-label">Категория</span>
+                  <div className="settings-form-control">
+                    <DropdownButton
+                      options={docCategories.map(c => c.name)}
+                      selectedLabel={docCategories.find(c => c.id === newTemplateCategoryId)?.name || "Выберите категорию"}
+                      onSelect={(name) => {
+                        const found = docCategories.find(c => c.name === name);
+                        setNewTemplateCategoryId(found?.id);
+                      }}
+                      defaultLabel="Выберите категорию"
+                      isOpen={activeFilter === "modalRuleCategory"}
+                      onToggle={() => toggleFilter("modalRuleCategory")}/>
+                  </div>
+                </div>
+                <div className="settings-form-row">
+                  <span className="settings-form-label">Направить в отдел</span>
+                  <div className="settings-form-control">
+                    <DropdownButton
+                      options={departments.filter(d => d.isActive).map(d => d.name)}
+                      selectedLabel={departments.find(d => d.id === newTemplateDeptId)?.name || "Выберите отдел"}
+                      onSelect={(name) => {
+                        const found = departments.find(d => d.name === name);
+                        setNewTemplateDeptId(found?.id);
+                      }}
+                      defaultLabel="Выберите отдел"
+                      isOpen={activeFilter === "modalRuleDept"}
+                      onToggle={() => toggleFilter("modalRuleDept")}/>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="modal-btn-cancel" onClick={() => setShowCreateTemplateModal(false)}>Отмена</button>
+              <button
+                className="modal-btn-confirm"
+                onClick={handleCreateTemplate}
+                disabled={!newTemplateTypeId || !newTemplateCategoryId || !newTemplateDeptId}
+              >
+                Создать
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

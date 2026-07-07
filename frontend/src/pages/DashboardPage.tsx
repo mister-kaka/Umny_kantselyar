@@ -11,6 +11,7 @@ import DepartmentDetailPage from "./DepartmentDetailPage";
 import Analytics from "../components/SubPages/Analytics";
 import Settings from "../components/SubPages/Settings";
 import Notifications from "../components/SubPages/Notifications";
+import AdminPanel from "../components/SubPages/AdminPanel";
 import Scanner from "../components/Scanner";
 import ProfilePage from "./ProfilePage";
 import ScrollToTop from "../components/ScrollToTop";
@@ -71,6 +72,7 @@ const DashboardContent = () => {
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Settings />} />
             <Route path="notifications" element={<Notifications />} />
+            <Route path="admin" element={<AdminPanel />} />
             <Route path="scan" element={<Scanner onClose={() => navigate('/dashboard/incoming')} />} />
           </Routes>
         </div>

@@ -554,3 +554,61 @@ export interface ImportDataResponse {
 export interface AboutResponse {
   version: string;
 }
+
+export interface AdminUser {
+  id: number;
+  fullName: string;
+  email: string;
+  role: string;
+  isBlocked: boolean;
+  avatarUrl: string | null;
+  departmentId: number | null;
+  createdAt: string;
+}
+
+export interface AdminUserStats {
+  documentCount: number;
+  commentCount: number;
+  sessionCount: number;
+}
+
+export interface AdminAuditLogResponse {
+  items: AdminAuditLogItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface AdminAuditLogItem {
+  id: number;
+  userId: number;
+  userName: string;
+  userAvatarUrl: string | null;
+  action: string;
+  documentId: number | null;
+  details: any;
+  createdAt: string;
+}
+
+export interface AdminStats {
+  totalDocuments: number;
+  totalUsers: number;
+  averageConfidence: number;
+  totalRoutes: number;
+  statusStats: { status: string; count: number }[];
+  userActivity: { userId: number; userName: string; count: number }[];
+}
+
+export interface AdminBackupStatus {
+  enabled: boolean;
+  time: string;
+  keepCount: number;
+  lastBackup: any;
+}
+
+export interface AdminNotificationHistoryResponse {
+  items: any[];
+  total: number;
+  page: number;
+  totalPages: number;
+}

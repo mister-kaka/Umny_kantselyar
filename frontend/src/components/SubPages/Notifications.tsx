@@ -1,3 +1,4 @@
+// Notifications.tsx
 import "../../styles/global.css";
 import "../../styles/Notifications.css";
 import "../../styles/DocumentsListPage.css";
@@ -37,6 +38,7 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
     document_deleted: "Документ удалён",
     reference_created: "Справочник изменён",
     reference_deleted: "Справочник изменён",
+    admin_message: "Сообщение администратора",
 };
 
 const FILTER_TYPE_OPTIONS = [
@@ -56,6 +58,7 @@ const FILTER_TYPE_OPTIONS = [
     "Комментарий",
     "Документ удалён",
     "Справочник изменён",
+    "Сообщение администратора",
 ];
 
 const FILTER_TYPE_MAP: Record<string, string> = {
@@ -75,6 +78,7 @@ const FILTER_TYPE_MAP: Record<string, string> = {
     "Комментарий": "comment_added",
     "Документ удалён": "document_deleted",
     "Справочник изменён": "reference_created",
+    "Сообщение администратора": "admin_message",
 };
 
 const REVERSE_FILTER_TYPE_MAP: Record<string, string> = Object.fromEntries(
@@ -876,7 +880,7 @@ const Notifications = () => {
                                                             </div>
                                                         ) : (
                                                             <div className="notification-message">
-                                                                {timeline.map(e => getTypeLabel(e.type)).join(' → ')}
+                                                                {timeline.map(e => getTypeLabel(e.type)).join(' - ')}
                                                             </div>
                                                         )}
                                                     </div>

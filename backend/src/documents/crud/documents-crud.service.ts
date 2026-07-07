@@ -14,6 +14,7 @@ import { DocumentAiResult } from '../../entities/document-ai-result.entity';
 import { User } from '../../entities/user.entity';
 import { DocumentType } from '../../entities/document-type.entity';
 import { DocumentCategory } from '../../entities/document-category.entity';
+import { SystemSettings } from '../../entities/system-settings.entity';
 import { DocumentCardDto } from '../dto/document-card.dto';
 import { UploadDocumentResponseDto } from '../dto/upload-document.dto';
 import { VerifyDocumentDto } from '../dto/verify-document.dto';
@@ -27,7 +28,8 @@ import { NotificationsService } from '../../notifications/notifications.service'
 import { AuditLogService } from '../../audit/audit-log.service';
 import { transliterate } from '../../utils/transliterate';
 
-const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif'];
+const DEFAULT_ALLOWED_EXTENSIONS = ['pdf', 'docx', 'txt', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif'];
+const DEFAULT_MAX_FILE_SIZE_MB = 50;
 
 @Injectable()
 export class DocumentsCrudService {
@@ -54,10 +56,44 @@ export class DocumentsCrudService {
         private documentTypeRepository: Repository<DocumentType>,
         @InjectRepository(DocumentCategory)
         private documentCategoryRepository: Repository<DocumentCategory>,
+        @InjectRepository(SystemSettings)
+        private systemSettingsRepository: Repository<SystemSettings>,
         private readonly logger: AppLoggerService,
         private readonly notificationsService: NotificationsService,
         private readonly auditLogService: AuditLogService,
     ) {}
+
+    private async getUploadSettings(): Promise<{ maxFileSizeBytes: number; allowedFormats: string[] }> {
+        try {
+            const settingsRecords = await this.systemSettingsRepository.find();
+            const settingsMap: Record<string, any> = {};
+            settingsRecords.forEach(s => { settingsMap[s.key] = s.value; });
+
+            const maxFileSizeMb = parseInt(settingsMap['upload.max_file_size_mb'] || String(DEFAULT_MAX_FILE_SIZE_MB), 10);
+            const maxFileSizeBytes = maxFileSizeMb * 1024 * 1024;
+
+            let allowedFormats: string[] = DEFAULT_ALLOWED_EXTENSIONS;
+            const formatsSetting = settingsMap['upload.allowed_formats'];
+            if (Array.isArray(formatsSetting)) {
+                allowedFormats = formatsSetting;
+            } else if (typeof formatsSetting === 'string') {
+                try {
+                    const parsed = JSON.parse(formatsSetting);
+                    if (Array.isArray(parsed)) {
+                        allowedFormats = parsed;
+                    }
+                } catch (e) {
+                }
+            }
+
+            return { maxFileSizeBytes, allowedFormats };
+        } catch (error) {
+            return {
+                maxFileSizeBytes: DEFAULT_MAX_FILE_SIZE_MB * 1024 * 1024,
+                allowedFormats: DEFAULT_ALLOWED_EXTENSIONS,
+            };
+        }
+    }
 
     async findOne(id: number): Promise<DocumentCardDto> {
         try {
@@ -192,8 +228,6 @@ export class DocumentsCrudService {
             const userName = user?.fullName || 'Пользователь';
             const now = new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
 
-            await this.documentRepository.remove(document);
-
             await this.auditLogService.log(
                 userId,
                 'document_delete',
@@ -207,6 +241,8 @@ export class DocumentsCrudService {
                 `Документ «${title}» удалён`,
                 `Документ был удалён из системы.\n\nНазвание: ${title}\nРег. номер: ${registrationNumber}\nУдалил: ${userName}\nВремя: ${now}`,
             );
+
+            await this.documentRepository.remove(document);
 
             await this.logger.log({
                 module: 'Documents', type: 'DELETE', url: `/documents/${id}`,
@@ -234,10 +270,20 @@ export class DocumentsCrudService {
 
     async uploadDocument(file: Express.Multer.File, createdBy: number): Promise<UploadDocumentResponseDto> {
         try {
-            const fileExtension = file.originalname.split('.').pop()?.toLowerCase() || '';
-            if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
+            const { maxFileSizeBytes, allowedFormats } = await this.getUploadSettings();
+
+            if (file.size > maxFileSizeBytes) {
+                const maxMb = Math.round(maxFileSizeBytes / (1024 * 1024));
                 throw new HttpException(
-                    `Неподдерживаемый формат файла: .${fileExtension}. Поддерживаемые: ${ALLOWED_EXTENSIONS.join(', ')}`,
+                    `Размер файла превышает максимально допустимый (${maxMb} МБ)`,
+                    HttpStatus.BAD_REQUEST,
+                );
+            }
+
+            const fileExtension = file.originalname.split('.').pop()?.toLowerCase() || '';
+            if (!allowedFormats.includes(fileExtension)) {
+                throw new HttpException(
+                    `Неподдерживаемый формат файла: .${fileExtension}. Поддерживаемые: ${allowedFormats.join(', ')}`,
                     HttpStatus.BAD_REQUEST,
                 );
             }

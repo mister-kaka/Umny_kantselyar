@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../Card";
 import Tooltip from "../Tooltip";
-import { getDepartmentStats, createDepartment, deleteDepartment, restoreDepartment } from "../../services/api";
+import { getDepartmentStats, createDepartment, deleteDepartment, restoreDepartment, getProfile } from "../../services/api";
 import { DepartmentStats } from "../../types";
 import { formatMoscowDate } from "../../utils/moscowTime";
 
@@ -32,6 +32,19 @@ const Departments = () => {
     const [showRestoreModal, setShowRestoreModal] = useState(false);
     const [restoringDept, setRestoringDept] = useState<DepartmentStats | null>(null);
     const [restoring, setRestoring] = useState(false);
+
+    const [userRole, setUserRole] = useState<string>("");
+    const isAdmin = userRole === "Администратор";
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const profile = await getProfile();
+                setUserRole(profile.role);
+            } catch {}
+        };
+        loadProfile();
+    }, []);
 
     const fetchData = async () => {
         try {
@@ -198,7 +211,7 @@ const Departments = () => {
                         {departments.length} {departments.length === 1 ? 'отдел' : departments.length < 5 ? 'отдела' : 'отделов'}
                     </span>
                 </div>
-                {!showArchived && (
+                {!showArchived && isAdmin && (
                     <button className="departments-add-btn" onClick={() => setShowAddModal(true)}>
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                             <path d="M7 3v8M3 7h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -302,35 +315,48 @@ const Departments = () => {
                                 </div>
                             )}
 
-                            <div className="department-card-footer">
-                                {showArchived ? (
-                                    <Tooltip text="Восстановить отдел из архива">
-                                        <button
-                                            className="department-card-restore-btn"
-                                            onClick={(e) => handleRestoreClick(e, dept)}
-                                        >
-                                            Восстановить
-                                        </button>
-                                    </Tooltip>
-                                ) : (
-                                    <Tooltip text="Архивировать отдел">
-                                        <button
-                                            className="department-card-archive-btn"
-                                            onClick={(e) => handleArchiveClick(e, dept)}
-                                        >
-                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                                <path d="M2 4h10M5 4V2h4v2M4 4v8h6V4M5.5 6.5v3M8.5 6.5v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                        </button>
-                                    </Tooltip>
-                                )}
-                                <div className="department-card-action">
-                                    <span className="department-card-action-text">Подробнее</span>
-                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                        <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
+                            {isAdmin && (
+                                <div className="department-card-footer">
+                                    {showArchived ? (
+                                        <Tooltip text="Восстановить отдел из архива">
+                                            <button
+                                                className="department-card-restore-btn"
+                                                onClick={(e) => handleRestoreClick(e, dept)}
+                                            >
+                                                Восстановить
+                                            </button>
+                                        </Tooltip>
+                                    ) : (
+                                        <Tooltip text="Архивировать отдел">
+                                            <button
+                                                className="department-card-archive-btn"
+                                                onClick={(e) => handleArchiveClick(e, dept)}
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                                    <path d="M2 4h10M5 4V2h4v2M4 4v8h6V4M5.5 6.5v3M8.5 6.5v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                            </button>
+                                        </Tooltip>
+                                    )}
+                                    <div className="department-card-action">
+                                        <span className="department-card-action-text">Подробнее</span>
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                            <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {!isAdmin && (
+                                <div className="department-card-footer">
+                                    <div className="department-card-action">
+                                        <span className="department-card-action-text">Подробнее</span>
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                            <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            )}
                         </Card>
                     ))}
                 </div>
@@ -413,7 +439,7 @@ const Departments = () => {
                                 <div className="archive-modal-info-row">
                                     <span className="archive-modal-info-label">Последний документ</span>
                                     <span className="archive-modal-info-value archive-modal-info-value--small">
-                                        {archivingDept.lastRoutedTitle || '—'}
+                                        {archivingDept.lastRoutedTitle || '-'}
                                     </span>
                                 </div>
                             </div>

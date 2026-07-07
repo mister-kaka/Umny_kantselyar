@@ -5,7 +5,7 @@ import Table from "../components/Table";
 import Pagination from "../components/Pagination";
 import "../styles/global.css";
 import "../styles/DepartmentDetail.css";
-import { getDepartmentDetail, deleteDepartment, restoreDepartment } from "../services/api";
+import { getDepartmentDetail, deleteDepartment, restoreDepartment, getProfile } from "../services/api";
 import { DepartmentDetail } from "../types";
 import { formatMoscowDate, formatMoscowDateTime } from "../utils/moscowTime";
 import { useSettings } from "../contexts/SettingsContext";
@@ -32,6 +32,9 @@ const DepartmentDetailPage = () => {
     const [page, setPage] = useState(1);
     const limit = 10;
 
+    const [userRole, setUserRole] = useState<string>("");
+    const isAdmin = userRole === "Администратор";
+
     const { theme } = useSettings();
     const isDark = theme === 'dark';
     const gridColor = isDark ? '#334155' : '#f0f0f0';
@@ -49,6 +52,16 @@ const DepartmentDetailPage = () => {
     const [showCustomRange, setShowCustomRange] = useState(false);
     const [customFrom, setCustomFrom] = useState<string>('');
     const [customTo, setCustomTo] = useState<string>('');
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const profile = await getProfile();
+                setUserRole(profile.role);
+            } catch {}
+        };
+        loadProfile();
+    }, []);
 
     const getBackLabel = (): string => {
         if (from === 'routing') return 'К маршрутизации';
@@ -222,17 +235,19 @@ const DepartmentDetailPage = () => {
                     {getBackLabel()}
                 </button>
 
-                <div className="dept-detail-actions">
-                    {data.isActive ? (
-                        <button className="dept-detail-archive-btn" onClick={() => setShowArchiveModal(true)}>
-                            Архивировать
-                        </button>
-                    ) : (
-                        <button className="dept-detail-restore-btn" onClick={() => setShowRestoreModal(true)}>
-                            Восстановить
-                        </button>
-                    )}
-                </div>
+                {isAdmin && (
+                    <div className="dept-detail-actions">
+                        {data.isActive ? (
+                            <button className="dept-detail-archive-btn" onClick={() => setShowArchiveModal(true)}>
+                                Архивировать
+                            </button>
+                        ) : (
+                            <button className="dept-detail-restore-btn" onClick={() => setShowRestoreModal(true)}>
+                                Восстановить
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className="dept-detail-header">
@@ -250,17 +265,17 @@ const DepartmentDetailPage = () => {
                             }
                         }}
                     />
-</              div>
+                </div>
                 <h2 className="dept-detail-title">{data.name}</h2>
             </div>
 
-            <div className="stats-cards-container">
+            <div className="dept-detail-stats">
                 <Card className="stat-card">
                     <div className="stat-card-icon-wrap">
                         <img src="/icons/departments/Total_incoming.png" className="stat-card-icon" alt="Всего" />
                     </div>
                     <div>
-                        <div className="stat-card-value">{data.totalRouted}</div>
+                        <div className="dept-stat-value">{data.totalRouted}</div>
                         <div className="stat-card-label">Всего направлено</div>
                     </div>
                 </Card>
@@ -269,7 +284,7 @@ const DepartmentDetailPage = () => {
                         <img src="/icons/departments/first.png" className="stat-card-icon" alt="Первое" />
                     </div>
                     <div>
-                        <div className="stat-card-value">{formatDate(data.firstRoutedAt)}</div>
+                        <div className="dept-stat-value">{formatDate(data.firstRoutedAt)}</div>
                         <div className="stat-card-label">Первое поступление</div>
                     </div>
                 </Card>
@@ -278,7 +293,7 @@ const DepartmentDetailPage = () => {
                         <img src="/icons/departments/last.png" className="stat-card-icon" alt="Последнее" />
                     </div>
                     <div className="stat-card-content">
-                        <div className="stat-card-value">{formatDate(data.lastRoutedAt)}</div>
+                        <div className="dept-stat-value">{formatDate(data.lastRoutedAt)}</div>
                         <div className="stat-card-label">Последнее поступление</div>
                     </div>
                 </Card>
@@ -471,7 +486,7 @@ const DepartmentDetailPage = () => {
                                 <tr key={doc.id} onClick={() => handleDocumentClick(doc.id)} className="dept-doc-row">
                                     <td>{doc.registrationNumber}</td>
                                     <td>{doc.title}</td>
-                                    <td>{doc.documentType || '—'}</td>
+                                    <td>{doc.documentType || '-'}</td>
                                     <td>
                                         <span className="dept-operator-name">
                                             {doc.operatorAvatarUrl ? (
@@ -491,7 +506,7 @@ const DepartmentDetailPage = () => {
                                             {doc.operatorName || 'Неизвестно'}
                                         </span>
                                     </td>
-                                    <td>{doc.routeReason || '—'}</td>
+                                    <td>{doc.routeReason || '-'}</td>
                                     <td>{formatDateTime(doc.routedAt)}</td>
                                 </tr>
                             ))}

@@ -1,5 +1,7 @@
 import { Controller, Get, Put, Post, Body, UseGuards, Req, Res, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { SettingsService } from './settings.service';
@@ -11,6 +13,7 @@ interface RequestWithUser extends Request {
   user: {
     userId: number;
     email: string;
+    role: string;
   };
 }
 
@@ -24,7 +27,8 @@ export class SettingsController {
     return this.settingsService.getAiSettings();
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
   @Put('ai')
   async updateAiSettings(
     @Req() req: RequestWithUser,
@@ -43,6 +47,12 @@ export class SettingsController {
   @Post('ai/test-connection')
   async testConnection(@Body() dto: UpdateAiSettingsDto) {
     return this.settingsService.testConnection(dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('upload-info')
+  async getUploadInfo() {
+    return this.settingsService.getUploadInfo();
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -75,7 +85,8 @@ export class SettingsController {
     return this.settingsService.updateInterfaceSettings(req.user.userId, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
   @Get('export')
   async exportData(
     @Req() req: RequestWithUser,
@@ -87,7 +98,8 @@ export class SettingsController {
     res.send(JSON.stringify(data, null, 2));
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))
   async importData(

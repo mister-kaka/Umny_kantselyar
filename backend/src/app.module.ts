@@ -26,6 +26,7 @@ import { DocumentComment } from './entities/document-comment.entity';
 import { AuditLog } from './entities/audit-log.entity';
 import { Notification } from './entities/notification.entity';
 import { UserSession } from './entities/user-session.entity';
+import { SystemSettings } from './entities/system-settings.entity';
 
 import { AuthModule } from './auth/auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
@@ -40,6 +41,7 @@ import { AuditLogModule } from './audit/audit-log.module';
 
 import { AiModule } from './ai/ai.module';
 import { SettingsModule } from './settings/settings.module';
+import { AdminModule } from './admin/admin.module';
 
 import { MulterModule } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -84,6 +86,7 @@ import { memoryStorage } from 'multer';
           AuditLog,
           Notification,
           UserSession,
+          SystemSettings,
         ],
         synchronize: false, 
         logging: ['error'],  
@@ -112,6 +115,7 @@ import { memoryStorage } from 'multer';
     AnalyticsModule,
     SecurityModule,
     AuditLogModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
