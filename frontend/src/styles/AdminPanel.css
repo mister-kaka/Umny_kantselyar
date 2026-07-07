@@ -653,6 +653,17 @@
     color: var(--text-primary);
 }
 
+.admin-format-chip {
+    cursor: pointer;
+    user-select: none;
+}
+
+.admin-format-chip.active {
+    background-color: var(--color-accent-light);
+    border-color: var(--color-accent);
+    color: var(--color-accent-hover);
+}
+
 @media (max-width: 1024px) {
     .admin-stats-grid {
         grid-template-columns: repeat(2, 1fr);

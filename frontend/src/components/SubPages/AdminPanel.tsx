@@ -988,7 +988,7 @@ const AdminPanel: React.FC = () => {
                                                 {ALL_FORMATS.map(f => (
                                                     <span
                                                         key={f}
-                                                        className={`settings-chip ${allowedFormats.includes(f) ? 'active' : ''}`}
+                                                        className={`settings-chip admin-format-chip ${allowedFormats.includes(f) ? 'active' : ''}`}
                                                         onClick={() => toggleFormat(f)}
                                                     >
                                                         {f.toUpperCase()}
